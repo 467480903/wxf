@@ -7,17 +7,11 @@ import math
 LEFT_NAME = "arm_l_end_link"
 RIGHT_NAME = "arm_r_end_link"
 
-# 目标位姿（位置和四元数）
-TARGET_LEFT_POSITION = [0.516, 0.433, 1.081]
-TARGET_LEFT_ORIENTATION = [0.382, -0.146, 0.663, 0.626]
-
-TARGET_RIGHT_POSITION = [0.579, -0.306, 1.158]
-TARGET_RIGHT_ORIENTATION = [0.320, 0.655, 0.651, 0.206]
-
 # 控制参数
 MAX_STEP_CM = 0.1  # 最大步长（厘米）
 LIFETIME = 0.02    # 生命周期（秒）
 RATE_HZ = 50.0     # 发送频率（Hz）
+MOVE_UP_DISTANCE = 0.05  # 向上移动的距离（米）
 
 
 class EndEffectorController:
@@ -94,7 +88,7 @@ class EndEffectorController:
                 start_pose['position'][2] + t * (goal_pose['position'][2] - start_pose['position'][2])
             ]
 
-            # 四元数SLERP插值
+            # 四元数SLERP插值（此处姿态不变，插值结果也不变）
             q0 = start_pose['orientation']
             q1 = goal_pose['orientation']
             quat = self.slerp(q0, q1, t)
@@ -118,41 +112,61 @@ class EndEffectorController:
                 return {'position': position, 'orientation': orientation}
         raise RuntimeError(f"Frame name {target_name} not found")
 
-    def execute_end_pose_control(self):
-        """执行末端位姿控制"""
-        time.sleep(1.0)  # 等待1秒
+    def move_to_pose(self, left_goal=None, right_goal=None, hold_final=False):
+        """
+        通用移动函数
+        left_goal: 左臂目标位姿字典，如果为None则左臂不动
+        right_goal: 右臂目标位姿字典，如果为None则右臂不动
+        hold_final: 是否保持最终位姿
+        """
+        if left_goal is None and right_goal is None:
+            print("没有指定任何目标位姿")
+            return
 
         # 获取当前状态
         status = self.robot.get_motion_control_status()
-
+        
         # 获取起始位姿
-        start_left_pose = self.find_pose_by_name(status, LEFT_NAME)
-        start_right_pose = self.find_pose_by_name(status, RIGHT_NAME)
-
-        # 目标位姿
-        goal_left_pose = {
-            'position': TARGET_LEFT_POSITION,
-            'orientation': TARGET_LEFT_ORIENTATION
-        }
-        goal_right_pose = {
-            'position': TARGET_RIGHT_POSITION,
-            'orientation': TARGET_RIGHT_ORIENTATION
-        }
+        start_left_pose = None
+        start_right_pose = None
+        
+        if left_goal is not None:
+            start_left_pose = self.find_pose_by_name(status, LEFT_NAME)
+            print(f"左臂当前位置: {start_left_pose['position']}")
+            print(f"左臂目标位置: {left_goal['position']}")
+        
+        if right_goal is not None:
+            start_right_pose = self.find_pose_by_name(status, RIGHT_NAME)
+            print(f"右臂当前位置: {start_right_pose['position']}")
+            print(f"右臂目标位置: {right_goal['position']}")
 
         # 计算步数
-        n_left = self.calculate_n_steps(start_left_pose['position'],
-                                        goal_left_pose['position'],
-                                        MAX_STEP_CM)
-        n_right = self.calculate_n_steps(start_right_pose['position'],
-                                        goal_right_pose['position'],
-                                        MAX_STEP_CM)
+        n_left = 1
+        n_right = 1
+        
+        if left_goal is not None:
+            n_left = self.calculate_n_steps(start_left_pose['position'],
+                                           left_goal['position'],
+                                           MAX_STEP_CM)
+        
+        if right_goal is not None:
+            n_right = self.calculate_n_steps(start_right_pose['position'],
+                                            right_goal['position'],
+                                            MAX_STEP_CM)
+        
         n_steps = max(n_left, n_right)
-
+        
         print(f"左臂步数: {n_left}, 右臂步数: {n_right}, 总步数: {n_steps}")
 
         # 规划轨迹
-        traj_left = self.plan_trajectory(start_left_pose, goal_left_pose, n_steps)
-        traj_right = self.plan_trajectory(start_right_pose, goal_right_pose, n_steps)
+        traj_left = None
+        traj_right = None
+        
+        if left_goal is not None:
+            traj_left = self.plan_trajectory(start_left_pose, left_goal, n_steps)
+        
+        if right_goal is not None:
+            traj_right = self.plan_trajectory(start_right_pose, right_goal, n_steps)
 
         # 执行轨迹
         dt = 1.0 / RATE_HZ
@@ -160,36 +174,73 @@ class EndEffectorController:
             # 创建末端执行器位姿控制请求
             end_pose = agibot_gdk.EndEffectorPose()
             end_pose.life_time = LIFETIME
-            end_pose.group = agibot_gdk.EndEffectorControlGroup.kBothArms
+            
+            # 设置控制组（只控制左臂）
+            end_pose.group = agibot_gdk.EndEffectorControlGroup.kLeftArm
 
             # 设置左臂位姿
-            end_pose.left_end_effector_pose.position.x = traj_left[i]['position'][0]
-            end_pose.left_end_effector_pose.position.y = traj_left[i]['position'][1]
-            end_pose.left_end_effector_pose.position.z = traj_left[i]['position'][2]
-            end_pose.left_end_effector_pose.orientation.x = traj_left[i]['orientation'][0]
-            end_pose.left_end_effector_pose.orientation.y = traj_left[i]['orientation'][1]
-            end_pose.left_end_effector_pose.orientation.z = traj_left[i]['orientation'][2]
-            end_pose.left_end_effector_pose.orientation.w = traj_left[i]['orientation'][3]
-
-            # 设置右臂位姿
-            end_pose.right_end_effector_pose.position.x = traj_right[i]['position'][0]
-            end_pose.right_end_effector_pose.position.y = traj_right[i]['position'][1]
-            end_pose.right_end_effector_pose.position.z = traj_right[i]['position'][2]
-            end_pose.right_end_effector_pose.orientation.x = traj_right[i]['orientation'][0]
-            end_pose.right_end_effector_pose.orientation.y = traj_right[i]['orientation'][1]
-            end_pose.right_end_effector_pose.orientation.z = traj_right[i]['orientation'][2]
-            end_pose.right_end_effector_pose.orientation.w = traj_right[i]['orientation'][3]
+            if left_goal is not None:
+                end_pose.left_end_effector_pose.position.x = traj_left[i]['position'][0]
+                end_pose.left_end_effector_pose.position.y = traj_left[i]['position'][1]
+                end_pose.left_end_effector_pose.position.z = traj_left[i]['position'][2]
+                end_pose.left_end_effector_pose.orientation.x = traj_left[i]['orientation'][0]
+                end_pose.left_end_effector_pose.orientation.y = traj_left[i]['orientation'][1]
+                end_pose.left_end_effector_pose.orientation.z = traj_left[i]['orientation'][2]
+                end_pose.left_end_effector_pose.orientation.w = traj_left[i]['orientation'][3]
 
             try:
                 result = self.robot.end_effector_pose_control(end_pose)
                 if result != 0:
                     print(f"控制命令发送失败，步数: {i}")
-                    return
+                    return False
             except Exception as e:
                 print(f"控制命令发送异常，步数: {i}, 错误: {e}")
-                return
+                return False
 
             time.sleep(dt)
+        
+        return True
+
+    def move_left_up(self, distance=MOVE_UP_DISTANCE, hold_final=True):
+        """
+        左臂在当前位姿基础上向上移动指定距离，保持姿态不变
+        distance: 向上移动的距离（米），默认0.05米
+        hold_final: 是否保持最终位姿
+        """
+        print(f"\n执行左臂向上移动{distance}米...")
+        
+        # 获取当前状态和左臂当前位姿
+        status = self.robot.get_motion_control_status()
+        current_pose = self.find_pose_by_name(status, LEFT_NAME)
+        
+        # 构建目标位姿（只修改Z轴位置，姿态保持不变）
+        goal_pose = {
+            'position': [
+                current_pose['position'][0]-distance,  # X轴位置不变
+                current_pose['position'][1],  # Y轴位置不变
+                current_pose['position'][2]   # Z轴位置增加指定距离
+            ],
+            'orientation': current_pose['orientation']  # 姿态完全不变
+        }
+        
+        print(f"左臂当前位置: {current_pose['position']}")
+        print(f"左臂目标位置: {goal_pose['position']}")
+        
+        return self.move_to_pose(left_goal=goal_pose, right_goal=None, hold_final=hold_final)
+
+    def execute_sequence(self):
+        """执行顺序运动序列"""
+        print("=" * 50)
+        print("开始执行运动序列")
+        print("=" * 50)
+        
+        # 只执行左臂向上移动的动作
+        self.move_left_up()
+        time.sleep(1.0)
+        
+        print("\n" + "=" * 50)
+        print("运动序列执行完成")
+        print("=" * 50)
 
 
 def main():
@@ -205,7 +256,12 @@ def main():
         time.sleep(2)  # 等待机器人初始化
 
         controller = EndEffectorController(robot)
-        controller.execute_end_pose_control()
+        
+        # 执行预设的运动序列（只动左臂向上移动）
+        controller.execute_sequence()
+        
+        # 也可以单独调用：
+        # controller.move_left_up(distance=0.05)
 
     except Exception as e:
         print(f"执行过程中发生错误: {e}")
