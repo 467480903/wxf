@@ -1,5 +1,6 @@
 import agibot_gdk
 import time
+import math
 
 # 初始化GDK系统
 if agibot_gdk.gdk_init() != agibot_gdk.GDKRes.kSuccess:
@@ -8,17 +9,26 @@ if agibot_gdk.gdk_init() != agibot_gdk.GDKRes.kSuccess:
 print("GDK初始化成功")
 
 pnc = agibot_gdk.Pnc()
-time.sleep(2)  # 等待PNC初始化
 
+
+
+time.sleep(2)  # 等待PNC初始化
+# pnc.cancel_task()
 # 创建相对移动目标
+
+state = pnc.get_task_state()
+# state_id = state.id
+
+# pnc.cancel_task(state_id)
+
 target = agibot_gdk.NaviReq()
-target.target.position.x = 0.0  # 相对前进0.5米
-target.target.position.y = 0.5
+target.target.position.x = 0
+target.target.position.y = 0
 target.target.position.z = 0.0
 target.target.orientation.x = 0.0
 target.target.orientation.y = 0.0
-target.target.orientation.z = 0.0
-target.target.orientation.w = 1.0
+target.target.orientation.z = math.sin(math.pi/4)
+target.target.orientation.w = math.cos(math.pi/4)
 # agiNL0876
 # 执行相对移动
 try:
