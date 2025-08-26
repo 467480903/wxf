@@ -12,7 +12,7 @@ time.sleep(2)  # 等待机器人初始化
 
 # 控制左夹爪（omnipicker类型，需要1个关节）
 joint_states_left = agibot_gdk.JointStates()
-joint_states_left.group = "left_tool"
+joint_states_left.group = "right_tool"
 joint_states_left.target_type = "omnipicker"
 
 joint_state = agibot_gdk.JointState()
