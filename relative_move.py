@@ -12,8 +12,8 @@ time.sleep(2)  # 等待PNC初始化
 
 # 创建相对移动目标
 target = agibot_gdk.NaviReq()
-target.target.position.x = -0.5  # 相对前进0.5米
-target.target.position.y = 0.0
+target.target.position.x = 0.0  # 相对前进0.5米
+target.target.position.y = 0.5
 target.target.position.z = 0.0
 target.target.orientation.x = 0.0
 target.target.orientation.y = 0.0
