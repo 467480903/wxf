@@ -54,17 +54,26 @@
     <script>
         $(document).ready(function() {
             // 设置相机图片URL
-            const currentHost = window.location.hostname;
-            const cameraPort = 8000;
-            const headCameraUrl = `http://${currentHost}:${cameraPort}/head_color`;
-            const rightHandCameraUrl = `http://${currentHost}:${cameraPort}/hand_right_color`;
+            const headCameraUrl = 'head.jpg';
+            const rightHandCameraUrl = 'right.jpg';
             
-            $('#head_camera').attr('src', headCameraUrl);
-            $('#right_hand_camera').attr('src', rightHandCameraUrl);
+            // 刷新相机图片函数
+            function refreshCameras() {
+                const timestamp = new Date().getTime();
+                $('#head_camera').attr('src', `${headCameraUrl}?rand=${timestamp}`);
+                $('#right_hand_camera').attr('src', `${rightHandCameraUrl}?rand=${timestamp}`);
+            }
+            
+            // 初始加载图片
+            refreshCameras();
+            
+            // 设置定时刷新，每0.5秒刷新一次
+            setInterval(refreshCameras, 500);
             
             // MQTT客户端配置
             const clientId = 'lerobot_client_' + Math.random().toString(16).substr(2, 8);
-            const client = new Paho.Client('10.20.15.178', 9001, clientId);
+            const brokerHost = window.location.hostname;
+            const client = new Paho.Client(brokerHost, 9001, clientId);
             
             // 连接状态
             let connected = false;
