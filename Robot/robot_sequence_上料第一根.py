@@ -144,8 +144,8 @@ def close_gripper():
         print("右夹爪闭合成功")
         time.sleep(0.1)
         
-        robot.move_ee_pos(joint_states_left)
-        print("左夹爪闭合成功")
+        #robot.move_ee_pos(joint_states_left)
+        #print("左夹爪闭合成功")
         
         print("夹爪闭合完成")
         return True
@@ -177,8 +177,8 @@ def open_gripper():
         print("右夹爪张开成功")
         time.sleep(0.1)
         
-        robot.move_ee_pos(joint_states_left)
-        print("左夹爪张开成功")
+        #robot.move_ee_pos(joint_states_left)
+        #print("左夹爪张开成功")
         
         print("夹爪张开完成")
         return True
@@ -201,8 +201,8 @@ def main():
     sequence = [
         ("上料P2", "姿态P2"),
         ("上料P3", "姿态P3"),
-        ("上料第一根P1", "姿态P4"),
-        ("上料第一根P2", "姿态P5"),
+        ("一一P1", "姿态P4"),
+        ("一一P2", "姿态P5"),
         ("CLOSE_GRIPPER", "闭合夹爪"),
         ("上料第一根P3", "姿态P6"),
         ("上料第一根P4", "姿态P7"),
@@ -212,8 +212,9 @@ def main():
         ("上料第一根P8", "姿态P11"),
         ("上料第一根P9", "姿态P12"),
         ("上料第一根P10", "姿态P13"),
+        ("上料第一根P11", "姿态P14"),
         ("OPEN_GRIPPER", "张开夹爪"),
-        ("上料第一根P11", "姿态P14")
+        ("上料第一根P12", "姿态P15")
         
         
         
