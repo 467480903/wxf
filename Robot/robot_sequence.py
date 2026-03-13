@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 # 配置区
-POSITIONS_DIR = "/data/ggyss/wxf/positions"
+POSITIONS_DIR = "/data/finalgys/wxf/positions"
 
 # 全局变量
 robot = None
@@ -30,7 +30,7 @@ def move_waist(pos_data):
             get_joint_position(pos_data, "idx04_body_joint4", "body_joint4", "joint4", "Body_Joint4"),
             get_joint_position(pos_data, "idx05_body_joint5", "body_joint5", "joint5", "Body_Joint5")
         ]
-        waist_velocities = [0.3] * 5
+        waist_velocities = [0.9] * 5
         robot.move_waist_joint(waist_positions, waist_velocities)
         print("腰部运动完成")
     except Exception as e:
@@ -105,13 +105,13 @@ def move_to_pose(file_name):
             pos_data = joint_data
         
         move_waist(pos_data)
-        time.sleep(1)  # 等待腰部运动完成
+        time.sleep(0.2)# 等待腰部运动完成
         
         move_arm(pos_data)
-        time.sleep(1)  # 等待手臂运动完成
+        time.sleep(0.2)# 等待手臂运动完成
         
-        move_head(pos_data)
-        time.sleep(1)  # 等待头部运动完成
+       #move_head(pos_data)
+       #time.sleep(0.2)# 等待头部运动完成
         
         print(f"完成: {file_name}.json")
         return True
@@ -142,7 +142,7 @@ def close_gripper():
         
         robot.move_ee_pos(joint_states_right)
         print("右夹爪闭合成功")
-        time.sleep(0.5)
+        time.sleep(0.1)
         
         robot.move_ee_pos(joint_states_left)
         print("左夹爪闭合成功")
@@ -175,7 +175,7 @@ def open_gripper():
         
         robot.move_ee_pos(joint_states_right)
         print("右夹爪张开成功")
-        time.sleep(0.5)
+        time.sleep(0.1)
         
         robot.move_ee_pos(joint_states_left)
         print("左夹爪张开成功")
@@ -199,17 +199,17 @@ def main():
     print("机器人初始化成功")
     
     sequence = [
-        ("第二天第一根P1", "姿态P1"),
-        ("第二天第一根P2", "姿态P2"),
-        ("第二天第一根P3", "姿态P3"),
-        ("第二天第一根P4", "姿态P4"),
-        ("CLOSE_GRIPPER", "闭合夹爪"),
-        ("第二天第一根P5", "姿态P5"),
-        ("第二天第一根P6", "姿态P6"),
-        ("第二天第一根P7", "姿态P7"),
         ("OPEN_GRIPPER", "张开夹爪"),
-        ("第二天第一根P9", "姿态P9"),
-        ("第二天第一根P10", "姿态P10")
+        ("最终第一根P1", "姿态P1"),
+        ("最终第一根P3", "姿态P3"),
+        ("CLOSE_GRIPPER", "闭合夹爪"),
+        ("最终第一根P4", "姿态P4"),
+        ("最终第一根P5", "姿态P5"),
+        ("最终第一根P6", "姿态P6"),
+        ("最终第一根P7", "姿态P7"),
+        ("OPEN_GRIPPER", "张开夹爪"),
+        ("最终第一根P9", "姿态P9"),
+        ("最终第一根P10", "姿态P10")
 
         
         

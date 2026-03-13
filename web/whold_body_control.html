@@ -236,7 +236,7 @@
                 $('#status').removeClass('alert-info alert-success alert-danger').addClass('alert-warning').text(`正在执行文件: ${selectedFileName}...`);
                 $('#executeBtn').prop('disabled', true);
                 
-                if (publish('/whold_body_control_file', { name: selectedFileName })) {
+                if (publish('/whole_body_control_file', { name: selectedFileName })) {
                     // 执行状态将通过onMessageArrived回调接收
                 } else {
                     $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text('发送执行命令失败');

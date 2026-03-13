@@ -283,7 +283,7 @@
                 $('#status').removeClass('alert-info alert-success alert-danger').addClass('alert-warning').text('正在执行文件: ' + selectedFileVal + '...');
                 $('#executeBtn').prop('disabled', true);
                 
-                if (publishMsg('/whold_body_control_file', { name: selectedFileVal })) {
+                if (publishMsg('/whole_body_control_file', { name: selectedFileVal })) {
                 } else {
                     $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text('发送执行命令失败');
                     $('#executeBtn').prop('disabled', false);
