@@ -221,9 +221,62 @@ def move_arm(pos_data):
         robot.move_arm_joint(arm_positions, arm_velocities, 2)
         print("上肢运动完成")
         
+        # 控制夹爪
+        control_gripper(pos_data)
+        
     except Exception as e:
         print(f"上肢运动失败: {e}")
         raise
+
+def control_gripper(pos_data):
+    """控制夹爪开合"""
+    try:
+        # 获取左夹爪位置（取值范围 [0, 1]，0=张开，1=闭合）
+        left_gripper_pos = get_joint_position(pos_data, 
+            "idx28_arm_l_gripper", "arm_l_gripper", "left_gripper", "LArm_Gripper",
+            "gripper_left", "left_tool", "gripper_l", "gripper_left_joint")
+        
+        # 获取右夹爪位置
+        right_gripper_pos = get_joint_position(pos_data, 
+            "idx68_arm_r_gripper", "arm_r_gripper", "right_gripper", "RArm_Gripper",
+            "gripper_right", "right_tool", "gripper_r", "gripper_right_joint")
+        
+        # 如果找到了夹爪数据，执行控制
+        if left_gripper_pos != 0.0 or right_gripper_pos != 0.0:
+            print(f"左夹爪位置: {left_gripper_pos}, 右夹爪位置: {right_gripper_pos}")
+            
+            # 控制左夹爪
+            if left_gripper_pos != 0.0:
+                joint_states_left = agibot_gdk.JointStates()
+                joint_states_left.group = "left_tool"
+                joint_states_left.target_type = "omnipicker"
+                
+                joint_state = agibot_gdk.JointState()
+                joint_state.position = left_gripper_pos
+                joint_states_left.states = [joint_state]
+                joint_states_left.nums = len(joint_states_left.states)
+                
+                robot.move_ee_pos(joint_states_left)
+                print("左夹爪控制成功")
+            
+            # 控制右夹爪
+            if right_gripper_pos != 0.0:
+                joint_states_right = agibot_gdk.JointStates()
+                joint_states_right.group = "right_tool"
+                joint_states_right.target_type = "omnipicker"
+                
+                joint_state = agibot_gdk.JointState()
+                joint_state.position = right_gripper_pos
+                joint_states_right.states = [joint_state]
+                joint_states_right.nums = len(joint_states_right.states)
+                
+                robot.move_ee_pos(joint_states_right)
+                print("右夹爪控制成功")
+        else:
+            print("未找到夹爪关节数据，跳过夹爪控制")
+        
+    except Exception as e:
+        print(f"夹爪控制失败: {e}")
 
 def move_head(pos_data):
     """控制头部运动"""
