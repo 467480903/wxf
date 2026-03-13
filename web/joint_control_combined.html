@@ -177,6 +177,24 @@
                     // 更新表格
                     updateFileTable(files);
                     $('#status').removeClass('alert-info alert-warning alert-danger').addClass('alert-success').text(`已读取 ${files.length} 个文件`);
+                    
+                    // 更新保存计数器基数，从文件列表中的最大编号开始
+                    if (files.length > 0) {
+                        var maxNum = 0;
+                        files.forEach(function(fileName) {
+                            var match = fileName.match(/^P(\d+)$/);
+                            if (match) {
+                                var num = parseInt(match[1], 10);
+                                if (num > maxNum) {
+                                    maxNum = num;
+                                }
+                            }
+                        });
+                        if (maxNum > 0) {
+                            saveCounterVal = maxNum + 1;
+                            $('#saveCount').text('P' + saveCounterVal);
+                        }
+                    }
                 }
             }
             

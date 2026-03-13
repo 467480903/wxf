@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 
 # 配置区
-POSITIONS_DIR = "/data/finalgys/wxf/positions"
+POSITIONS_DIR = "/data/wxf/wxf/positions"
 
 # 全局变量
 robot = None
@@ -30,7 +30,7 @@ def move_waist(pos_data):
             get_joint_position(pos_data, "idx04_body_joint4", "body_joint4", "joint4", "Body_Joint4"),
             get_joint_position(pos_data, "idx05_body_joint5", "body_joint5", "joint5", "Body_Joint5")
         ]
-        waist_velocities = [0.9] * 5
+        waist_velocities = [0.5] * 5
         robot.move_waist_joint(waist_positions, waist_velocities)
         print("腰部运动完成")
     except Exception as e:
@@ -199,17 +199,28 @@ def main():
     print("机器人初始化成功")
     
     sequence = [
-        ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终第一根P1", "姿态P1"),
-        ("最终第一根P3", "姿态P3"),
-        ("CLOSE_GRIPPER", "闭合夹爪"),
-        ("最终第一根P4", "姿态P4"),
-        ("最终第一根P5", "姿态P5"),
-        ("最终第一根P6", "姿态P6"),
-        ("最终第一根P7", "姿态P7"),
-        ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终第一根P9", "姿态P9"),
-        ("最终第一根P10", "姿态P10")
+        ("P1", " "),
+        ("P2", " "),
+        ("P3", " "),
+        ("P4", " "),
+        ("P5", " "),
+        ("P6", " "),
+        ("P7", " "),
+        ("P8", " "),
+        ("P9", " "),
+        ("P10"," "),
+        ("P11", " "),
+        ("P12", " "),
+        ("P13", " "),
+        ("P14", " "),
+        ("P15", " "),
+        ("P16", " "),
+        ("P17", " "),
+        ("P18", " "),
+        ("P19", " "),
+        ("P20", " ")
+
+
 
         
         

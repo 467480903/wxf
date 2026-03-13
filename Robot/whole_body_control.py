@@ -8,7 +8,7 @@ import paho.mqtt.client as mqtt
 from pathlib import Path
 
 # --- 配置区 ---
-POSITIONS_DIR = "/data/finalgys/wxf/positions"
+POSITIONS_DIR = "/data/wxf/wxf/positions"
 MQTT_BROKER = "127.0.0.1"
 MQTT_PORT = 1883
 TOPIC_CONTROL_FILE = "/whole_body_control_file"
