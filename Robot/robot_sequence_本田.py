@@ -144,8 +144,8 @@ def close_gripper():
         print("右夹爪闭合成功")
         time.sleep(0.1)
         
-        #robot.move_ee_pos(joint_states_left)
-        #print("左夹爪闭合成功")
+        robot.move_ee_pos(joint_states_left)
+        print("左夹爪闭合成功")
         
         print("夹爪闭合完成")
         return True
@@ -177,8 +177,8 @@ def open_gripper():
         print("右夹爪张开成功")
         time.sleep(0.1)
         
-       # robot.move_ee_pos(joint_states_left)
-        #print("左夹爪张开成功")
+        robot.move_ee_pos(joint_states_left)
+        print("左夹爪张开成功")
         
         print("夹爪张开完成")
         return True
@@ -200,56 +200,13 @@ def main():
     
     sequence = [
         ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终单手P1", "姿态P1"),
-        ("最终单手P3", "姿态P3"),
+        ("本田P1", "姿态P1"),
+        ("本田P2", "姿态P2"),
         ("CLOSE_GRIPPER", "闭合夹爪"),
-        ("最终单手P4", "姿态P4"),
-        ("最终单手P5", "姿态P5"),
-        ("最终单手P6", "姿态P6"),
-        ("最终单手第一P7", "姿态P7"),
+        ("本田P3", "姿态P3"),
+        ("本田P2", "姿态P2"),
         ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终单手P8", "姿态P8"),
-
-        ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终单手P1", "姿态P1"),
-        ("最终单手第二P3", "姿态P3"),
-        ("CLOSE_GRIPPER", "闭合夹爪"),
-        ("最终单手P4", "姿态P4"),
-        ("最终单手P5", "姿态P5"),
-        ("最终单手P6", "姿态P6"),
-        ("最终单手第二P7", "姿态P7"),
-        ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终单手P8", "姿态P8"),
-
-        ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终单手P1", "姿态P1"),
-        ("最终单手第三P3", "姿态P3"),
-        ("CLOSE_GRIPPER", "闭合夹爪"),
-        ("最终单手P4", "姿态P4"),
-        ("最终单手P5", "姿态P5"),
-        ("最终单手P6", "姿态P6"),
-        ("最终单手第三P7", "姿态P7"),
-        ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终单手P8", "姿态P8"),
-
-        ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终单手P1", "姿态P1"),
-        ("最终单手第四P3", "姿态P3"),
-        ("CLOSE_GRIPPER", "闭合夹爪"),
-        ("最终单手P4", "姿态P4"),
-        ("最终单手P5", "姿态P5"),
-        ("最终单手P6", "姿态P6"),
-        ("最终单手第四P7", "姿态P7"),
-        ("OPEN_GRIPPER", "张开夹爪"),
-        ("最终单手P8", "姿态P8"),
-        ("最终单手P1", "姿态P1")
-        
-
-        
-
-
-        
-        
+        ("本田P1", "姿态P1")
 
         
     ]

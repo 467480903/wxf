@@ -1,0 +1,204 @@
+{
+    "timestamp": 1773421170915031552,
+    "nums": 22,
+    "states": [
+        {
+            "name": "idx01_body_joint1",
+            "position": -0.753231,
+            "velocity": 0.0,
+            "effort": 0.0,
+            "motor_position": -0.753231,
+            "motor_current": -2.218,
+            "error_code": 0
+        },
+        {
+            "name": "idx02_body_joint2",
+            "position": 1.710489,
+            "velocity": 0.0,
+            "effort": 0.0,
+            "motor_position": 1.710489,
+            "motor_current": -11.565,
+            "error_code": 0
+        },
+        {
+            "name": "idx03_body_joint3",
+            "position": -0.88623,
+            "velocity": 0.0,
+            "effort": 0.0,
+            "motor_position": -0.88623,
+            "motor_current": -2.784,
+            "error_code": 0
+        },
+        {
+            "name": "idx04_body_joint4",
+            "position": 0.006614,
+            "velocity": 0.0,
+            "effort": 0.0,
+            "motor_position": 0.006614,
+            "motor_current": 0.373,
+            "error_code": 0
+        },
+        {
+            "name": "idx05_body_joint5",
+            "position": 0.037481,
+            "velocity": 0.0,
+            "effort": 0.0,
+            "motor_position": 0.037481,
+            "motor_current": 0.22,
+            "error_code": 0
+        },
+        {
+            "name": "idx11_head_joint1",
+            "position": -0.002646,
+            "velocity": 0.0,
+            "effort": 0.0,
+            "motor_position": -0.002646,
+            "motor_current": -0.135,
+            "error_code": 0
+        },
+        {
+            "name": "idx12_head_joint2",
+            "position": 0.0,
+            "velocity": 0.0,
+            "effort": 0.0,
+            "motor_position": 0.0,
+            "motor_current": -0.0,
+            "error_code": 0
+        },
+        {
+            "name": "idx13_head_joint3",
+            "position": 0.015146,
+            "velocity": 0.0,
+            "effort": 0.0,
+            "motor_position": 0.015146,
+            "motor_current": -0.298,
+            "error_code": 0
+        },
+        {
+            "name": "idx21_arm_l_joint1",
+            "position": 0.945333,
+            "velocity": 0.000566,
+            "effort": -25.8795,
+            "motor_position": 0.945333,
+            "motor_current": -17.253,
+            "error_code": 0
+        },
+        {
+            "name": "idx22_arm_l_joint2",
+            "position": -1.782256,
+            "velocity": 0.000194,
+            "effort": -10.125,
+            "motor_position": -1.782256,
+            "motor_current": -6.75,
+            "error_code": 0
+        },
+        {
+            "name": "idx23_arm_l_joint3",
+            "position": -1.271441,
+            "velocity": -0.000317,
+            "effort": 6.602,
+            "motor_position": -1.271441,
+            "motor_current": 6.602,
+            "error_code": 0
+        },
+        {
+            "name": "idx24_arm_l_joint4",
+            "position": -1.868994,
+            "velocity": 0.000481,
+            "effort": -11.356,
+            "motor_position": -1.868994,
+            "motor_current": -11.356,
+            "error_code": 0
+        },
+        {
+            "name": "idx25_arm_l_joint5",
+            "position": 0.163362,
+            "velocity": 0.00018,
+            "effort": 1.5448,
+            "motor_position": 0.163362,
+            "motor_current": 1.931,
+            "error_code": 0
+        },
+        {
+            "name": "idx26_arm_l_joint6",
+            "position": 0.514384,
+            "velocity": 0.000134,
+            "effort": -3.6304,
+            "motor_position": 0.514384,
+            "motor_current": -4.538,
+            "error_code": 0
+        },
+        {
+            "name": "idx27_arm_l_joint7",
+            "position": 0.297326,
+            "velocity": -0.000179,
+            "effort": -1.0704,
+            "motor_position": 0.297326,
+            "motor_current": -1.338,
+            "error_code": 0
+        },
+        {
+            "name": "idx61_arm_r_joint1",
+            "position": -0.941151,
+            "velocity": -0.000196,
+            "effort": 24.3825,
+            "motor_position": -0.941151,
+            "motor_current": 16.255,
+            "error_code": 0
+        },
+        {
+            "name": "idx62_arm_r_joint2",
+            "position": -1.733749,
+            "velocity": -0.000147,
+            "effort": -10.401,
+            "motor_position": -1.733749,
+            "motor_current": -6.934,
+            "error_code": 0
+        },
+        {
+            "name": "idx63_arm_r_joint3",
+            "position": 1.322171,
+            "velocity": -0.000112,
+            "effort": -4.689,
+            "motor_position": 1.322171,
+            "motor_current": -4.689,
+            "error_code": 0
+        },
+        {
+            "name": "idx64_arm_r_joint4",
+            "position": -1.910598,
+            "velocity": 0.000437,
+            "effort": -12.203,
+            "motor_position": -1.910598,
+            "motor_current": -12.203,
+            "error_code": 0
+        },
+        {
+            "name": "idx65_arm_r_joint5",
+            "position": -0.143317,
+            "velocity": 0.000385,
+            "effort": 1.9368,
+            "motor_position": -0.143317,
+            "motor_current": 2.421,
+            "error_code": 0
+        },
+        {
+            "name": "idx66_arm_r_joint6",
+            "position": 0.536453,
+            "velocity": -0.000107,
+            "effort": -1.9536,
+            "motor_position": 0.536453,
+            "motor_current": -2.442,
+            "error_code": 0
+        },
+        {
+            "name": "idx67_arm_r_joint7",
+            "position": -0.24879,
+            "velocity": -0.000292,
+            "effort": 2.324,
+            "motor_position": -0.24879,
+            "motor_current": 2.905,
+            "error_code": 0
+        }
+    ]
+}
