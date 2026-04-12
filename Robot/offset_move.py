@@ -79,92 +79,103 @@ class EndEffectorController:
     # ── 运动执行 ─────────────────────────────────────────────
 
     def _send_dual_trajectory(self, traj_left, traj_right):
-            """同时发送双臂的轨迹指令序列"""
-            dt = 1.0 / RATE_HZ  # 50Hz 时 dt = 0.02秒
-            steps = len(traj_left) # 左右臂步数是对齐的
+        """同时发送双臂的轨迹指令序列"""
+        dt = 1.0 / RATE_HZ  # 50Hz 时 dt = 0.02秒
+        steps = len(traj_left) # 左右臂步数是对齐的
+        
+        for i in range(steps):
+            wp_l = traj_left[i]
+            wp_r = traj_right[i]
             
-            for i in range(steps):
-                wp_l = traj_left[i]
-                wp_r = traj_right[i]
+            # --- 构造左臂指令 ---
+            end_pose_l = agibot_gdk.EndEffectorPose()
+            end_pose_l.life_time = LIFETIME
+            end_pose_l.group     = agibot_gdk.EndEffectorControlGroup.kLeftArm
+
+            end_pose_l.left_end_effector_pose.position.x    = wp_l["position"][0]
+            end_pose_l.left_end_effector_pose.position.y    = wp_l["position"][1]
+            end_pose_l.left_end_effector_pose.position.z    = wp_l["position"][2]
+            end_pose_l.left_end_effector_pose.orientation.x = wp_l["orientation"][0]
+            end_pose_l.left_end_effector_pose.orientation.y = wp_l["orientation"][1]
+            end_pose_l.left_end_effector_pose.orientation.z = wp_l["orientation"][2]
+            end_pose_l.left_end_effector_pose.orientation.w = wp_l["orientation"][3]
+
+            # --- 构造右臂指令 ---
+            end_pose_r = agibot_gdk.EndEffectorPose()
+            end_pose_r.life_time = LIFETIME
+            end_pose_r.group     = agibot_gdk.EndEffectorControlGroup.kRightArm
+
+            end_pose_r.right_end_effector_pose.position.x    = wp_r["position"][0]
+            end_pose_r.right_end_effector_pose.position.y    = wp_r["position"][1]
+            end_pose_r.right_end_effector_pose.position.z    = wp_r["position"][2]
+            end_pose_r.right_end_effector_pose.orientation.x = wp_r["orientation"][0]
+            end_pose_r.right_end_effector_pose.orientation.y = wp_r["orientation"][1]
+            end_pose_r.right_end_effector_pose.orientation.z = wp_r["orientation"][2]
+            end_pose_r.right_end_effector_pose.orientation.w = wp_r["orientation"][3]
+
+            try:
+                # 加入微小延时，防止底层指令被覆盖
+                ret_l = self.robot.end_effector_pose_control(end_pose_l)
+                time.sleep(0.002)  # 等待 2 毫秒
+                ret_r = self.robot.end_effector_pose_control(end_pose_r)
                 
-                # --- 构造左臂指令 ---
-                end_pose_l = agibot_gdk.EndEffectorPose()
-                end_pose_l.life_time = LIFETIME
-                end_pose_l.group     = agibot_gdk.EndEffectorControlGroup.kLeftArm
-
-                end_pose_l.left_end_effector_pose.position.x    = wp_l["position"][0]
-                end_pose_l.left_end_effector_pose.position.y    = wp_l["position"][1]
-                end_pose_l.left_end_effector_pose.position.z    = wp_l["position"][2]
-                end_pose_l.left_end_effector_pose.orientation.x = wp_l["orientation"][0]
-                end_pose_l.left_end_effector_pose.orientation.y = wp_l["orientation"][1]
-                end_pose_l.left_end_effector_pose.orientation.z = wp_l["orientation"][2]
-                end_pose_l.left_end_effector_pose.orientation.w = wp_l["orientation"][3]
-
-                # --- 构造右臂指令 ---
-                end_pose_r = agibot_gdk.EndEffectorPose()
-                end_pose_r.life_time = LIFETIME
-                end_pose_r.group     = agibot_gdk.EndEffectorControlGroup.kRightArm
-
-                end_pose_r.right_end_effector_pose.position.x    = wp_r["position"][0]
-                end_pose_r.right_end_effector_pose.position.y    = wp_r["position"][1]
-                end_pose_r.right_end_effector_pose.position.z    = wp_r["position"][2]
-                end_pose_r.right_end_effector_pose.orientation.x = wp_r["orientation"][0]
-                end_pose_r.right_end_effector_pose.orientation.y = wp_r["orientation"][1]
-                end_pose_r.right_end_effector_pose.orientation.z = wp_r["orientation"][2]
-                end_pose_r.right_end_effector_pose.orientation.w = wp_r["orientation"][3]
-
-                try:
-                    # 【关键修改】：加入微小延时，防止底层指令被覆盖
-                    ret_l = self.robot.end_effector_pose_control(end_pose_l)
-                    
-                    time.sleep(0.002)  # 等待 2 毫秒，让控制器消化左臂指令
-                    
-                    ret_r = self.robot.end_effector_pose_control(end_pose_r)
-                    
-                    if ret_l != 0 or ret_r != 0:
-                        print(f"  [警告] 第 {i} 步指令返回非零: 左={ret_l}, 右={ret_r}")
-                        return False
-                except Exception as e:
-                    print(f"  [错误] 第 {i} 步发送异常: {e}")
+                if ret_l != 0 or ret_r != 0:
+                    print(f"  [警告] 第 {i} 步指令返回非零: 左={ret_l}, 右={ret_r}")
                     return False
+            except Exception as e:
+                print(f"  [错误] 第 {i} 步发送异常: {e}")
+                return False
 
-                # 维持原本的 50Hz 发送频率，扣除掉前面消耗的 2 毫秒
-                time.sleep(max(0.0, dt - 0.002))
-                
-            return True
+            # 维持原本的 50Hz 发送频率，扣除掉前面消耗的 2 毫秒
+            time.sleep(max(0.0, dt - 0.002))
+            
+        return True
 
     # ── 主流程 ───────────────────────────────────────────────
 
-    def move_both_hands_up(self, offset_z: float = 0.05) -> bool:
+    def adjust_arms_relative(self, offset_l=(0.0, 0.0, 0.0), offset_r=(0.0, 0.0, 0.0)) -> bool:
         """
-        获取当前双臂位置，并控制双臂各自在 Z 轴加上 offset_z 的距离
+        分别设定左右臂的相对位移 (dx, dy, dz)，单位：米。
+        如果不动某只手，传入 (0.0, 0.0, 0.0) 即可。
         """
         print("=" * 55)
-        print(f"准备执行动作：双手向上移动 {offset_z * 1000} mm")
+        print(f"准备执行调整：")
+        print(f"  左臂偏移 (X, Y, Z): {offset_l}")
+        print(f"  右臂偏移 (X, Y, Z): {offset_r}")
         
         # 1. 获取当前状态
         status = self.robot.get_motion_control_status()
         start_l = self._find_pose(status, LEFT_NAME)
         start_r = self._find_pose(status, RIGHT_NAME)
 
-        print(f"  左手起点 Z: {start_l['position'][2]:.4f} m")
-        print(f"  右手起点 Z: {start_r['position'][2]:.4f} m")
-
-        # 2. 计算目标位姿（保持 XY 和姿态不变，Z 轴增加 offset_z）
+        # 2. 计算目标位姿
         target_l = {
-            "position": [start_l["position"][0], start_l["position"][1], start_l["position"][2] + offset_z],
+            "position": [
+                start_l["position"][0] + offset_l[0],
+                start_l["position"][1] + offset_l[1],
+                start_l["position"][2] + offset_l[2]
+            ],
             "orientation": list(start_l["orientation"])
         }
+        
         target_r = {
-            "position": [start_r["position"][0], start_r["position"][1], start_r["position"][2] + offset_z],
+            "position": [
+                start_r["position"][0] + offset_r[0],
+                start_r["position"][1] + offset_r[1],
+                start_r["position"][2] + offset_r[2]
+            ],
             "orientation": list(start_r["orientation"])
         }
 
-        # 3. 规划轨迹（取左右臂所需的最大步数，保证双臂同步到达）
+        # 3. 规划轨迹
         n_l = self._n_steps(start_l["position"], target_l["position"])
         n_r = self._n_steps(start_r["position"], target_r["position"])
         n_steps = max(n_l, n_r)
         
+        if n_steps <= 1:
+            print("  目标位置与当前位置过近，无需移动。")
+            return True
+
         print(f"  规划步数: {n_steps} 步")
 
         traj_l = self._plan(start_l, target_l, n_steps)
@@ -175,9 +186,9 @@ class EndEffectorController:
         success = self._send_dual_trajectory(traj_l, traj_r)
         
         if success:
-            print("双手向上移动完成")
+            print("调整完成")
         else:
-            print("双手向上移动失败")
+            print("调整失败")
         print("=" * 55)
         
         return success
@@ -199,8 +210,25 @@ def main():
     try:
         controller = EndEffectorController(robot)
         
-        # 调用新方法：双手向上移动 50mm (0.05m)
-        controller.move_both_hands_up(offset_z=0.1)
+        # ───────────────────────────────────────────────────────
+        # 使用说明：
+        # offset 参数格式为 (X偏移, Y偏移, Z偏移)，单位为 米。
+        # 坐标系规则： X+(向前)， Y+(向左)， Z+(向上)
+        # ───────────────────────────────────────────────────────
+
+        # 示例 1：仅仅让左臂向左移动 50mm (Y+方向)，右臂保持不动
+        # controller.adjust_arms_relative(offset_l=(0, 0.05, 0), offset_r=(0, 0, 0))
+
+        # 示例 2：仅仅让右臂向下移动 50mm (Z-方向)，左臂保持不动
+        # controller.adjust_arms_relative(offset_l=(0, 0, 0), offset_r=(0, 0, -0.05))
+        
+        # 示例 3：左臂向左 (Y+) 50mm，右臂向右 (Y-) 50mm，同时执行
+        # controller.adjust_arms_relative(offset_l=(0, -0.01, 0), offset_r=(0,    0.01, 0))
+        # controller.adjust_arms_relative(offset_l=(0, 0, -0.01   ), offset_r=(0,    0, -0.01))
+        
+        controller.adjust_arms_relative(offset_l=(0, 0, -0.05  ), offset_r=(0,    0, -0.05))
+        # 示例 4：双臂同时向前 (X+) 伸出 50mm
+        # controller.adjust_arms_relative(offset_l=(0.05, 0, 0), offset_r=(0.05, 0, 0))
 
     except Exception as e:
         print(f"[运行错误] {e}")
