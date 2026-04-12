@@ -23,7 +23,13 @@ try:
 
         # 保存图片
         os.makedirs("images", exist_ok=True)
-        filename = f"images/head_color.jpg"
+        
+        # 获取当前时间（格式：YYYYMMDD_HHMMSS，包含秒数）
+        time_str = time.strftime("%Y%m%d_%H%M%S")
+        filename = f"images/head_color_{time_str}.jpg"
+        
+        # 如果你只想要纯数字的累计秒数 (Epoch time)，可以使用下面这行代替上面两行：
+        # filename = f"images/head_color_{int(time.time())}.jpg"
 
         with open(filename, "wb") as f:
             f.write(img.data)

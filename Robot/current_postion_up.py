@@ -200,7 +200,7 @@ def main():
         controller = EndEffectorController(robot)
         
         # 调用新方法：双手向上移动 50mm (0.05m)
-        controller.move_both_hands_up(offset_z=0.05)
+        controller.move_both_hands_up(offset_z=0.2)
 
     except Exception as e:
         print(f"[运行错误] {e}")

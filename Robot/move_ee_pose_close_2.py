@@ -17,7 +17,7 @@ joint_states_right.target_type = "omnipicker"
 
 joint_state_r = agibot_gdk.JointState()
 # 【修改点】：张开夹爪的值改为 -0.785 (对应报错提示的下限)
-joint_state_r.position = -0.785  
+joint_state_r.position = 0
 joint_states_right.states = [joint_state_r]
 joint_states_right.nums = len(joint_states_right.states)
 
@@ -28,7 +28,7 @@ joint_states_left.target_type = "omnipicker"
 
 joint_state_l = agibot_gdk.JointState()
 # 【修改点】：张开夹爪的值改为 -0.785
-joint_state_l.position = -0.785  
+joint_state_l.position = 0
 joint_states_left.states = [joint_state_l]
 joint_states_left.nums = len(joint_states_left.states)
 
