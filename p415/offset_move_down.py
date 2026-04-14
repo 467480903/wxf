@@ -226,7 +226,7 @@ def main():
         # controller.adjust_arms_relative(offset_l=(0, -0.01, 0), offset_r=(0,    0.01, 0))
         # controller.adjust_arms_relative(offset_l=(0, 0, -0.01   ), offset_r=(0,    0, -0.01))
         
-        controller.adjust_arms_relative(offset_l=(0, 0, -0.05  ), offset_r=(0,    0, -0.05))
+        controller.adjust_arms_relative(offset_l=(0, 0, -0.02  ), offset_r=(0,    0, -0.02))
         # 示例 4：双臂同时向前 (X+) 伸出 50mm
         # controller.adjust_arms_relative(offset_l=(0.05, 0, 0), offset_r=(0.05, 0, 0))
 
