@@ -41,7 +41,6 @@ target.target.orientation.w = 0.967
 # 执行导航
 try:
     pnc.normal_navi(target)
-    # pnc.MoveChassis(target)
     print("正常导航请求发送成功")
 except Exception as e:
     print(f"正常导航失败: {e}")
