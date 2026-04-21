@@ -11,5 +11,5 @@ robot = RobotController()
 # time.sleep(0.5)
 # robot.go(4)
 # time.sleep(0.5)
-robot.go(1)
+robot.go(2)
 
