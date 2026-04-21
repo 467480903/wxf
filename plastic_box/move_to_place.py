@@ -5,13 +5,11 @@ import time
 robot = RobotController()
 
 # 导航到地图第0个点
-# robot.go(4)
+# robot.go(9)
 # time.sleep(0.5)
 # robot.go(10)
 # time.sleep(0.5)
-# robot.go(9)
+# robot.go(4)
 # time.sleep(0.5)
-robot.go(8)
+robot.go(1)
 
-# 高精度导航
-robot.go(8, high_precision=True)

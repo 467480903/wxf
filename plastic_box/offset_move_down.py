@@ -21,17 +21,16 @@ def main():
         # ───────────────────────────────────────────────────────
 
         # 示例 1：仅仅让左臂向左移动 50mm (Y+方向)，右臂保持不动
-        # controller.adjust_arms_relative(offset_l=(0, 0.01, 0), offset_r=(0, 0.01, 0))
+        # controller.adjust_arms_relative(offset_l=(0, 0.05, 0), offset_r=(0, 0, 0))
 
         # 示例 2：仅仅让右臂向下移动 50mm (Z-方向)，左臂保持不动
         # controller.adjust_arms_relative(offset_l=(0, 0, 0), offset_r=(0, 0, -0.05))
         
         # 示例 3：左臂向左 (Y+) 50mm，右臂向右 (Y-) 50mm，同时执行
-        # controller.adjust_arms_relative(offset_l=(0, 0, 0), offset_r=(0,   - 0.01, 0))
+        # controller.adjust_arms_relative(offset_l=(0, -0.01, 0), offset_r=(0,    0.01, 0))
         # controller.adjust_arms_relative(offset_l=(0, 0, -0.01   ), offset_r=(0,    0, -0.01))
         
-        controller.adjust_arms_relative(offset_l=(0, 0, 0.15  ), offset_r=(0,    0, 0.15))
-        # 示例 4：双臂同时向前 (X+) 伸出 50mm
+        controller.adjust_arms_relative(offset_l=(0, 0, -0.04  ), offset_r=(0,    0, -0.04))        # 示例 4：双臂同时向前 (X+) 伸出 50mm
         # controller.adjust_arms_relative(offset_l=(0.05, 0, 0), offset_r=(0.05, 0, 0))
 
     except Exception as e:

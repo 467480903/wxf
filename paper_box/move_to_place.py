@@ -11,7 +11,5 @@ robot = RobotController()
 # time.sleep(0.5)
 # robot.go(4)
 # time.sleep(0.5)
-robot.go(5)
+robot.go(1)
 
-# 高精度导航
-robot.go(5, high_precision=True)
