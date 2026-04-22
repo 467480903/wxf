@@ -21,7 +21,7 @@ def main():
         # ───────────────────────────────────────────────────────
 
 
-        controller.adjust_arms_relative(offset_l=(0, 0, 0.02  ), offset_r=(0,    0, 0.02))
+        controller.adjust_arms_relative(offset_l=(0, 0, 0.15  ), offset_r=(0,    0, 0.15))
         # controller.adjust_arms_relative(offset_l=(0,  0.15,0  ), offset_r=(0,     -0.15,0))#远
         # controller.adjust_arms_relative(offset_l=(0,  -0.02,0  ), offset_r=(0,     +0.02,0))#近
 

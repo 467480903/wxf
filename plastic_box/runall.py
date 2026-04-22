@@ -38,7 +38,8 @@ def run_script(script_name, max_retries=1):
     return False
 
 # 主程序
-scripts = ['/data/wxf/wxf_421/plastic_box/move_ee_pose_open_2.py',
+scripts = ['/data/wxf/wxf_421/plastic_box/move_to_pick.py',
+           '/data/wxf/wxf_421/plastic_box/move_ee_pose_open_2.py',
            '/data/wxf/wxf_421/plastic_box/move_arm_by_json_grab_above.py',
            '/data/wxf/wxf_421/plastic_box/move_waist_by_json_down.py', 
            '/data/wxf/wxf_421/plastic_box/move_ee_pose_close_2.py', 
