@@ -6,3 +6,4 @@ head_color_camera_images/
 images/
 *.pt
 lerobot_dataset/
+data_to_cloud/
