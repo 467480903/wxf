@@ -5,3 +5,4 @@ detect_results/
 head_color_camera_images/
 images/
 *.pt
+lerobot_dataset/
