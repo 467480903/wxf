@@ -4,7 +4,7 @@ import json
 import os
 
 # 定义JSON文件路径
-JSON_FILE_PATH = "/data/wxf/wxf/positions/arm_position_to_grab.json"
+JSON_FILE_PATH = "/data/wxf_/wxf_0504/positions/arm_default.json"
 
 # ================= 1. 读取 JSON 配置文件 =================
 print("正在读取目标位置配置...")
@@ -63,7 +63,7 @@ arm_velocities = [0.2] * 14  # 简写形式：生成包含 14 个 0.2 的列表
 try:
     print(f"准备发送手臂位置控制指令...")
     # 执行双臂关节运动
-    result = robot.move_arm_joint(arm_positions, arm_velocities, 2)
+    result = robot.move_arm_joint(arm_positions, arm_velocities)
     print("✅ 手臂控制成功")
 except Exception as e:
     print(f"❌ 手臂控制失败: {e}")
