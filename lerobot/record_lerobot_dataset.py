@@ -35,7 +35,7 @@ import agibot_gdk
 import time
 
 # MQTT配置
-MQTT_BROKER = "10.20.15.236"
+MQTT_BROKER = "127.0.0.1"
 MQTT_PORT = 1883
 MQTT_TOPIC = "/record_lerobot_dataset"
 MQTT_LOG_TOPIC = "/record_lerobot_dataset/log"
@@ -546,7 +546,7 @@ def on_message(client, userdata, msg):
 def main() -> None:
     """主函数，初始化MQTT客户端并保持运行"""
     # 创建MQTT客户端
-    client = mqtt.Client(client_id="record_lerobot_dataset_server", clean_session=True)
+    client = mqtt.Client(client_id="record_lerobot_dataset_server2", clean_session=True)
     
     # 设置回调函数
     client.on_connect = on_connect
