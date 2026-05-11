@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关节状态保存</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">关节状态保存</h1>
+        
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6 text-center">
+                <button class="btn btn-primary btn-lg" onclick="saveJointStates()">保存关节状态</button>
+            </div>
+        </div>
+        
+        <!-- 保存计数器显示 -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6 text-center">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h2 class="h5 mb-0">保存计数</h2>
+                    </div>
+                    <div class="card-body">
+                        <h3 id="saveCount" class="text-primary">P1</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 状态显示 -->
+        <div class="alert alert-info text-center mt-4" id="status">连接中...</div>
+    </div>
+    
+    <script src="jquery.min.js"></script>
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="paho-mqtt.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 保存计数器，初始值为1
+            let saveCounter = 1;
+            
+            // MQTT客户端配置
+            const clientId = 'save_joint_client_' + Math.random().toString(16).substr(2, 8);
+            const brokerHost = window.location.hostname;
+            const client = new Paho.Client(brokerHost, 9001, clientId);
+            
+            // 连接状态
+            let connected = false;
+            
+            // 设置回调函数
+            client.onConnectionLost = onConnectionLost;
+            client.onMessageArrived = onMessageArrived;
+            
+            // 连接参数
+            const connectionOptions = {
+                useSSL: false,
+                onSuccess: onConnect,
+                onFailure: onConnectFailure,
+                reconnect: true,
+                mqttVersion: 4 // MQTT 3.1.1
+            };
+            
+            // 连接到MQTT broker
+            client.connect(connectionOptions);
+            
+            // 连接成功回调
+            function onConnect() {
+                console.log('MQTT连接成功');
+                $('#status').removeClass('alert-info').addClass('alert-success').text('已连接');
+                connected = true;
+            }
+            
+            // 连接失败回调
+            function onConnectFailure(error) {
+                console.error('MQTT连接失败:', error.errorMessage);
+                $('#status').removeClass('alert-info').addClass('alert-danger').text('连接错误');
+                connected = false;
+            }
+            
+            // 连接丢失回调
+            function onConnectionLost(responseObject) {
+                if (responseObject.errorCode !== 0) {
+                    console.error('MQTT连接丢失:', responseObject.errorMessage);
+                    $('#status').removeClass('alert-info alert-success').addClass('alert-danger').text('已断开连接');
+                    connected = false;
+                }
+            }
+            
+            // 消息到达回调
+            function onMessageArrived(message) {
+                console.log('收到消息:', message.destinationName, ':', message.payloadString);
+            }
+            
+            // 发布消息
+            function publish(topic, payload) {
+                if (connected) {
+                    const mqttMessage = new Paho.Message(JSON.stringify(payload));
+                    mqttMessage.destinationName = topic;
+                    mqttMessage.qos = 1;
+                    mqttMessage.retained = false;
+                    client.send(mqttMessage);
+                    console.log('已发布消息到主题:', topic, payload);
+                    return true;
+                }
+                return false;
+            }
+            
+            // 保存关节状态
+            window.saveJointStates = function() {
+                // 生成保存名称，如P1, P2, P3...
+                const saveName = `P${saveCounter}`;
+                
+                // 发送MQTT消息
+                const success = publish('/save_joint_states', { name: saveName });
+                
+                if (success) {
+                    // 更新显示
+                    $('#saveCount').text(saveName);
+                    
+                    // 显示操作反馈
+                    const originalText = $('#status').text();
+                    $('#status').removeClass('alert-info alert-success alert-danger').addClass('alert-warning').text(`正在保存: ${saveName}...`);
+                    
+                    // 3秒后恢复状态显示
+                    setTimeout(() => {
+                        if (connected) {
+                            $('#status').removeClass('alert-info alert-danger alert-warning').addClass('alert-success').text(`已保存: ${saveName}`);
+                        } else {
+                            $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text('已断开连接');
+                        }
+                    }, 3000);
+                    
+                    // 递增计数器
+                    saveCounter++;
+                } else {
+                    $('#status').removeClass('alert-info alert-success alert-danger').addClass('alert-danger').text('保存失败：未连接到服务器');
+                    
+                    // 3秒后恢复状态显示
+                    setTimeout(() => {
+                        if (connected) {
+                            $('#status').removeClass('alert-info alert-danger alert-warning').addClass('alert-success').text('已连接');
+                        } else {
+                            $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text('已断开连接');
+                        }
+                    }, 3000);
+                }
+            };
+        });
+    </script>
+</body>
+</html>

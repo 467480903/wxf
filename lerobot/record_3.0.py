@@ -110,9 +110,13 @@ def record_thread_function(args):
     dt = 1.0 / args.fps
     t0 = time.monotonic()
     frame_idx = 0
+    
+    # 跟踪最后一帧图像
+    last_frames = {}
     joint_names = [
         "idx61_arm_r_joint1", "idx62_arm_r_joint2", "idx63_arm_r_joint3",
-        "idx64_arm_r_joint4", "idx65_arm_r_joint5", "idx66_arm_r_joint6", "idx67_arm_r_joint7"
+        "idx64_arm_r_joint4", "idx65_arm_r_joint5", "idx66_arm_r_joint6", "idx67_arm_r_joint7",
+        "right_gripper"
     ]
 
     log_message(f"开始录制 Episode {args.episode_id}...")
@@ -123,10 +127,26 @@ def record_thread_function(args):
             
             # 1. 状态采集
             js = robot.get_joint_states()
+            end_state = robot.get_end_state()
+            
             # 增加安全检查：确保 js 不是 None 且包含 states
             if js and "states" in js:
                 states_map = {s['name']: s['position'] for s in js.get("states", [])}
-                current_state = [states_map.get(name, 0.0) for name in joint_names]
+                # 获取右臂关节状态
+                current_state = [states_map.get(name, 0.0) for name in joint_names[:-1]]
+                
+                # 获取右臂夹爪张开角度
+                if end_state and "right_end_state" in end_state:
+                    right_end = end_state["right_end_state"]
+                    if "end_states" in right_end and right_end["end_states"]:
+                        # 假设夹爪关节是第一个关节
+                        gripper_position = right_end["end_states"][0]["position"]
+                    else:
+                        gripper_position = 0.0
+                else:
+                    gripper_position = 0.0
+                    
+                current_state.append(gripper_position)
             else:
                 current_state = [0.0] * len(joint_names)
 
@@ -146,6 +166,8 @@ def record_thread_function(args):
                             if (frame.shape[1], frame.shape[0]) != (640, 480):
                                 frame = cv2.resize(frame, (640, 480))
                             video_writers[cam.key].write(frame)
+                            # 保存最后一帧
+                            last_frames[cam.key] = frame.copy()
                         else:
                             log_message(f"警告: {cam.key} 解码失败")
                 else:
@@ -186,6 +208,21 @@ def record_thread_function(args):
     except Exception as e:
         log_message(f"录制异常: {e}")
     finally:
+        # 保存最后一帧图像
+        if last_frames:
+            try:
+                lastframe_dir = episode_dir / "lastframe"
+                lastframe_dir.mkdir(parents=True, exist_ok=True)
+                
+                for cam_key, frame in last_frames.items():
+                    if frame is not None:
+                        img_path = lastframe_dir / f"{cam_key}.jpg"
+                        cv2.imwrite(str(img_path), frame)
+                
+                log_message(f"最后一帧图像已保存到: {lastframe_dir}")
+            except Exception as e:
+                log_message(f"保存最后一帧图像失败: {e}")
+        
         for w in video_writers.values(): w.release()
         camera.close_camera()
 

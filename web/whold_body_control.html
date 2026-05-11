@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全身关节控制</title>
+    <link rel="stylesheet" href="bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">全身关节控制</h1>
+        
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-12 text-center">
+                <button class="btn btn-primary btn-lg mr-4" onclick="readFileList()">读取文件</button>
+                <button class="btn btn-success btn-lg" onclick="executeSelectedFile()" id="executeBtn" disabled>执行</button>
+            </div>
+        </div>
+        
+        <!-- 文件列表表格 -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h2 class="h5 mb-0">位置文件列表</h2>
+                    </div>
+                    <div class="card-body">
+                        <table id="fileTable" class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">选择</th>
+                                    <th scope="col">文件名</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fileTableBody">
+                                <tr>
+                                    <td colspan="2" class="text-center">点击"读取文件"按钮加载文件列表</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 状态显示 -->
+        <div class="alert alert-info text-center mt-4" id="status">连接中...</div>
+    </div>
+    
+    <script src="jquery.min.js"></script>
+    <script src="bootstrap.bundle.min.js"></script>
+    <script src="paho-mqtt.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 选中的文件名
+            let selectedFileName = null;
+            
+            // MQTT客户端配置
+            const clientId = 'whole_body_client_' + Math.random().toString(16).substr(2, 8);
+            const brokerHost = window.location.hostname;
+            const client = new Paho.Client(brokerHost, 9001, clientId);
+            
+            // 连接状态
+            let connected = false;
+            
+            // 设置回调函数
+            client.onConnectionLost = onConnectionLost;
+            client.onMessageArrived = onMessageArrived;
+            
+            // 连接参数
+            const connectionOptions = {
+                useSSL: false,
+                onSuccess: onConnect,
+                onFailure: onConnectFailure,
+                reconnect: true,
+                mqttVersion: 4 // MQTT 3.1.1
+            };
+            
+            // 连接到MQTT broker
+            client.connect(connectionOptions);
+            
+            // 连接成功回调
+            function onConnect() {
+                console.log('MQTT连接成功');
+                $('#status').removeClass('alert-info').addClass('alert-success').text('已连接');
+                connected = true;
+                // 订阅控制状态和响应主题
+                client.subscribe('/whole_body_control');
+                client.subscribe('/whole_body_control_response');
+            }
+            
+            // 连接失败回调
+            function onConnectFailure(error) {
+                console.error('MQTT连接失败:', error.errorMessage);
+                $('#status').removeClass('alert-info').addClass('alert-danger').text('连接错误');
+                connected = false;
+            }
+            
+            // 连接丢失回调
+            function onConnectionLost(responseObject) {
+                if (responseObject.errorCode !== 0) {
+                    console.error('MQTT连接丢失:', responseObject.errorMessage);
+                    $('#status').removeClass('alert-info alert-success').addClass('alert-danger').text('已断开连接');
+                    connected = false;
+                }
+            }
+            
+            // 消息到达回调
+            function onMessageArrived(message) {
+                console.log('收到消息:', message.destinationName, ':', message.payloadString);
+                
+                try {
+                    const payload = JSON.parse(message.payloadString);
+                    
+                    if (message.destinationName === '/whole_body_control') {
+                        // 处理控制状态消息
+                        handleControlStatus(payload);
+                    } else if (message.destinationName === '/whole_body_control_response') {
+                        // 处理控制响应消息
+                        handleControlResponse(payload);
+                    }
+                } catch (e) {
+                    console.error('解析消息失败:', e);
+                }
+            }
+            
+            // 处理控制状态消息
+            function handleControlStatus(payload) {
+                const states = payload.states;
+                const message = payload.message || '';
+                
+                if (states === 'running') {
+                    $('#status').removeClass('alert-info alert-success alert-danger').addClass('alert-warning').text('机器人正在运动中...');
+                    $('#executeBtn').prop('disabled', true);
+                    $('#readFileBtn').prop('disabled', true);
+                } else if (states === 'done') {
+                    $('#status').removeClass('alert-info alert-warning alert-danger').addClass('alert-success').text('机器人运动完成');
+                    $('#executeBtn').prop('disabled', false);
+                    $('#readFileBtn').prop('disabled', false);
+                } else if (states === 'error') {
+                    $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text(`运动失败: ${message}`);
+                    $('#executeBtn').prop('disabled', false);
+                    $('#readFileBtn').prop('disabled', false);
+                }
+            }
+            
+            // 处理控制响应消息
+            function handleControlResponse(payload) {
+                if (payload.command === 'file_list') {
+                    const files = payload.files || [];
+                    const error = payload.error || '';
+                    
+                    if (error) {
+                        $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text(`读取文件列表失败: ${error}`);
+                        return;
+                    }
+                    
+                    // 更新表格
+                    updateFileTable(files);
+                    $('#status').removeClass('alert-info alert-warning alert-danger').addClass('alert-success').text(`已读取 ${files.length} 个文件`);
+                }
+            }
+            
+            // 更新文件表格
+            function updateFileTable(files) {
+                const tableBody = $('#fileTableBody');
+                tableBody.empty();
+                
+                if (files.length === 0) {
+                    tableBody.append(`
+                        <tr>
+                            <td colspan="2" class="text-center">未找到位置文件</td>
+                        </tr>
+                    `);
+                    return;
+                }
+                
+                files.forEach(fileName => {
+                    tableBody.append(`
+                        <tr>
+                            <td><input type="radio" name="fileRadio" value="${fileName}" onclick="selectFile('${fileName}')"></td>
+                            <td>${fileName}</td>
+                        </tr>
+                    `);
+                });
+            }
+            
+            // 发布消息
+            function publish(topic, payload) {
+                if (connected) {
+                    const mqttMessage = new Paho.Message(JSON.stringify(payload));
+                    mqttMessage.destinationName = topic;
+                    mqttMessage.qos = 1;
+                    mqttMessage.retained = false;
+                    client.send(mqttMessage);
+                    console.log('已发布消息到主题:', topic, payload);
+                    return true;
+                }
+                return false;
+            }
+            
+            // 读取文件列表
+            window.readFileList = function() {
+                if (!connected) {
+                    $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text('未连接到服务器');
+                    return;
+                }
+                
+                $('#status').removeClass('alert-info alert-success alert-danger').addClass('alert-warning').text('正在读取文件列表...');
+                
+                if (publish('/whole_body_control_request', { command: 'read_file_list' })) {
+                    // 文件列表将通过onMessageArrived回调接收
+                } else {
+                    $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text('发送请求失败');
+                }
+            };
+            
+            // 选择文件
+            window.selectFile = function(fileName) {
+                selectedFileName = fileName;
+                $('#executeBtn').prop('disabled', false);
+            };
+            
+            // 执行选中的文件
+            window.executeSelectedFile = function() {
+                if (!connected) {
+                    $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text('未连接到服务器');
+                    return;
+                }
+                
+                if (!selectedFileName) {
+                    $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text('请先选择一个文件');
+                    return;
+                }
+                
+                $('#status').removeClass('alert-info alert-success alert-danger').addClass('alert-warning').text(`正在执行文件: ${selectedFileName}...`);
+                $('#executeBtn').prop('disabled', true);
+                
+                if (publish('/whold_body_control_file', { name: selectedFileName })) {
+                    // 执行状态将通过onMessageArrived回调接收
+                } else {
+                    $('#status').removeClass('alert-info alert-success alert-warning').addClass('alert-danger').text('发送执行命令失败');
+                    $('#executeBtn').prop('disabled', false);
+                }
+            };
+        });
+    </script>
+</body>
+</html>
