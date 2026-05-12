@@ -68,8 +68,14 @@ def save_joint_states(save_name):
             }
             data_to_save["states"].append(joint_data)
         
+        # 定义保存目录为 wxf 文件夹下的 positions 文件夹
+        save_dir = "/data/ggyss/wxf/positions"
+        
+        # 确保保存目录存在
+        Path(save_dir).mkdir(parents=True, exist_ok=True)
+        
         # 生成文件名
-        filename = f"{save_name}.json"
+        filename = f"{save_dir}/{save_name}.json"
         
         # 保存为JSON文件
         with open(filename, "w", encoding="utf-8") as f:

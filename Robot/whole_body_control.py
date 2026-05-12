@@ -8,7 +8,7 @@ import paho.mqtt.client as mqtt
 from pathlib import Path
 
 # --- 配置区 ---
-POSITIONS_DIR = "positions"
+POSITIONS_DIR = "/data/ggyss/wxf/positions"
 MQTT_BROKER = "127.0.0.1"
 MQTT_PORT = 1883
 TOPIC_CONTROL_FILE = "/whold_body_control_file"
@@ -66,6 +66,19 @@ def handle_control_file(payload):
         # 读取JSON文件
         with open(file_path, "r", encoding="utf-8") as f:
             pos_data = json.load(f)
+        
+        # 检查数据格式 - 兼容两种格式：简单字典格式和完整状态格式
+        if "states" in pos_data and isinstance(pos_data["states"], list):
+            # 完整状态格式，提取motor_position
+            joint_data = {}
+            for state in pos_data["states"]:
+                if "name" in state and "motor_position" in state:
+                    joint_data[state["name"]] = state["motor_position"]
+            pos_data = joint_data
+        # 否则假设已经是简单字典格式 {joint_name: position}
+        
+        # 打印可用的关节数据进行调试
+        print(f"可用关节数据: {list(pos_data.keys())}")
         
         # 发送开始运动的状态
         publish_message(TOPIC_CONTROL_STATUS, {"states": "running"})
@@ -135,17 +148,26 @@ def handle_control_request(payload):
                 "error": str(e)
             })
 
+# --- 辅助函数：获取关节位置，支持多种名称格式 ---
+def get_joint_position(pos_data, *possible_names):
+    """尝试多种可能的关节名称，返回找到的位置值"""
+    for name in possible_names:
+        if name in pos_data:
+            return pos_data[name]
+    # 如果都没找到，返回0.0
+    return 0.0
+
 # --- 运动控制函数 ---
 def move_waist(pos_data):
     """控制腰部和腿部运动"""
     try:
-        # 提取腰部关节数据
+        # 提取腰部关节数据，支持多种名称格式
         waist_positions = [
-            pos_data.get("idx01_body_joint1", 0.0),
-            pos_data.get("idx02_body_joint2", 0.0),
-            pos_data.get("idx03_body_joint3", 0.0),
-            pos_data.get("idx04_body_joint4", 0.0),
-            pos_data.get("idx05_body_joint5", 0.0)
+            get_joint_position(pos_data, "idx01_body_joint1", "body_joint1", "joint1", "Body_Joint1"),
+            get_joint_position(pos_data, "idx02_body_joint2", "body_joint2", "joint2", "Body_Joint2"),
+            get_joint_position(pos_data, "idx03_body_joint3", "body_joint3", "joint3", "Body_Joint3"),
+            get_joint_position(pos_data, "idx04_body_joint4", "body_joint4", "joint4", "Body_Joint4"),
+            get_joint_position(pos_data, "idx05_body_joint5", "body_joint5", "joint5", "Body_Joint5")
         ]
         
         waist_velocities = [0.3] * 5
@@ -161,34 +183,42 @@ def move_waist(pos_data):
 def move_arm(pos_data):
     """控制上肢运动"""
     try:
-        # 提取左臂关节数据
+        # 提取左臂关节数据，支持多种名称格式
         left_arm_pos = [
-            pos_data.get("idx21_arm_l_joint1", 0.0),
-            pos_data.get("idx22_arm_l_joint2", 0.0),
-            pos_data.get("idx23_arm_l_joint3", 0.0),
-            pos_data.get("idx24_arm_l_joint4", 0.0),
-            pos_data.get("idx25_arm_l_joint5", 0.0),
-            pos_data.get("idx26_arm_l_joint6", 0.0),
-            pos_data.get("idx27_arm_l_joint7", 0.0)
+            get_joint_position(pos_data, "idx21_arm_l_joint1", "arm_l_joint1", "left_arm_joint1", "LArm_Joint1"),
+            get_joint_position(pos_data, "idx22_arm_l_joint2", "arm_l_joint2", "left_arm_joint2", "LArm_Joint2"),
+            get_joint_position(pos_data, "idx23_arm_l_joint3", "arm_l_joint3", "left_arm_joint3", "LArm_Joint3"),
+            get_joint_position(pos_data, "idx24_arm_l_joint4", "arm_l_joint4", "left_arm_joint4", "LArm_Joint4"),
+            get_joint_position(pos_data, "idx25_arm_l_joint5", "arm_l_joint5", "left_arm_joint5", "LArm_Joint5"),
+            get_joint_position(pos_data, "idx26_arm_l_joint6", "arm_l_joint6", "left_arm_joint6", "LArm_Joint6"),
+            get_joint_position(pos_data, "idx27_arm_l_joint7", "arm_l_joint7", "left_arm_joint7", "LArm_Joint7")
         ]
         
-        # 提取右臂关节数据
+        # 提取右臂关节数据，支持多种名称格式
         right_arm_pos = [
-            pos_data.get("idx61_arm_r_joint1", 0.0),
-            pos_data.get("idx62_arm_r_joint2", 0.0),
-            pos_data.get("idx63_arm_r_joint3", 0.0),
-            pos_data.get("idx64_arm_r_joint4", 0.0),
-            pos_data.get("idx65_arm_r_joint5", 0.0),
-            pos_data.get("idx66_arm_r_joint6", 0.0),
-            pos_data.get("idx67_arm_r_joint7", 0.0)
+            get_joint_position(pos_data, "idx61_arm_r_joint1", "arm_r_joint1", "right_arm_joint1", "RArm_Joint1"),
+            get_joint_position(pos_data, "idx62_arm_r_joint2", "arm_r_joint2", "right_arm_joint2", "RArm_Joint2"),
+            get_joint_position(pos_data, "idx63_arm_r_joint3", "arm_r_joint3", "right_arm_joint3", "RArm_Joint3"),
+            get_joint_position(pos_data, "idx64_arm_r_joint4", "arm_r_joint4", "right_arm_joint4", "RArm_Joint4"),
+            get_joint_position(pos_data, "idx65_arm_r_joint5", "arm_r_joint5", "right_arm_joint5", "RArm_Joint5"),
+            get_joint_position(pos_data, "idx66_arm_r_joint6", "arm_r_joint6", "right_arm_joint6", "RArm_Joint6"),
+            get_joint_position(pos_data, "idx67_arm_r_joint7", "arm_r_joint7", "right_arm_joint7", "RArm_Joint7")
         ]
         
         # 合并为机器人接口所需的 14 个关节数组
         arm_positions = left_arm_pos + right_arm_pos
         arm_velocities = [0.2] * 14
         
-        # 执行手臂运动
-        robot.move_arm_joint(arm_positions, arm_velocities)
+        # 打印调试信息
+        print(f"左臂关节位置：{left_arm_pos}")
+        print(f"右臂关节位置：{right_arm_pos}")
+        
+        # 检查是否所有关节位置都是 0
+        if all(p == 0.0 for p in left_arm_pos) and all(p == 0.0 for p in right_arm_pos):
+            print("警告：所有手臂关节位置都是 0，可能关节名称不匹配")
+        
+        # 执行手臂运动（添加超时参数2，与move_arm_joint.py一致）
+        robot.move_arm_joint(arm_positions, arm_velocities, 2)
         print("上肢运动完成")
         
     except Exception as e:
@@ -198,11 +228,11 @@ def move_arm(pos_data):
 def move_head(pos_data):
     """控制头部运动"""
     try:
-        # 提取头部关节数据
+        # 提取头部关节数据，支持多种名称格式
         head_positions = [
-            pos_data.get("idx11_head_joint1", 0.0),
-            pos_data.get("idx12_head_joint2", 0.0),
-            pos_data.get("idx13_head_joint3", 0.0)
+            get_joint_position(pos_data, "idx11_head_joint1", "head_joint1", "Head_Joint1"),
+            get_joint_position(pos_data, "idx12_head_joint2", "head_joint2", "Head_Joint2"),
+            get_joint_position(pos_data, "idx13_head_joint3", "head_joint3", "Head_Joint3")
         ]
         
         head_velocities = [0.3] * 3
@@ -220,10 +250,7 @@ def publish_message(topic, payload):
     """发布MQTT消息"""
     if client and client.is_connected():
         try:
-            message = mqtt.MQTTMessage()
-            message.payload = json.dumps(payload).encode()
-            message.topic = topic
-            client.publish(message)
+            client.publish(topic, json.dumps(payload), qos=1)
             print(f"已发布消息到主题 {topic}: {payload}")
         except Exception as e:
             print(f"发布消息失败: {e}")
