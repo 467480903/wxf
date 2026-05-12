@@ -358,6 +358,57 @@ class RobotController:
         self._cancel_navi()
         return False
 
+    def go_by_number(self,
+                     num: int,
+                     high_precision: bool = False,
+                     timeout: float = 120.0) -> bool:
+        """
+        使用数字编号导航到指定点位（需要先运行 rename_waypoints.py 生成配置）
+        
+        Parameters
+        ----------
+        num : int
+            导航点数字编号（1, 2, 3...），对应重命名后的顺序
+        high_precision : bool
+            是否使用高精度导航
+        timeout : float
+            超时时间（秒）
+        
+        Returns
+        -------
+        bool : True=成功到达，False=失败
+        """
+        import json
+        
+        json_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "waypoints_renamed.json"
+        )
+        
+        if not os.path.exists(json_path):
+            self._log(f"❌ 未找到重命名配置文件: {json_path}")
+            self._log("   请先运行: python3 rename_waypoints.py --map-id 7")
+            return False
+        
+        try:
+            with open(json_path, encoding='utf-8') as f:
+                data = json.load(f)
+            
+            # 查找对应的原始ID
+            target_name = str(num)
+            for wp in data['waypoints']:
+                if wp['name'] == target_name:
+                    original_name = wp['original_name']
+                    self._log(f"📌 将数字 {num} 映射到原始导航点: '{original_name}'")
+                    return self.go(original_name, high_precision, timeout)
+            
+            self._log(f"❌ 未找到数字编号为 '{num}' 的导航点")
+            return False
+            
+        except Exception as e:
+            self._log(f"❌ 读取重命名配置文件失败: {e}")
+            return False
+
     def go_sequence(self,
                     waypoints: List[Union[int, str]],
                     high_precision: bool = False,
