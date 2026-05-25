@@ -26,22 +26,24 @@ def main():
         
 
 
-        'move-pick4.py',
+        'move-pick3.py',
         'move_ee_pose_open_2.py',
         'move_arm_by_json_grab_above.py',
         'move_waist_by_json_down.py',
         'move_ee_pose_close_2.py',
         'offset_move_up.py',
         'move_waist_by_json_up.py',
-        'move-put4.py',
+        'move-put3.py',
         'move_waist_by_json_down.py',
         'offset_move_down.py',
         'move_ee_pose_open_2.py',
         'offset_move_up.py',
         'move_waist_by_json_up.py',
         'move_arm_by_json_default.py',
-        'move_waist_by_json_default.py',
-        'move-back4.py',
+        'move_waist_by_json_default.py'
+
+
+        
         
             ]
 

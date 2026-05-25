@@ -41,8 +41,7 @@ def main():
         'offset_move_up.py',
         'move_waist_by_json_up.py',
         'move_arm_by_json_default.py',
-        'move_waist_by_json_default.py',
-        'move-back1.py',
+        'move_waist_by_json_default.py'
 
 
         

@@ -7,3 +7,4 @@ robot = RobotController()
 robot.go(14)
 # 高精度导航
 # robot.go(5, high_precision=True)
+
