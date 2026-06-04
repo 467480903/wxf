@@ -4,9 +4,9 @@ import math
 robot = RobotController()
 
 # 导航到地图第0个点
-robot.go(6)
-robot.go(7)
+robot.go(17)
 robot.go(8)
+robot.go(9)
 robot.go(0)
 
 

@@ -41,7 +41,7 @@ def main():
         'move_waist_by_json_up.py',
         'move_arm_by_json_default.py',
         'move_waist_by_json_default.py'
-
+        #        'move-back2.py'
 
         
         

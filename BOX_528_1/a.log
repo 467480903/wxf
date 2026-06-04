@@ -1,0 +1,525 @@
+开始依次执行脚本序列...
+==================================================
+正在执行: move-pick2.py
+执行成功: move-pick2.py
+标准输出:
+Init glog with processor name:python3.10, pid:883147
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+正在初始化 GDK...
+正在从地图读取导航点...
+地图 id=12，读到 18 个导航点
+
+🚀 导航到: '1' [map] (普通)
+   目标: (-1.7424, -0.3040, 0.0000)
+   等待启动...
+ 已启动
+
+   运行中... 1s/120s
+   运行中... 1s/120s
+   成功... 2s/120s
+✅ 已到达 '1'！耗时 1.5s
+
+🚀 导航到: '2' [map] (普通)
+   目标: (1.9969, 0.4073, 0.0000)
+   等待启动...
+ 已启动
+
+   运行中... 1s/120s
+   运行中... 1s/120s
+   运行中... 2s/120s
+   运行中... 2s/120s
+   运行中... 3s/120s
+   运行中... 3s/120s
+   运行中... 4s/120s
+   运行中... 4s/120s
+   运行中... 5s/120s
+   运行中... 5s/120s
+   运行中... 6s/120s
+   运行中... 6s/120s
+   运行中... 7s/120s
+   运行中... 7s/120s
+   运行中... 8s/120s
+   运行中... 8s/120s
+   运行中... 9s/120s
+   运行中... 9s/120s
+   运行中... 10s/120s
+   运行中... 10s/120s
+   运行中... 11s/120s
+   运行中... 11s/120s
+   成功... 12s/120s
+✅ 已到达 '2'！耗时 11.5s
+
+--------------------------------------------------
+正在执行: move_ee_pose_open_2.py
+执行成功: move_ee_pose_open_2.py
+标准输出:
+Init glog with processor name:python3.10, pid:884812
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+GDK初始化成功
+右夹爪张开成功
+左夹爪张开成功
+GDK释放成功
+
+--------------------------------------------------
+正在执行: move_arm_by_json_grab_above.py
+执行成功: move_arm_by_json_grab_above.py
+标准输出:
+Init glog with processor name:python3.10, pid:885044
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+正在读取目标位置配置...
+✅ JSON 配置读取成功
+✅ GDK初始化成功
+准备发送手臂位置控制指令...
+✅ 手臂控制成功
+✅ GDK释放成功
+
+--------------------------------------------------
+正在执行: move_waist_by_json_down.py
+执行成功: move_waist_by_json_down.py
+标准输出:
+Init glog with processor name:python3.10, pid:885703
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+正在读取腰部目标位置配置...
+✅ JSON 配置读取成功
+✅ GDK初始化成功
+准备发送腰部位置控制指令: [-1.049, 2.437, -0.869, 0.0, 0.0]
+✅ 腰部控制成功
+✅ GDK释放成功
+
+--------------------------------------------------
+正在执行: move_ee_pose_close_2.py
+执行成功: move_ee_pose_close_2.py
+标准输出:
+Init glog with processor name:python3.10, pid:886416
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+GDK初始化成功
+右夹爪张开成功
+左夹爪张开成功
+GDK释放成功
+
+--------------------------------------------------
+正在执行: offset_move_up.py
+执行成功: offset_move_up.py
+标准输出:
+Init glog with processor name:python3.10, pid:886652
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+GDK 初始化成功
+=======================================================
+准备执行调整：
+  左臂偏移 (X, Y, Z): (0, 0, 0.15)
+  右臂偏移 (X, Y, Z): (0, 0, 0.15)
+  规划步数: 150 步
+  正在执行...
+调整完成
+=======================================================
+GDK释放成功
+
+--------------------------------------------------
+正在执行: move_waist_by_json_up.py
+执行成功: move_waist_by_json_up.py
+标准输出:
+Init glog with processor name:python3.10, pid:887177
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+正在读取腰部目标位置配置...
+✅ JSON 配置读取成功
+✅ GDK初始化成功
+准备发送腰部位置控制指令: [-0.298, 0.545, 0.004, 0.0, 0.0]
+✅ 腰部控制成功
+✅ GDK释放成功
+
+--------------------------------------------------
+正在执行: move-put2.py
+执行成功: move-put2.py
+标准输出:
+Init glog with processor name:python3.10, pid:888156
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+正在初始化 GDK...
+正在从地图读取导航点...
+地图 id=12，读到 18 个导航点
+
+🚀 导航到: '3' [map] (普通)
+   目标: (2.0650, -0.5013, 0.0000)
+   等待启动...
+ 已启动
+
+   运行中... 1s/120s
+   运行中... 1s/120s
+   运行中... 2s/120s
+   运行中... 2s/120s
+   运行中... 3s/120s
+   运行中... 3s/120s
+   运行中... 4s/120s
+   运行中... 4s/120s
+   运行中... 5s/120s
+   运行中... 5s/120s
+   运行中... 6s/120s
+   运行中... 6s/120s
+   运行中... 7s/120s
+   成功... 7s/120s
+✅ 已到达 '3'！耗时 7.0s
+
+🚀 导航到: '4' [map] (普通)
+   目标: (-12.3279, -0.0219, 0.0000)
+   等待启动...
+ 已启动
+
+   运行中... 1s/120s
+   运行中... 1s/120s
+   运行中... 2s/120s
+   运行中... 2s/120s
+   运行中... 3s/120s
+   运行中... 3s/120s
+   运行中... 4s/120s
+   运行中... 4s/120s
+   运行中... 5s/120s
+   运行中... 5s/120s
+   运行中... 6s/120s
+   运行中... 6s/120s
+   运行中... 7s/120s
+   运行中... 7s/120s
+   运行中... 8s/120s
+   运行中... 8s/120s
+   运行中... 9s/120s
+   运行中... 9s/120s
+   运行中... 10s/120s
+   运行中... 10s/120s
+   运行中... 11s/120s
+   运行中... 11s/120s
+   运行中... 12s/120s
+   运行中... 12s/120s
+   运行中... 13s/120s
+   运行中... 13s/120s
+   运行中... 14s/120s
+   运行中... 14s/120s
+   运行中... 15s/120s
+   运行中... 15s/120s
+   运行中... 16s/120s
+   运行中... 16s/120s
+   运行中... 17s/120s
+   运行中... 17s/120s
+   运行中... 18s/120s
+   运行中... 18s/120s
+   运行中... 19s/120s
+   运行中... 19s/120s
+   运行中... 20s/120s
+   运行中... 20s/120s
+   运行中... 21s/120s
+   运行中... 21s/120s
+   运行中... 22s/120s
+   运行中... 22s/120s
+   运行中... 23s/120s
+   运行中... 23s/120s
+   运行中... 24s/120s
+   运行中... 24s/120s
+   运行中... 25s/120s
+   运行中... 25s/120s
+   运行中... 26s/120s
+   运行中... 26s/120s
+   运行中... 27s/120s
+   运行中... 27s/120s
+   运行中... 28s/120s
+   成功... 28s/120s
+✅ 已到达 '4'！耗时 28.0s
+
+🚀 导航到: '5' [map] (普通)
+   目标: (-29.1010, 0.5686, 0.0000)
+   等待启动...
+ 已启动
+
+   运行中... 1s/120s
+   运行中... 1s/120s
+   运行中... 2s/120s
+   运行中... 2s/120s
+   运行中... 3s/120s
+   运行中... 3s/120s
+   运行中... 4s/120s
+   运行中... 4s/120s
+   运行中... 5s/120s
+   运行中... 5s/120s
+   运行中... 6s/120s
+   运行中... 6s/120s
+   运行中... 7s/120s
+   运行中... 7s/120s
+   运行中... 8s/120s
+   运行中... 8s/120s
+   运行中... 9s/120s
+   运行中... 9s/120s
+   运行中... 10s/120s
+   运行中... 10s/120s
+   运行中... 11s/120s
+   运行中... 11s/120s
+   运行中... 12s/120s
+   运行中... 12s/120s
+   运行中... 13s/120s
+   运行中... 13s/120s
+   运行中... 14s/120s
+   运行中... 14s/120s
+   运行中... 15s/120s
+   运行中... 15s/120s
+   运行中... 16s/120s
+   运行中... 16s/120s
+   运行中... 17s/120s
+   运行中... 17s/120s
+   运行中... 18s/120s
+   运行中... 18s/120s
+   运行中... 19s/120s
+   运行中... 19s/120s
+   运行中... 20s/120s
+   运行中... 20s/120s
+   运行中... 21s/120s
+   运行中... 21s/120s
+   运行中... 22s/120s
+   运行中... 22s/120s
+   运行中... 23s/120s
+   运行中... 23s/120s
+   运行中... 24s/120s
+   运行中... 24s/120s
+   运行中... 25s/120s
+   运行中... 25s/120s
+   运行中... 26s/120s
+   运行中... 26s/120s
+   运行中... 27s/120s
+   运行中... 27s/120s
+   运行中... 28s/120s
+   运行中... 28s/120s
+   运行中... 29s/120s
+   运行中... 29s/120s
+   运行中... 30s/120s
+   运行中... 30s/120s
+   运行中... 31s/120s
+   运行中... 31s/120s
+   成功... 32s/120s
+✅ 已到达 '5'！耗时 31.5s
+
+🚀 导航到: '6' [map] (普通)
+   目标: (-42.1546, 0.6982, 0.0000)
+   等待启动...
+ 已启动
+
+   运行中... 1s/120s
+   运行中... 1s/120s
+   运行中... 2s/120s
+   运行中... 2s/120s
+   运行中... 3s/120s
+   运行中... 3s/120s
+   运行中... 4s/120s
+   运行中... 4s/120s
+   运行中... 5s/120s
+   运行中... 5s/120s
+   运行中... 6s/120s
+   运行中... 6s/120s
+   运行中... 7s/120s
+   运行中... 7s/120s
+   运行中... 8s/120s
+   运行中... 8s/120s
+   运行中... 9s/120s
+   运行中... 9s/120s
+   运行中... 10s/120s
+   运行中... 10s/120s
+   运行中... 11s/120s
+   运行中... 11s/120s
+   运行中... 12s/120s
+   运行中... 12s/120s
+   运行中... 13s/120s
+   运行中... 13s/120s
+   运行中... 14s/120s
+   运行中... 14s/120s
+   运行中... 15s/120s
+   运行中... 15s/120s
+   运行中... 16s/120s
+   运行中... 16s/120s
+   运行中... 17s/120s
+   运行中... 17s/120s
+   运行中... 18s/120s
+   运行中... 18s/120s
+   运行中... 19s/120s
+   运行中... 19s/120s
+   运行中... 20s/120s
+   运行中... 20s/120s
+   运行中... 21s/120s
+   运行中... 21s/120s
+   运行中... 22s/120s
+   运行中... 22s/120s
+   运行中... 23s/120s
+   运行中... 23s/120s
+   运行中... 24s/120s
+   运行中... 24s/120s
+   运行中... 25s/120s
+   运行中... 25s/120s
+   运行中... 26s/120s
+   运行中... 26s/120s
+   运行中... 27s/120s
+   运行中... 27s/120s
+   成功... 28s/120s
+✅ 已到达 '6'！耗时 27.5s
+
+🚀 导航到: '7' [map] (普通)
+   目标: (-42.2832, 4.6339, 0.0000)
+   等待启动...
+ 已启动
+
+   运行中... 1s/120s
+   运行中... 1s/120s
+   运行中... 2s/120s
+   运行中... 2s/120s
+   运行中... 3s/120s
+   运行中... 3s/120s
+   运行中... 4s/120s
+   运行中... 4s/120s
+   运行中... 5s/120s
+   运行中... 5s/120s
+   运行中... 6s/120s
+   运行中... 6s/120s
+   运行中... 7s/120s
+   运行中... 7s/120s
+   运行中... 8s/120s
+   运行中... 8s/120s
+   运行中... 9s/120s
+   运行中... 9s/120s
+   成功... 10s/120s
+✅ 已到达 '7'！耗时 9.5s
+
+--------------------------------------------------
+正在执行: move_waist_by_json_down.py
+执行成功: move_waist_by_json_down.py
+标准输出:
+Init glog with processor name:python3.10, pid:898195
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+正在读取腰部目标位置配置...
+✅ JSON 配置读取成功
+✅ GDK初始化成功
+准备发送腰部位置控制指令: [-1.049, 2.437, -0.869, 0.0, 0.0]
+✅ 腰部控制成功
+✅ GDK释放成功
+
+--------------------------------------------------
+正在执行: offset_move_down.py
+执行成功: offset_move_down.py
+标准输出:
+Init glog with processor name:python3.10, pid:899156
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+GDK 初始化成功
+=======================================================
+准备执行调整：
+  左臂偏移 (X, Y, Z): (0, 0, -0.14)
+  右臂偏移 (X, Y, Z): (0, 0, -0.14)
+  规划步数: 140 步
+  正在执行...
+调整完成
+=======================================================
+GDK释放成功
+
+--------------------------------------------------
+正在执行: move_ee_pose_open_2.py
+执行成功: move_ee_pose_open_2.py
+标准输出:
+Init glog with processor name:python3.10, pid:899684
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+GDK初始化成功
+右夹爪张开成功
+左夹爪张开成功
+GDK释放成功
+
+--------------------------------------------------
+正在执行: offset_move_up.py
+执行成功: offset_move_up.py
+标准输出:
+Init glog with processor name:python3.10, pid:899924
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+GDK 初始化成功
+=======================================================
+准备执行调整：
+  左臂偏移 (X, Y, Z): (0, 0, 0.15)
+  右臂偏移 (X, Y, Z): (0, 0, 0.15)
+  规划步数: 150 步
+  正在执行...
+调整完成
+=======================================================
+GDK释放成功
+
+--------------------------------------------------
+正在执行: move_waist_by_json_up.py
+执行成功: move_waist_by_json_up.py
+标准输出:
+Init glog with processor name:python3.10, pid:900415
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+正在读取腰部目标位置配置...
+✅ JSON 配置读取成功
+✅ GDK初始化成功
+准备发送腰部位置控制指令: [-0.298, 0.545, 0.004, 0.0, 0.0]
+✅ 腰部控制成功
+✅ GDK释放成功
+
+--------------------------------------------------
+正在执行: move_arm_by_json_default.py
+执行成功: move_arm_by_json_default.py
+标准输出:
+Init glog with processor name:python3.10, pid:901316
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+正在读取目标位置配置...
+✅ JSON 配置读取成功
+✅ GDK初始化成功
+准备发送手臂位置控制指令...
+✅ 手臂控制成功
+✅ GDK释放成功
+
+--------------------------------------------------
+正在执行: move_waist_by_json_default.py
+执行成功: move_waist_by_json_default.py
+标准输出:
+Init glog with processor name:python3.10, pid:902045
+Initialising DDS
+Default PTP device /dev/ptp_xgi0 is not valid, try /dev/ptp3
+Default PTP device /dev/ptp3 is not valid.
+No valid PTP device found
+正在读取腰部目标位置配置...
+✅ JSON 配置读取成功
+✅ GDK初始化成功
+准备发送腰部位置控制指令: [-0.698, 1.571, -0.873, 0.0, 0.0]
+✅ 腰部控制成功
+✅ GDK释放成功
+
+--------------------------------------------------
+所有脚本执行完成！
