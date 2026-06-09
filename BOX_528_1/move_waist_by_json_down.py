@@ -4,7 +4,7 @@ import json
 import os
 
 # 定义JSON文件路径
-JSON_FILE_PATH = "/data/wxf/wxf/positions/waist_position_to_down.json"
+JSON_FILE_PATH = "/data/btgys/bengtian_backup_20260608_081250/wxf/positions/waist_position_to_down.json"
 
 # ================= 1. 读取 JSON 配置文件 =================
 print("正在读取腰部目标位置配置...")

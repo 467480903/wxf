@@ -4,7 +4,5 @@ import math
 robot = RobotController()
 
 # 使用导航点索引进行导航（整数索引）
-robot.go(4)
-
-robot.go(5)
+robot.go(3)
 
