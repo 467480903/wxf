@@ -8,3 +8,5 @@ images/
 lerobot_dataset/
 lerobot/lerobot_dataset/
 data_to_cloud/
+yolo/images/*.jpg
+yolo/images/*.png
