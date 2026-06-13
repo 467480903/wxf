@@ -69,8 +69,8 @@ class WebCameraViewerWithSave:
             # (agibot_gdk.CameraType.kHeadStereoRight, "头部双目右相机"),
             # (agibot_gdk.CameraType.kHandLeftColor, "左手彩色相机"),
             # (agibot_gdk.CameraType.kHandRightColor, "右手彩色相机"),
-            (agibot_gdk.CameraType.kHeadDepth, "头部深度相机"),
-            (agibot_gdk.CameraType.kHeadColor, "头部彩色相机"),
+            (agibot_gdk.CameraType.kHeadDepth, "kHeadDepth"),
+            (agibot_gdk.CameraType.kHeadColor, "kHeadColor"),
         ]
 
         # RGB 相机索引集合（有颜色信息的相机才显示保存按钮）

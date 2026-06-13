@@ -36,7 +36,7 @@ joint_states_left.nums = len(joint_states_left.states)
 try:
     robot.move_ee_pos(joint_states_right)
     print("右夹爪张开成功")
-    time.sleep(0.5)  # 等待动作完成
+    time.sleep(0.02)  # 等待动作完成
 except Exception as e:
     print(f"右夹爪张开失败: {e}")
 
@@ -45,8 +45,6 @@ try:
     print("左夹爪张开成功")
 except Exception as e:
     print(f"左夹爪张开失败: {e}")
-
-time.sleep(1.0)
 
 
 # 释放GDK系统资源
