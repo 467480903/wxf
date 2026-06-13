@@ -18,7 +18,6 @@ from ultralytics import YOLO
 # ===================== 全局配置 =====================
 IMG_PATH = 'head.jpg'                    # 输入的 RGB 图像
 DEPTH_RAW_PATH = 'head_depth.raw'        # 深度原始数据文件
-
 DEPTH_SHAPE = (400, 640)                 # 深度图尺寸 (H, W)，根据实际情况修改（当前文件 512000B = 400x640）
 MODEL_PATH = '06132022.pt'               # YOLO 模型路径
 SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
@@ -66,11 +65,14 @@ def _auto_reshape(raw_bytes: bytes) -> np.ndarray | None:
     n_pixels = len(raw_bytes) // 2
     # 常见深度相机分辨率
     common_resolutions = [
+        (400, 640),   # 当前实际尺寸
         (480, 640),   # 最常见的 VGA
         (480, 848),   # 广角
         (360, 640),
         (720, 1280),
         (240, 424),
+        (400, 848),   # 其他可能
+        (720, 960),
     ]
     for H, W in common_resolutions:
         if H * W == n_pixels:
@@ -273,16 +275,60 @@ def draw_and_calculate(img, img_h, img_w, img_center_x, pt1, pt2,
 
 # ===================== 深度值采样 =====================
 
-def get_depth_at_pixel(depth_raw: np.ndarray, x: int, y: int) -> float:
+def get_depth_at_pixel(depth_raw: np.ndarray, x: int, y: int, search_radius: int = 10) -> float:
     """
     获取深度图 (x, y) 位置的深度值 (mm)。
-    如果坐标越界或深度为0（无效），返回 -1。
+    如果坐标越界或深度为0（无效），则在周围 search_radius 范围内搜索最近的有效深度点。
+    search_radius: 搜索半径，默认为10像素
     """
     h, w = depth_raw.shape[:2]
-    if x < 0 or x >= w or y < 0 or y >= h:
+    
+    # 首先尝试获取目标点深度
+    if 0 <= x < w and 0 <= y < h:
+        val = depth_raw[y, x]
+        if val > 0:
+            return float(val)
+    
+    # 目标点无效，进行邻近搜索（BFS方式）
+    for r in range(1, search_radius + 1):
+        # 搜索半径为 r 的菱形区域
+        for dx in range(-r, r + 1):
+            for dy in range(-r, r + 1):
+                if abs(dx) + abs(dy) != r:  # 只搜索当前半径的边缘
+                    continue
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h:
+                    val = depth_raw[ny, nx]
+                    if val > 0:
+                        return float(val)
+    
+    # 搜索范围内没有找到有效深度
+    return -1.0
+
+
+def get_average_depth(depth_raw: np.ndarray, x: int, y: int, radius: int = 5) -> float:
+    """
+    获取深度图 (x, y) 位置周围半径 radius 范围内的平均深度值 (mm)。
+    只计算有效深度点（值 > 0）的平均值。
+    radius: 搜索半径，默认为5像素
+    """
+    h, w = depth_raw.shape[:2]
+    
+    depths = []
+    for dx in range(-radius, radius + 1):
+        for dy in range(-radius, radius + 1):
+            # 计算到中心点的距离，只保留在半径范围内的点
+            if dx * dx + dy * dy <= radius * radius:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < w and 0 <= ny < h:
+                    val = depth_raw[ny, nx]
+                    if val > 0:
+                        depths.append(val)
+    
+    if len(depths) == 0:
         return -1.0
-    val = depth_raw[y, x]
-    return float(val) if val > 0 else -1.0
+    
+    return float(np.mean(depths))
 
 
 # ===================== 主流程 =====================
@@ -327,15 +373,20 @@ def main():
     # 5. 深度采样
     print("\n[4] 深度值采样...")
 
-    # 点 a 左侧 5 个像素: (cx1 - 5, cy1)
-    sample_a_left_x = int(cx1) - 5
+    # 点 a 左侧 12 个像素: (cx1 - 12, cy1)，读取周围半径5像素的平均深度
+    sample_a_left_x = int(cx1) - 12
     sample_a_left_y = int(cy1)
-    depth_a_left = get_depth_at_pixel(depth_raw, sample_a_left_x, sample_a_left_y)
+    depth_a_left = get_average_depth(depth_raw, sample_a_left_x, sample_a_left_y, radius=5)
 
-    # 点 b 右侧 5 个像素: (cx2 + 5, cy2)
-    sample_b_right_x = int(cx2) + 5
+    # 点 b 右侧 12 个像素: (cx2 + 12, cy2)，读取周围半径5像素的平均深度
+    sample_b_right_x = int(cx2) + 12
     sample_b_right_y = int(cy2)
-    depth_b_right = get_depth_at_pixel(depth_raw, sample_b_right_x, sample_b_right_y)
+    depth_b_right = get_average_depth(depth_raw, sample_b_right_x, sample_b_right_y, radius=5)
+
+    # a 和 b 的中心点，读取周围半径5像素的平均深度
+    sample_center_x = int((cx1 + cx2) / 2)
+    sample_center_y = int((cy1 + cy2) / 2)
+    depth_center = get_average_depth(depth_raw, sample_center_x, sample_center_y, radius=5)
 
     # 中心点对比
     depth_a_center = get_depth_at_pixel(depth_raw, int(cx1), int(cy1))
@@ -343,9 +394,10 @@ def main():
 
     print(f"\n===== 深度采样结果 =====")
     print(f"点 {label1} 中心 ({cx1:.1f}, {cy1:.1f}) 深度: {depth_a_center:.1f} mm")
-    print(f"点 {label1} 左侧 5px ({sample_a_left_x}, {sample_a_left_y}) 深度: {depth_a_left:.1f} mm")
+    print(f"点 {label1} 左侧 12px ({sample_a_left_x}, {sample_a_left_y}) 周围半径5像素平均深度: {depth_a_left:.1f} mm")
     print(f"点 {label2} 中心 ({cx2:.1f}, {cy2:.1f}) 深度: {depth_b_center:.1f} mm")
-    print(f"点 {label2} 右侧 5px ({sample_b_right_x}, {sample_b_right_y}) 深度: {depth_b_right:.1f} mm")
+    print(f"点 {label2} 右侧 12px ({sample_b_right_x}, {sample_b_right_y}) 周围半径5像素平均深度: {depth_b_right:.1f} mm")
+    print(f"a-b 中心点 ({sample_center_x}, {sample_center_y}) 周围半径5像素平均深度: {depth_center:.1f} mm")
 
     # ===== 生成伪彩色深度图 =====
     valid_mask = depth_raw > 0
@@ -365,25 +417,32 @@ def main():
     print(f"✅ 深度图已保存: yolo_depth_depth.jpg")
 
     # 6. 在 RGB 图上标注深度采样点
-    # 点 a 左侧 5px（紫色圆点 + 箭头）
+    # 点 a 左侧 12px（紫色圆点 + 箭头）
     if 0 <= sample_a_left_x < img_w and 0 <= sample_a_left_y < img_h:
         cv2.circle(img, (sample_a_left_x, sample_a_left_y), 5, (255, 0, 255), -1)
-        cv2.putText(img, f'L5:{depth_a_left:.0f}mm',
-                    (sample_a_left_x - 60, sample_a_left_y - 10),
+        cv2.putText(img, f'L12:{depth_a_left:.0f}mm',
+                    (sample_a_left_x - 65, sample_a_left_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
         cv2.arrowedLine(img, (int(cx1), int(cy1)),
                         (sample_a_left_x, sample_a_left_y),
                         (255, 0, 255), 1, tipLength=0.3)
 
-    # 点 b 右侧 5px（青色圆点 + 箭头）
+    # 点 b 右侧 12px（青色圆点 + 箭头）
     if 0 <= sample_b_right_x < img_w and 0 <= sample_b_right_y < img_h:
         cv2.circle(img, (sample_b_right_x, sample_b_right_y), 5, (255, 255, 0), -1)
-        cv2.putText(img, f'R5:{depth_b_right:.0f}mm',
+        cv2.putText(img, f'R12:{depth_b_right:.0f}mm',
                     (sample_b_right_x + 5, sample_b_right_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
         cv2.arrowedLine(img, (int(cx2), int(cy2)),
                         (sample_b_right_x, sample_b_right_y),
                         (255, 255, 0), 1, tipLength=0.3)
+
+    # a-b 中心点（绿色圆点）
+    if 0 <= sample_center_x < img_w and 0 <= sample_center_y < img_h:
+        cv2.circle(img, (sample_center_x, sample_center_y), 6, (0, 255, 0), -1)
+        cv2.putText(img, f'Center:{depth_center:.0f}mm',
+                    (sample_center_x + 10, sample_center_y + 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
     out_rgb_with_depth = 'yolo_depth_rgb_with_depth.jpg'
     cv2.imwrite(out_rgb_with_depth, img)
@@ -393,16 +452,23 @@ def main():
     depth_marked = depth_colored.copy()
     if 0 <= sample_a_left_x < img_w and 0 <= sample_a_left_y < img_h:
         cv2.circle(depth_marked, (sample_a_left_x, sample_a_left_y), 5, (255, 0, 255), -1)
-        cv2.putText(depth_marked, f'{label1}_L5:{depth_a_left:.0f}mm',
-                    (sample_a_left_x - 70, sample_a_left_y - 10),
+        cv2.putText(depth_marked, f'{label1}_L12:{depth_a_left:.0f}mm',
+                    (sample_a_left_x - 75, sample_a_left_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
     if 0 <= sample_b_right_x < img_w and 0 <= sample_b_right_y < img_h:
         cv2.circle(depth_marked, (sample_b_right_x, sample_b_right_y), 5, (255, 255, 0), -1)
-        cv2.putText(depth_marked, f'{label2}_R5:{depth_b_right:.0f}mm',
+        cv2.putText(depth_marked, f'{label2}_R12:{depth_b_right:.0f}mm',
                     (sample_b_right_x + 5, sample_b_right_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
     cv2.circle(depth_marked, (int(cx1), int(cy1)), 5, (0, 255, 255), -1)
     cv2.circle(depth_marked, (int(cx2), int(cy2)), 5, (0, 255, 255), -1)
+    
+    # a-b 中心点
+    if 0 <= sample_center_x < img_w and 0 <= sample_center_y < img_h:
+        cv2.circle(depth_marked, (sample_center_x, sample_center_y), 6, (0, 255, 0), -1)
+        cv2.putText(depth_marked, f'Center:{depth_center:.0f}mm',
+                    (sample_center_x + 10, sample_center_y + 15),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
     cv2.imwrite('yolo_depth_depth_marked.jpg', depth_marked)
     print(f"✅ 深度图标注已保存: yolo_depth_depth_marked.jpg")
@@ -424,9 +490,10 @@ def main():
     print(f"  - 与水平夹角: {calc['angle_deg']:.2f} deg ({calc['angle_rad']:.4f} rad)")
     print(f"深度信息:")
     print(f"  - 点 {label1} 中心深度: {depth_a_center:.1f} mm")
-    print(f"  - 点 {label1} 左侧 5px 深度: {depth_a_left:.1f} mm")
+    print(f"  - 点 {label1} 左侧 12px 周围半径5像素平均深度: {depth_a_left:.1f} mm")
     print(f"  - 点 {label2} 中心深度: {depth_b_center:.1f} mm")
-    print(f"  - 点 {label2} 右侧 5px 深度: {depth_b_right:.1f} mm")
+    print(f"  - 点 {label2} 右侧 12px 周围半径5像素平均深度: {depth_b_right:.1f} mm")
+    print(f"  - a-b 中心点 ({sample_center_x}, {sample_center_y}) 周围半径5像素平均深度: {depth_center:.1f} mm")
     print(f"输出文件:")
     print(f"  - {out_rgb}")
     print(f"  - {out_rgb_with_depth}")

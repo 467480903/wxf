@@ -11,3 +11,4 @@ data_to_cloud/
 yolo/images/*.jpg
 yolo/images/*.png
 yolo/yolo-env/
+yolo/*.jpg
