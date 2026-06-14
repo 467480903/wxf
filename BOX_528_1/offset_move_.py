@@ -25,8 +25,10 @@ def main():
         # 坐标系规则： X+(向前)， Y+(向左)， Z+(向上)
         # ───────────────────────────────────────────────────────
 
-        controller.adjust_arms_relative(offset_l=(-0.10, 0, 0), offset_r=(-0.10, 0, 0))#后缩
+        # controller.adjust_arms_relative(offset_l=(-0.10, 0, 0), offset_r=(-0.10, 0, 0))#后缩
         # controller.adjust_arms_relative(offset_l=(-0.005, 0, 0), offset_r=(0, 0, 0))#前伸
+        controller.adjust_arms_relative(offset_l=(0, 0, -0.06   ), offset_r=(0, 0, -0.06   ))#下降60
+
 
     except Exception as e:
         print(f"[运行错误] {e}")

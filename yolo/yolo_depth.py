@@ -10,6 +10,8 @@ yolo_depth.py
 4. 输出标注后的图像及深度信息
 """
 
+
+
 import cv2
 import numpy as np
 import os
@@ -129,8 +131,10 @@ def yolo_detect(image_path: str):
     boxes_b = collect_boxes_by_class('b')
     boxes_c = collect_boxes_by_class('c')
     boxes_d = collect_boxes_by_class('d')
+    boxes_g = collect_boxes_by_class('g')
+    boxes_h = collect_boxes_by_class('h')
 
-    print(f"检测到 a={len(boxes_a)}, b={len(boxes_b)}, c={len(boxes_c)}, d={len(boxes_d)}")
+    print(f"检测到 a={len(boxes_a)}, b={len(boxes_b)}, c={len(boxes_c)}, d={len(boxes_d)}, g={len(boxes_g)}, h={len(boxes_h)}")
 
     # ========== 策略选择两个画线点 ==========
     pt1 = pt2 = None
@@ -155,10 +159,10 @@ def yolo_detect(image_path: str):
         print("策略: 使用最高置信度的 2 个 d 画线")
     else:
         print(f"❌ 无法满足任何画线条件")
-        return None, None, None, None, None, None
+        return None, None, None, None, None, None, None, None
 
     return (img, img_h, img_w, img_center_x, pt1, pt2,
-            boxes_a, boxes_b, boxes_c, boxes_d)
+            boxes_a, boxes_b, boxes_c, boxes_d, boxes_g, boxes_h)
 
 
 def get_label(pt, ba, bb, bc, bd):
@@ -184,9 +188,6 @@ def draw_and_calculate(img, img_h, img_w, img_center_x, pt1, pt2,
 
     print(f"点1: label={label1}, conf={conf1:.4f}, center=({cx1:.1f}, {cy1:.1f})")
     print(f"点2: label={label2}, conf={conf2:.4f}, center=({cx2:.1f}, {cy2:.1f})")
-
-    color1 = label_color(label1)
-    color2 = label_color(label2)
 
     color1 = label_color(label1)
     color2 = label_color(label2)
@@ -346,7 +347,7 @@ def main():
         return
 
     (img, img_h, img_w, img_center_x, pt1, pt2,
-     boxes_a, boxes_b, boxes_c, boxes_d) = result
+     boxes_a, boxes_b, boxes_c, boxes_d, boxes_g, boxes_h) = result
 
     # 2. 画线、计算偏移和斜率
     print("\n[2] 画线 & 计算偏移 & 斜率...")
@@ -398,6 +399,74 @@ def main():
     print(f"点 {label2} 中心 ({cx2:.1f}, {cy2:.1f}) 深度: {depth_b_center:.1f} mm")
     print(f"点 {label2} 右侧 12px ({sample_b_right_x}, {sample_b_right_y}) 周围半径5像素平均深度: {depth_b_right:.1f} mm")
     print(f"a-b 中心点 ({sample_center_x}, {sample_center_y}) 周围半径5像素平均深度: {depth_center:.1f} mm")
+
+    # ===== 5b. 检测 g/h 并画线 =====
+    has_gh = len(boxes_g) >= 1 and len(boxes_h) >= 1
+    gh_info = {}
+    if has_gh:
+        print("\n[5b] 检测到 g 和 h，画线并计算中点偏移...")
+        # 取最高置信度的 g 和 h
+        g_box = boxes_g[0]
+        h_box = boxes_h[0]
+        g_cx, g_cy, g_x1, g_y1, g_x2, g_y2, g_conf = g_box
+        h_cx, h_cy, h_x1, h_y1, h_x2, h_y2, h_conf = h_box
+
+        print(f"g: conf={g_conf:.4f}, center=({g_cx:.1f}, {g_cy:.1f})")
+        print(f"h: conf={h_conf:.4f}, center=({h_cx:.1f}, {h_cy:.1f})")
+
+        # 画 g 框（橙色）
+        cv2.rectangle(img, (int(g_x1), int(g_y1)), (int(g_x2), int(g_y2)), (0, 100, 255), 2)
+        cv2.putText(img, f'g {g_conf:.2f}', (int(g_x1), int(g_y1)-10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 100, 255), 2)
+
+        # 画 h 框（粉红色）
+        cv2.rectangle(img, (int(h_x1), int(h_y1)), (int(h_x2), int(h_y2)), (255, 0, 255), 2)
+        cv2.putText(img, f'h {h_conf:.2f}', (int(h_x1), int(h_y1)-10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 255), 2)
+
+        # 画 gh 连线（棕色）
+        cv2.line(img, (int(g_cx), int(g_cy)), (int(h_cx), int(h_cy)), (0, 75, 150), 2)
+
+        # gh 中点
+        gh_center_x = (g_cx + h_cx) / 2
+        gh_center_y = (g_cy + h_cy) / 2
+        cv2.circle(img, (int(gh_center_x), int(gh_center_y)), 8, (0, 75, 150), -1)
+        cv2.putText(img, f'GH({gh_center_x:.1f},{gh_center_y:.1f})',
+                    (int(gh_center_x)+10, int(gh_center_y)-10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 75, 150), 2)
+
+        # g/h 中心点
+        cv2.circle(img, (int(g_cx), int(g_cy)), 5, (0, 100, 255), -1)
+        cv2.circle(img, (int(h_cx), int(h_cy)), 5, (255, 0, 255), -1)
+
+        # 计算 gh 中点 vs ab 中点的水平偏移
+        gh_vs_ab_offset = gh_center_x - sample_center_x
+        print(f"\n===== GH vs AB 中点水平偏移 =====")
+        print(f"ab 中点 x: {sample_center_x:.1f}")
+        print(f"gh 中点 x: {gh_center_x:.1f}")
+        print(f"gh 中点相对于 ab 中点水平偏移: {gh_vs_ab_offset:.1f} px "
+              f"({'gh偏右' if gh_vs_ab_offset > 0 else 'gh偏左' if gh_vs_ab_offset < 0 else '居中'})")
+
+        # 在图上标注 gh 与 ab 中点的水平连线
+        mid_y = int((gh_center_y + sample_center_y) / 2)
+        cv2.line(img, (int(sample_center_x), mid_y),
+                 (int(gh_center_x), mid_y), (255, 255, 255), 1, cv2.LINE_AA)
+        cv2.putText(img, f'gh-ab offset:{gh_vs_ab_offset:.1f}px',
+                    (min(int(sample_center_x), int(gh_center_x)) + 5, mid_y - 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
+        gh_info = {
+            'g_center': (g_cx, g_cy),
+            'h_center': (h_cx, h_cy),
+            'gh_center': (gh_center_x, gh_center_y),
+            'gh_vs_ab_offset': gh_vs_ab_offset,
+        }
+
+        # 重新保存 RGB 图（含 gh 标注）
+        cv2.imwrite(out_rgb, img)
+        print(f"✅ RGB 标注（含 gh）已更新: {out_rgb}")
+    else:
+        print(f"\n[5b] 未同时检测到 g 和 h (g={len(boxes_g)}, h={len(boxes_h)})，跳过 gh 画线")
 
     # ===== 生成伪彩色深度图 =====
     valid_mask = depth_raw > 0
@@ -481,6 +550,7 @@ def main():
     print(f"输入图像: {IMG_PATH}")
     print(f"深度数据: {DEPTH_RAW_PATH} ({depth_raw.shape})")
     print(f"检测点: {label1}({calc['pt1']}), {label2}({calc['pt2']})")
+    print(f"  - g: {len(boxes_g)}个, h: {len(boxes_h)}个, 同时存在: {'是' if has_gh else '否'}")
     print(f"偏移信息:")
     print(f"  - 线段中心点: ({calc['line_center'][0]:.1f}, {calc['line_center'][1]:.1f})")
     print(f"  - 图像垂直中线 x: {calc['img_center_x']:.1f}")
@@ -488,6 +558,11 @@ def main():
     print(f"斜率信息:")
     print(f"  - 斜率: {calc['slope']:.4f}")
     print(f"  - 与水平夹角: {calc['angle_deg']:.2f} deg ({calc['angle_rad']:.4f} rad)")
+    if has_gh:
+        print(f"GH 中点 vs AB 中点:")
+        print(f"  - ab 中点 x: {sample_center_x:.1f}")
+        print(f"  - gh 中点 x: {gh_info['gh_center'][0]:.1f}")
+        print(f"  - gh-ab 水平偏移: {gh_info['gh_vs_ab_offset']:.1f} px")
     print(f"深度信息:")
     print(f"  - 点 {label1} 中心深度: {depth_a_center:.1f} mm")
     print(f"  - 点 {label1} 左侧 12px 周围半径5像素平均深度: {depth_a_left:.1f} mm")
