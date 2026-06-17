@@ -29,7 +29,7 @@ for state in joint_states['states']:
 print(f"当前腰部位姿 (弧度): {[round(p, 4) for p in current_waist_positions]}")
 
 # idx05_body_joint5 转动 0.0343 rad (~1.96 deg)
-target_delta = 0.0704  # rad
+target_delta = -0.0396 # rad
 current_waist_positions[4] -= target_delta
 
 # 设定腰部运动的速度 (弧度/秒)

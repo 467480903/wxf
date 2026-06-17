@@ -13,13 +13,14 @@ yolo_depth.py
 import cv2
 import numpy as np
 import os
+import sys
 from ultralytics import YOLO
 
 # ===================== 全局配置 =====================
 IMG_PATH = 'head.jpg'                    # 输入的 RGB 图像
 DEPTH_RAW_PATH = 'head_depth.raw'        # 深度原始数据文件
 DEPTH_SHAPE = (400, 640)                 # 深度图尺寸 (H, W)，根据实际情况修改（当前文件 512000B = 400x640）
-MODEL_PATH = '06132022.pt'               # YOLO 模型路径
+MODEL_PATH = sys.argv[1] if len(sys.argv) > 1 else '06131557.pt'
 SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
 os.makedirs(SAVE_DIR, exist_ok=True)
 
