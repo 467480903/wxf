@@ -1,0 +1,7 @@
+[2026-06-11 03:58:04] STEP 001: standalone strict retreat 1.000m
+[2026-06-11 03:58:04] dry_run: standalone retreat validation plan only; no chassis, arm, turn, rack approach, or rod sequence motion will run
+[2026-06-11 03:58:04] run_report=/home/davie/G2/G2_dipan_yundong/rack_hybrid_docking_package/logs/local_dryrun_retreat_validation_test_report.json
+[2026-06-11 03:58:04] standalone_retreat_validation_failed: TypeError: industrial_run_artifacts.RunRecorder.checkpoint() got multiple values for keyword argument 'dry_run'
+[2026-06-11 03:58:20] STEP 001: standalone strict retreat 1.000m
+[2026-06-11 03:58:20] dry_run: standalone retreat validation plan only; no chassis, arm, turn, rack approach, or rod sequence motion will run
+[2026-06-11 03:58:20] run_report=/home/davie/G2/G2_dipan_yundong/rack_hybrid_docking_package/logs/local_dryrun_retreat_validation_test_report.json

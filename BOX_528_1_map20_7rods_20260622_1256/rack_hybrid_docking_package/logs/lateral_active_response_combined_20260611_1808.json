@@ -1,0 +1,103 @@
+{
+  "blocked": [
+    {
+      "active_direction": "disabled",
+      "fit_residual_m": 0.03897574417402405,
+      "label": "active_probe:before_approach",
+      "lateral_center_m": -0.10949999839067459,
+      "lateral_sample_span_m": 0.09200000017881393,
+      "pass_index": 1,
+      "reasons": [
+        "lateral_sample_unstable",
+        "linear_y_direction_not_calibrated"
+      ],
+      "result_status": "blocked",
+      "run_id": "20260611_175122_368b46ff",
+      "source": "logs/lateral_centering_probe_direction_disabled_20260611_1801.jsonl",
+      "yaw_deg": 0.060570797821984435
+    }
+  ],
+  "blocked_count": 1,
+  "by_vy_sign": {
+    "negative": {
+      "count": 1,
+      "improved_count": 0,
+      "improvement_m_max": -0.0247,
+      "improvement_m_median": -0.0247,
+      "improvement_m_min": -0.0247,
+      "worse_count": 1
+    },
+    "positive": {
+      "count": 1,
+      "improved_count": 0,
+      "improvement_m_max": -0.036,
+      "improvement_m_median": -0.036,
+      "improvement_m_min": -0.036,
+      "worse_count": 1
+    }
+  },
+  "event_count": 44,
+  "files": [
+    "logs/lateral_centering_probe_direction_disabled_20260611_1801.jsonl",
+    "logs/lateral_centering_probe_tight_target_20260611_1752.jsonl",
+    "logs/lateral_centering_probe_tight_target_fixed_sign_20260611_1757.jsonl"
+  ],
+  "improvement_m_median": -0.0304,
+  "improvement_m_min": -0.036,
+  "reason_counts": {
+    "lateral_sample_unstable": 2,
+    "linear_y_direction_not_calibrated": 2
+  },
+  "recommendation": "keep_active_lateral_motion_disabled",
+  "recommendation_reason": "all_executed_lateral_steps_worsened_pose",
+  "result_status_counts": {
+    "blocked": 1,
+    "no_improvement_rollback_done": 2
+  },
+  "rollback_improvement_m_median": 0.005,
+  "step_count": 2,
+  "steps": [
+    {
+      "active_direction": null,
+      "after_abs_m": 0.09425000101327896,
+      "after_lateral_center_m": -0.09425000101327896,
+      "before_abs_m": 0.05824999883770943,
+      "before_lateral_center_m": -0.05824999883770943,
+      "fit_residual_m": 0.04852886629670217,
+      "improvement_m": -0.036000002175569534,
+      "label": "active_probe:before_approach",
+      "lateral_sample_span_m": 0.07149999588727951,
+      "pass_index": 1,
+      "result_status": "no_improvement_rollback_done",
+      "rollback_improvement_m": 0.011250000447034836,
+      "rollback_lateral_center_m": -0.08300000056624413,
+      "rollback_vy_mps": -0.03,
+      "run_id": "20260611_174740_770530f2",
+      "source": "logs/lateral_centering_probe_tight_target_20260611_1752.jsonl",
+      "target_lateral_m": 0.05,
+      "vy_mps": 0.03,
+      "yaw_deg": -0.8436797797845321
+    },
+    {
+      "active_direction": null,
+      "after_abs_m": 0.10624999925494194,
+      "after_lateral_center_m": -0.10624999925494194,
+      "before_abs_m": 0.08150000125169754,
+      "before_lateral_center_m": -0.08150000125169754,
+      "fit_residual_m": 0.045338097210019745,
+      "improvement_m": -0.0247499980032444,
+      "label": "active_probe:before_approach",
+      "lateral_sample_span_m": 0.059000007808208466,
+      "pass_index": 1,
+      "result_status": "no_improvement_rollback_done",
+      "rollback_improvement_m": -0.001250002533197403,
+      "rollback_lateral_center_m": -0.10750000178813934,
+      "rollback_vy_mps": 0.03,
+      "run_id": "20260611_174903_80802719",
+      "source": "logs/lateral_centering_probe_tight_target_fixed_sign_20260611_1757.jsonl",
+      "target_lateral_m": 0.05,
+      "vy_mps": -0.03,
+      "yaw_deg": -1.3660142217716609
+    }
+  ]
+}

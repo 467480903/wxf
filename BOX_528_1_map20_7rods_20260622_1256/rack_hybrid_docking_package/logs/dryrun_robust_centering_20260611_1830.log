@@ -1,0 +1,61 @@
+[2026-06-11 18:16:56] required file check passed
+[2026-06-11 18:16:56] pose_json_check script=move_arm_by_json_grab_above_第一根.py json=/data/btgys/bengtian_backup_20260608_081250/wxf/positions/arm_position_to_grab_第一根.json sha256=aee10086fabf mtime=2026-06-10T09:03:51
+[2026-06-11 18:16:56] pose_json_check script=move_arm_by_json_grab_above_第二根.py json=/data/btgys/bengtian_backup_20260608_081250/wxf/positions/arm_position_to_grab_第二根.json sha256=5a14abf64030 mtime=2026-06-10T09:30:31
+[2026-06-11 18:16:56] pose_json_check script=move_arm_by_json_grab_above_第三根.py json=/data/btgys/bengtian_backup_20260608_081250/wxf/positions/arm_position_to_grab_第三根.json sha256=b24e407abf73 mtime=2026-06-10T09:33:35
+[2026-06-11 18:16:56] pose_json_check script=move_arm_by_json_grab_above_第四根.py json=/data/btgys/bengtian_backup_20260608_081250/wxf/positions/arm_position_to_grab_第四根.json sha256=de3ae5d2d901 mtime=2026-06-09T13:34:35
+[2026-06-11 18:16:56] pose_json_check script=move_arm_by_json_grab_above_第五根.py json=/data/btgys/bengtian_backup_20260608_081250/wxf/positions/arm_position_to_grab_第五根.json sha256=42c3e9efa36e mtime=2026-06-09T13:41:38
+[2026-06-11 18:16:56] pose_json_check script=move_arm_by_json_grab_above_第六根.py json=/data/btgys/bengtian_backup_20260608_081250/wxf/positions/arm_position_to_grab_第六根.json sha256=74a610af7b1a mtime=2026-06-09T13:49:13
+[2026-06-11 18:16:56] pose_json_check script=move_arm_by_json_grab_above_第七根.py json=/data/btgys/bengtian_backup_20260608_081250/wxf/positions/arm_position_to_grab_第七根.json sha256=64201f14b35e mtime=2026-06-09T13:53:22
+[2026-06-11 18:16:56] pose_json_check script=move_arm_by_json_grab_above_2.py json=/data/btgys/bengtian_backup_20260608_081250/wxf/positions/arm_position_to_grab_2.json sha256=fe674bf9b142 mtime=2026-06-10T09:09:12
+[2026-06-11 18:16:56] pose json check passed scripts=8 joints_per_pose=14
+[2026-06-11 18:16:56] startup live preflight skipped in dry-run
+[2026-06-11 18:16:56] controller_start base_dir=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1 dry_run=True rod_range=1-1
+[2026-06-11 18:16:56] ================================================================================
+[2026-06-11 18:16:56] START ROD 1: script=move_arm_by_json_grab_above_第一根.py
+[2026-06-11 18:16:56] STEP 001: 第1根：张开夹爪
+[2026-06-11 18:16:56] script=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/move_ee_pose_open_2.py args=()
+[2026-06-11 18:16:56] dry-run: skip script execution
+[2026-06-11 18:16:56] STEP 002: 第1根：移动到抓取上方
+[2026-06-11 18:16:56] script=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/move_arm_by_json_grab_above_第一根.py args=()
+[2026-06-11 18:16:56] dry-run: skip script execution
+[2026-06-11 18:16:56] STEP 003: 第1根：前雷达靠近到 155mm
+[2026-06-11 18:16:56] target_front_distance_mm=155 brake_margin_mm=70 trigger_front_distance_mm=225 min_safe_front_distance_mm=135 coarse_speed_mps=0.6 fine_speed_mps=0.15 target_tolerance_mm=10 correction_speed_mps=0.02 correction_max_passes=5 angle_correction_max_span_mm=25 angle_correction_max_passes=2 angle_correction_angular_speed_radps=0.05 angle_correction_probe_s=0.2
+[2026-06-11 18:16:56] dry-run: skip front ultrasonic approach
+[2026-06-11 18:16:56] STEP 004: 第1根：闭合夹爪
+[2026-06-11 18:16:56] script=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/move_ee_pose_close_2.py args=()
+[2026-06-11 18:16:56] dry-run: skip script execution
+[2026-06-11 18:16:56] STEP 005: 第1根：拉出
+[2026-06-11 18:16:56] script=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/offset_move_pull.py args=()
+[2026-06-11 18:16:56] dry-run: skip script execution
+[2026-06-11 18:16:56] STEP 006: 第1根：后退 1.0m
+[2026-06-11 18:16:56] retreat_target_distance_m=1.0 retreat_method=front-ultrasonic speed_mps=0.5 open_loop_brake_compensation_m=0.1
+[2026-06-11 18:16:56] dry-run: skip retreat
+[2026-06-11 18:16:56] STEP 007: 第1根：向右转 90 度
+[2026-06-11 18:16:56] rotate_angle_deg=-90.0 turn_angular_speed_radps=0.5236 turn_control_mode=0 turn_method=velocity turn_yaw_tolerance_deg=0.5
+[2026-06-11 18:16:56] dry-run: skip chassis rotate
+[2026-06-11 18:16:56] STEP 008: 第1根：移动到放置上方
+[2026-06-11 18:16:56] script=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/move_arm_by_json_grab_above_2.py args=()
+[2026-06-11 18:16:56] dry-run: skip script execution
+[2026-06-11 18:16:56] STEP 009: 第1根：前雷达靠近到 327mm
+[2026-06-11 18:16:56] target_front_distance_mm=327 brake_margin_mm=60 trigger_front_distance_mm=387 min_safe_front_distance_mm=280 coarse_speed_mps=0.6 fine_speed_mps=0.15 target_tolerance_mm=30 correction_speed_mps=0.05 correction_max_passes=2 angle_correction_max_span_mm=None angle_correction_max_passes=0 angle_correction_angular_speed_radps=0.0 angle_correction_probe_s=0.0
+[2026-06-11 18:16:56] dry-run: skip front ultrasonic approach
+[2026-06-11 18:16:56] STEP 010: 第1根：下移
+[2026-06-11 18:16:56] script=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/offset_move_down.py args=()
+[2026-06-11 18:16:56] dry-run: skip script execution
+[2026-06-11 18:16:56] STEP 011: 第1根：张开夹爪放料
+[2026-06-11 18:16:56] script=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/move_ee_pose_open_2.py args=()
+[2026-06-11 18:16:56] dry-run: skip script execution
+[2026-06-11 18:16:56] STEP 012: 第1根：放料后拉出
+[2026-06-11 18:16:56] script=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/offset_move_pull.py args=()
+[2026-06-11 18:16:56] dry-run: skip script execution
+[2026-06-11 18:16:56] STEP 013: 第1根：放料后后退 1.0m
+[2026-06-11 18:16:56] retreat_target_distance_m=1.0 retreat_method=front-ultrasonic speed_mps=0.5 open_loop_brake_compensation_m=0.1
+[2026-06-11 18:16:56] dry-run: skip retreat
+[2026-06-11 18:16:56] STEP 014: 第1根：向左转 90 度
+[2026-06-11 18:16:56] rotate_angle_deg=90.0 turn_angular_speed_radps=0.5236 turn_control_mode=0 turn_method=velocity turn_yaw_tolerance_deg=0.5
+[2026-06-11 18:16:56] dry-run: skip chassis rotate
+[2026-06-11 18:16:56] END ROD 1: success
+[2026-06-11 18:16:56] final_pnc_cleanup skipped dry_run=True
+[2026-06-11 18:16:56] final_status_snapshot skipped dry_run=True
+[2026-06-11 18:16:56] controller_finished: all requested rods completed
+[2026-06-11 18:16:56] run_report=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/logs/dryrun_robust_centering_20260611_1830_report.json

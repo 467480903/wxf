@@ -1,0 +1,29 @@
+{
+  "checkpoint_file": "/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/logs/dryrun_retreat_1m_pm20mm_20260611_1915_checkpoint.json",
+  "elapsed_s": 0.054,
+  "event_file": "/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/logs/dryrun_retreat_1m_pm20mm_20260611_1915.jsonl",
+  "events_written": 32,
+  "last_checkpoint": {
+    "dry_run": true,
+    "end_index": 1,
+    "event_file": "/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/logs/dryrun_retreat_1m_pm20mm_20260611_1915.jsonl",
+    "log_file": "/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/logs/dryrun_retreat_1m_pm20mm_20260611_1915.log",
+    "rod_index": 1,
+    "run_id": "20260611_185039_d81865f1",
+    "start_index": 1,
+    "status": "completed",
+    "step_no": 14,
+    "step_title": "第1根：向左转 90 度",
+    "ts": "2026-06-11T18:50:39",
+    "workflow": "industrial_7_rods"
+  },
+  "log_file": "/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/logs/dryrun_retreat_1m_pm20mm_20260611_1915.log",
+  "rod_index": 1,
+  "run_id": "20260611_185039_d81865f1",
+  "started_at": "2026-06-11T18:50:39",
+  "status": "completed",
+  "step_no": 14,
+  "step_title": "第1根：向左转 90 度",
+  "ts": "2026-06-11T18:50:39",
+  "workflow": "industrial_7_rods"
+}
