@@ -10,4 +10,4 @@ horizontal_offset_px = float(result_data["offset"]["horizontal_offset_px"])
 print(f"从 yolo_depth_result.json 读取 offset/horizontal_offset_px = {horizontal_offset_px}")
 
 if __name__ == "__main__":
-    run_offset(offset_l=(0, horizontal_offset_px*(-0.2)/100 +0.02, 0), offset_r=(0, horizontal_offset_px*(-0.2)/100 +0.02, 0))
+    run_offset(offset_l=(0, horizontal_offset_px*(-0.2)/100 +0.03, 0), offset_r=(0, horizontal_offset_px*(-0.2)/100 +0.03, 0))

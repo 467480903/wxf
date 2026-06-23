@@ -377,14 +377,14 @@ def main():
     print("\n[4] 深度值采样...")
 
     # 点 a 左侧 DEPTH_OFFSET 个像素: (cx1 - DEPTH_OFFSET, cy1)，读取周围半径5像素的平均深度
-    sample_a_left_x = int(cx1) - DEPTH_OFFSET
-    sample_a_left_y = int(cy1)
-    depth_a_left = get_average_depth(depth_raw, sample_a_left_x, sample_a_left_y, radius=5)
+    sample_a_left_x = int(cx1) 
+    sample_a_left_y = int(cy1)+ DEPTH_OFFSET
+    depth_a_left = get_average_depth(depth_raw, sample_a_left_x, sample_a_left_y, radius=2)
 
     # 点 b 右侧 DEPTH_OFFSET 个像素: (cx2 + DEPTH_OFFSET, cy2)，读取周围半径5像素的平均深度
-    sample_b_right_x = int(cx2) + DEPTH_OFFSET
-    sample_b_right_y = int(cy2)
-    depth_b_right = get_average_depth(depth_raw, sample_b_right_x, sample_b_right_y, radius=5)
+    sample_b_right_x = int(cx2) 
+    sample_b_right_y = int(cy2)+ DEPTH_OFFSET
+    depth_b_right = get_average_depth(depth_raw, sample_b_right_x, sample_b_right_y, radius=2)
 
     # a 和 b 的中心点，读取周围半径5像素的平均深度
     sample_center_x = int((cx1 + cx2) / 2)
