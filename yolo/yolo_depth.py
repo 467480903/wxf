@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 import os
 import sys
+import json
 from ultralytics import YOLO
 
 # ===================== 全局配置 =====================
@@ -503,6 +504,59 @@ def main():
     print(f"  - yolo_depth_depth_marked.jpg")
     print(f"  - result.jpg (YOLO 默认输出)")
     print("=" * 60)
+
+    # ===== 输出诊断结果到 JSON =====
+    result_json_path = 'yolo_depth_result.json'
+    result_data = {
+        "model_path": MODEL_PATH,
+        "image_path": IMG_PATH,
+        "depth_raw_path": DEPTH_RAW_PATH,
+        "depth_offset_px": DEPTH_OFFSET,
+        "depth_shape": list(depth_raw.shape),
+        "image_size": {"height": img_h, "width": img_w},
+        "detection": {
+            "point1": {
+                "label": label1,
+                "center": [round(float(cx1), 2), round(float(cy1), 2)],
+            },
+            "point2": {
+                "label": label2,
+                "center": [round(float(cx2), 2), round(float(cy2), 2)],
+            },
+        },
+        "offset": {
+            "line_center": [round(float(calc['line_center'][0]), 2), round(float(calc['line_center'][1]), 2)],
+            "image_center_x": round(float(calc['img_center_x']), 2),
+            "horizontal_offset_px": round(float(calc['h_offset']), 2),
+            "direction": "偏右" if calc['h_offset'] > 0 else ("偏左" if calc['h_offset'] < 0 else "居中"),
+        },
+        "slope": {
+            "slope": None if np.isinf(calc['slope']) else round(float(calc['slope']), 4),
+            "angle_rad": round(float(calc['angle_rad']), 4),
+            "angle_deg": round(float(calc['angle_deg']), 2),
+        },
+        "depth": {
+            "point1_center_mm": round(float(depth_a_center), 1),
+            "point1_left_offset_mm": round(float(depth_a_left), 1),
+            "point1_left_sample_pixel": [int(sample_a_left_x), int(sample_a_left_y)],
+            "point2_center_mm": round(float(depth_b_center), 1),
+            "point2_right_offset_mm": round(float(depth_b_right), 1),
+            "point2_right_sample_pixel": [int(sample_b_right_x), int(sample_b_right_y)],
+            "center_mm": round(float(depth_center), 1),
+            "center_sample_pixel": [int(sample_center_x), int(sample_center_y)],
+        },
+        "output_files": [
+            out_rgb,
+            out_rgb_with_depth,
+            "yolo_depth_depth.jpg",
+            "yolo_depth_depth_marked.jpg",
+            "result.jpg",
+        ],
+    }
+
+    with open(result_json_path, "w", encoding="utf-8") as f:
+        json.dump(result_data, f, ensure_ascii=False, indent=2)
+    print(f"✅ 诊断结果已保存: {result_json_path}")
 
 
 if __name__ == '__main__':

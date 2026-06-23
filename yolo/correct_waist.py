@@ -1,5 +1,7 @@
 import agibot_gdk
 import time
+import os
+import json
 
 # 初始化GDK系统
 if agibot_gdk.gdk_init() != agibot_gdk.GDKRes.kSuccess:
@@ -9,6 +11,17 @@ print("GDK初始化成功")
 
 robot = agibot_gdk.Robot()
 time.sleep(2)  # 等待机器人初始化
+
+# 从 yolo_depth_result.json 读取 slope/angle_rad 作为 target_delta
+RESULT_JSON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yolo_depth_result.json")
+try:
+    with open(RESULT_JSON_PATH, "r", encoding="utf-8") as f:
+        result_data = json.load(f)
+    target_delta = float(result_data["slope"]["angle_rad"])
+    print(f"从 {RESULT_JSON_PATH} 读取 slope/angle_rad = {target_delta:.4f} rad")
+except Exception as e:
+    print(f"读取 {RESULT_JSON_PATH} 失败: {e}")
+    exit(1)
 
 # 获取当前腰部关节位置
 joint_states = robot.get_joint_states()
@@ -28,8 +41,7 @@ for state in joint_states['states']:
 
 print(f"当前腰部位姿 (弧度): {[round(p, 4) for p in current_waist_positions]}")
 
-# idx05_body_joint5 转动 0.0343 rad (~1.96 deg)
-target_delta = -0.0396 # rad
+# idx05_body_joint5 转动 target_delta rad (从 yolo_depth_result.json 读取)
 current_waist_positions[4] -= target_delta
 
 # 设定腰部运动的速度 (弧度/秒)
