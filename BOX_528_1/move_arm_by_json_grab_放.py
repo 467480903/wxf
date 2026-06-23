@@ -4,7 +4,7 @@ import json
 import os
 
 # 定义JSON文件路径
-JSON_FILE_PATH = "/data/本田现场gys/wxf/bengtian_backup_20260608_081250/wxf/positions/arm_position_to_grab_推车.json"
+JSON_FILE_PATH = "../positions/arm_position_to_grab_放.json"
 
 # ================= 1. 读取 JSON 配置文件 =================
 print("正在读取目标位置配置...")

@@ -21,6 +21,7 @@ IMG_PATH = 'head.jpg'                    # 输入的 RGB 图像
 DEPTH_RAW_PATH = 'head_depth.raw'        # 深度原始数据文件
 DEPTH_SHAPE = (400, 640)                 # 深度图尺寸 (H, W)，根据实际情况修改（当前文件 512000B = 400x640）
 MODEL_PATH = sys.argv[1] if len(sys.argv) > 1 else '06131557.pt'
+DEPTH_OFFSET = int(sys.argv[2]) if len(sys.argv) > 2 else 12
 SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
 os.makedirs(SAVE_DIR, exist_ok=True)
 
@@ -374,13 +375,13 @@ def main():
     # 5. 深度采样
     print("\n[4] 深度值采样...")
 
-    # 点 a 左侧 12 个像素: (cx1 - 12, cy1)，读取周围半径5像素的平均深度
-    sample_a_left_x = int(cx1) - 12
+    # 点 a 左侧 DEPTH_OFFSET 个像素: (cx1 - DEPTH_OFFSET, cy1)，读取周围半径5像素的平均深度
+    sample_a_left_x = int(cx1) - DEPTH_OFFSET
     sample_a_left_y = int(cy1)
     depth_a_left = get_average_depth(depth_raw, sample_a_left_x, sample_a_left_y, radius=5)
 
-    # 点 b 右侧 12 个像素: (cx2 + 12, cy2)，读取周围半径5像素的平均深度
-    sample_b_right_x = int(cx2) + 12
+    # 点 b 右侧 DEPTH_OFFSET 个像素: (cx2 + DEPTH_OFFSET, cy2)，读取周围半径5像素的平均深度
+    sample_b_right_x = int(cx2) + DEPTH_OFFSET
     sample_b_right_y = int(cy2)
     depth_b_right = get_average_depth(depth_raw, sample_b_right_x, sample_b_right_y, radius=5)
 
@@ -395,9 +396,9 @@ def main():
 
     print(f"\n===== 深度采样结果 =====")
     print(f"点 {label1} 中心 ({cx1:.1f}, {cy1:.1f}) 深度: {depth_a_center:.1f} mm")
-    print(f"点 {label1} 左侧 12px ({sample_a_left_x}, {sample_a_left_y}) 周围半径5像素平均深度: {depth_a_left:.1f} mm")
+    print(f"点 {label1} 左侧 {DEPTH_OFFSET}px ({sample_a_left_x}, {sample_a_left_y}) 周围半径5像素平均深度: {depth_a_left:.1f} mm")
     print(f"点 {label2} 中心 ({cx2:.1f}, {cy2:.1f}) 深度: {depth_b_center:.1f} mm")
-    print(f"点 {label2} 右侧 12px ({sample_b_right_x}, {sample_b_right_y}) 周围半径5像素平均深度: {depth_b_right:.1f} mm")
+    print(f"点 {label2} 右侧 {DEPTH_OFFSET}px ({sample_b_right_x}, {sample_b_right_y}) 周围半径5像素平均深度: {depth_b_right:.1f} mm")
     print(f"a-b 中心点 ({sample_center_x}, {sample_center_y}) 周围半径5像素平均深度: {depth_center:.1f} mm")
 
     # ===== 生成伪彩色深度图 =====
@@ -418,20 +419,20 @@ def main():
     print(f"✅ 深度图已保存: yolo_depth_depth.jpg")
 
     # 6. 在 RGB 图上标注深度采样点
-    # 点 a 左侧 12px（紫色圆点 + 箭头）
+    # 点 a 左侧 DEPTH_OFFSET px（紫色圆点 + 箭头）
     if 0 <= sample_a_left_x < img_w and 0 <= sample_a_left_y < img_h:
         cv2.circle(img, (sample_a_left_x, sample_a_left_y), 5, (255, 0, 255), -1)
-        cv2.putText(img, f'L12:{depth_a_left:.0f}mm',
+        cv2.putText(img, f'L{DEPTH_OFFSET}:{depth_a_left:.0f}mm',
                     (sample_a_left_x - 65, sample_a_left_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
         cv2.arrowedLine(img, (int(cx1), int(cy1)),
                         (sample_a_left_x, sample_a_left_y),
                         (255, 0, 255), 1, tipLength=0.3)
 
-    # 点 b 右侧 12px（青色圆点 + 箭头）
+    # 点 b 右侧 DEPTH_OFFSET px（青色圆点 + 箭头）
     if 0 <= sample_b_right_x < img_w and 0 <= sample_b_right_y < img_h:
         cv2.circle(img, (sample_b_right_x, sample_b_right_y), 5, (255, 255, 0), -1)
-        cv2.putText(img, f'R12:{depth_b_right:.0f}mm',
+        cv2.putText(img, f'R{DEPTH_OFFSET}:{depth_b_right:.0f}mm',
                     (sample_b_right_x + 5, sample_b_right_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
         cv2.arrowedLine(img, (int(cx2), int(cy2)),
@@ -453,12 +454,12 @@ def main():
     depth_marked = depth_colored.copy()
     if 0 <= sample_a_left_x < img_w and 0 <= sample_a_left_y < img_h:
         cv2.circle(depth_marked, (sample_a_left_x, sample_a_left_y), 5, (255, 0, 255), -1)
-        cv2.putText(depth_marked, f'{label1}_L12:{depth_a_left:.0f}mm',
+        cv2.putText(depth_marked, f'{label1}_L{DEPTH_OFFSET}:{depth_a_left:.0f}mm',
                     (sample_a_left_x - 75, sample_a_left_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
     if 0 <= sample_b_right_x < img_w and 0 <= sample_b_right_y < img_h:
         cv2.circle(depth_marked, (sample_b_right_x, sample_b_right_y), 5, (255, 255, 0), -1)
-        cv2.putText(depth_marked, f'{label2}_R12:{depth_b_right:.0f}mm',
+        cv2.putText(depth_marked, f'{label2}_R{DEPTH_OFFSET}:{depth_b_right:.0f}mm',
                     (sample_b_right_x + 5, sample_b_right_y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
     cv2.circle(depth_marked, (int(cx1), int(cy1)), 5, (0, 255, 255), -1)
@@ -491,9 +492,9 @@ def main():
     print(f"  - 与水平夹角: {calc['angle_deg']:.2f} deg ({calc['angle_rad']:.4f} rad)")
     print(f"深度信息:")
     print(f"  - 点 {label1} 中心深度: {depth_a_center:.1f} mm")
-    print(f"  - 点 {label1} 左侧 12px 周围半径5像素平均深度: {depth_a_left:.1f} mm")
+    print(f"  - 点 {label1} 左侧 {DEPTH_OFFSET}px 周围半径5像素平均深度: {depth_a_left:.1f} mm")
     print(f"  - 点 {label2} 中心深度: {depth_b_center:.1f} mm")
-    print(f"  - 点 {label2} 右侧 12px 周围半径5像素平均深度: {depth_b_right:.1f} mm")
+    print(f"  - 点 {label2} 右侧 {DEPTH_OFFSET}px 周围半径5像素平均深度: {depth_b_right:.1f} mm")
     print(f"  - a-b 中心点 ({sample_center_x}, {sample_center_y}) 周围半径5像素平均深度: {depth_center:.1f} mm")
     print(f"输出文件:")
     print(f"  - {out_rgb}")

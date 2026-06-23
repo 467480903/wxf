@@ -7,8 +7,3 @@ robot = RobotController()
 robot.go(1)
 robot.go(2)
 robot.go(3)
-
-
-
-
-
