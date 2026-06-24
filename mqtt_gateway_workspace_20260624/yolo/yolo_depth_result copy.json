@@ -1,0 +1,70 @@
+{
+  "model_path": "place_product.pt",
+  "image_path": "head.jpg",
+  "depth_raw_path": "head_depth.raw",
+  "depth_offset_px": 1,
+  "depth_shape": [
+    400,
+    640
+  ],
+  "image_size": {
+    "height": 400,
+    "width": 640
+  },
+  "detection": {
+    "point1": {
+      "label": "a",
+      "center": [
+        203.9,
+        195.57
+      ]
+    },
+    "point2": {
+      "label": "b",
+      "center": [
+        430.57,
+        197.44
+      ]
+    }
+  },
+  "offset": {
+    "line_center": [
+      317.24,
+      196.51
+    ],
+    "image_center_x": 320.0,
+    "horizontal_offset_px": -2.76,
+    "direction": "偏左"
+  },
+  "slope": {
+    "slope": 0.0082,
+    "angle_rad": 0.0082,
+    "angle_deg": 0.47
+  },
+  "depth": {
+    "point1_center_mm": 2766.0,
+    "point1_left_offset_mm": 1455.9,
+    "point1_left_sample_pixel": [
+      202,
+      195
+    ],
+    "point2_center_mm": 720.0,
+    "point2_right_offset_mm": 700.9,
+    "point2_right_sample_pixel": [
+      431,
+      197
+    ],
+    "center_mm": 1648.6,
+    "center_sample_pixel": [
+      317,
+      196
+    ]
+  },
+  "output_files": [
+    "yolo_depth_rgb.jpg",
+    "yolo_depth_rgb_with_depth.jpg",
+    "yolo_depth_depth.jpg",
+    "yolo_depth_depth_marked.jpg",
+    "result.jpg"
+  ]
+}
