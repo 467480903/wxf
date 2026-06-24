@@ -4,7 +4,7 @@ import math
 robot = RobotController()
 
 # 导航到地图第0个点
-robot.go_adjusted(23)
+robot.go(28)
 
 # 高精度导航
-robot.go_adjusted(25)
+robot.go(27)

@@ -1,0 +1,88 @@
+{
+  "cmd": "detect",
+  "depth": {
+    "center_mm": 1475.1,
+    "center_sample_pixel": [
+      315,
+      218
+    ],
+    "point1_center_mm": 638.0,
+    "point1_left_offset_mm": 639.7,
+    "point1_left_sample_pixel": [
+      207,
+      219
+    ],
+    "point2_center_mm": 637.0,
+    "point2_right_offset_mm": 637.7,
+    "point2_right_sample_pixel": [
+      423,
+      220
+    ]
+  },
+  "depth_offset_px": 1,
+  "depth_raw_path": "head_depth.raw",
+  "depth_shape": [
+    400,
+    640
+  ],
+  "detection": {
+    "counts": {
+      "a": 1,
+      "b": 1,
+      "c": 0,
+      "d": 0
+    },
+    "point1": {
+      "center": [
+        207.24,
+        218.43
+      ],
+      "label": "a"
+    },
+    "point2": {
+      "center": [
+        423.65,
+        219.42
+      ],
+      "label": "b"
+    },
+    "strategy": "highest confidence a and b"
+  },
+  "image_path": "head.jpg",
+  "image_size": {
+    "height": 400,
+    "width": 640
+  },
+  "latency_ms": 1018.2,
+  "model_path": "shelf.pt",
+  "offset": {
+    "direction": "偏左",
+    "horizontal_offset_px": -4.56,
+    "image_center_x": 320.0,
+    "line_center": [
+      315.44,
+      218.93
+    ]
+  },
+  "output_files": [
+    "yolo_depth_rgb.jpg",
+    "yolo_depth_rgb_with_depth.jpg",
+    "yolo_depth_depth.jpg",
+    "yolo_depth_depth_marked.jpg",
+    "result.jpg"
+  ],
+  "request_id": "detect-client-1782285331138-ced73fc9",
+  "server": {
+    "broker": "127.0.0.1:1883",
+    "device": "cpu",
+    "hostname": "G2",
+    "latency_ms": 1028.21,
+    "work_dir": "/data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo_detect_mqtt_service/runs/requests/20260624_151531_detect-client-1782285331138-ced73fc9"
+  },
+  "slope": {
+    "angle_deg": 0.26,
+    "angle_rad": 0.0046,
+    "slope": 0.0046
+  },
+  "status": "success"
+}

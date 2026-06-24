@@ -27,27 +27,7 @@ TASK_SEQUENCE = [
     "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
     "python ../BOX_528_1/move-put1.py",
 
-#上面顾工下面魏工
-    "python move_whole_body_by_json.py ../positions/pick_standby.json",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py place_product.pt 2",
-    "python correct_waist.py",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py place_product.pt 2",
-    "python move_ee_pose_right_half.py",
-    "python move_arm_by_json.py ../positions/place_1.json",
-    "python move_arm_by_json.py ../positions/place_2.json",
-    "python offset_move_horizon.py",
-    "python offset_move_downward_004.py",
 
-    "python move_ee_pose_open_05.py",
-    "python offset_move_downward_002.py",
-    "python offset_move_forward_001.py",
-    "python offset_move_downward_004.py",
-    "python offset_move_downward_004.py",
-    "python ../Robot/move_ee_pose_open_2.py",
-    "python offset_move_pull_back.py",
-    "python move_whole_body_by_json.py ../positions/pick_standby.json",
 ]
 
 

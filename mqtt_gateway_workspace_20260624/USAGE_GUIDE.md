@@ -3551,3 +3551,220 @@ cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
 live 自动重试在工业现场风险很高。
 第一次失败后，必须先看日志、看 preflight、看现场，再决定是否重跑。
 ```
+
+---
+
+## 20. YOLO Detect MQTT 视觉服务
+
+独立视觉服务目录：
+
+```text
+/data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo_detect_mqtt_service
+```
+
+它和总控动作脚本是两条边界：
+
+```text
+总控动作脚本: 通过 g2.task.v1 调 Gateway，可能 dry-run 或 live 动机器人。
+YOLO Detect 服务: 通过 /yolo_detect/ 收图片，通过 /yolo_detect_result 返回识别结果，不发运动命令。
+```
+
+当前机器人上已经安装为 systemd 常驻服务：
+
+```text
+wxf-yolo-detect-mqtt.service
+```
+
+机器人实际安装位置：
+
+```text
+/etc/systemd/system/wxf-yolo-detect-mqtt.service
+/data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo_detect_mqtt_service/yolo-detect-mqtt.env
+```
+
+查看是否开机自启动：
+
+```bash
+systemctl is-enabled wxf-yolo-detect-mqtt.service
+```
+
+查看是否正在运行：
+
+```bash
+systemctl is-active wxf-yolo-detect-mqtt.service
+```
+
+看最近日志：
+
+```bash
+journalctl -u wxf-yolo-detect-mqtt.service -n 100 --no-pager
+```
+
+重启服务：
+
+```bash
+sudo systemctl restart wxf-yolo-detect-mqtt.service
+```
+
+手动启动机器人本体 CPU 服务端只用于临时调试：
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo_detect_mqtt_service
+./run_server_cpu.sh
+```
+
+文件模式客户端测试：
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo_detect_mqtt_service
+./run_client_files.sh --timeout-s 180
+```
+
+Gateway 实时抓拍客户端测试：
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo_detect_mqtt_service
+./run_client_gateway.sh --timeout-s 180 --http-timeout-s 15
+```
+
+实时客户端不会 import GDK。它只通过 HTTP 读 Gateway：
+
+```text
+GET /api/cameras/head_rgb/snapshot.jpg
+GET /api/cameras/head_depth/raw
+```
+
+客户脚本推荐最简调用：
+
+```python
+from yolo_detect_gateway_client import detect_once
+
+result = detect_once(
+    gateway_url="http://127.0.0.1:8767",
+    broker="127.0.0.1",
+    port=1883,
+    http_timeout_s=15,
+    timeout_s=180,
+    raise_on_error=False,
+)
+
+if result["status"] != "success":
+    print("YOLO_DETECT_FAILED:", result.get("error"))
+    raise SystemExit(1)
+
+print(result["offset"]["horizontal_offset_px"])
+print(result["offset"]["direction"])
+```
+
+原始 JSON demo：
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo_detect_mqtt_service
+./demo_detect_once.py
+```
+
+内部备用说明：
+
+```text
+detect_shelf/profile/guard 这层当前对接方不需要。
+不要让对接方配置 shelf_guard_profiles.json。
+不要把 demo_detect_shelf_guard.py 或 demo_detect_shelf_profile.py 写进他们的必跑流程。
+以后如果工艺负责人明确要做视觉阈值门禁，再启用这层。
+```
+
+MQTT 请求格式：
+
+```json
+{
+  "cmd": "detect",
+  "image": "base64-rgb-jpg",
+  "depthimg": "base64-uint16-depth-raw"
+}
+```
+
+注意：
+
+```text
+depthimg 必须是 raw uint16 深度文件，不是深度 JPG。
+文件模式和 Gateway 实时模式都不直接 import GDK。
+Gateway raw depth 接口已经上线。
+如果 /api/cameras/head_depth/raw 偶发 503: Failed to get latest image，等 1-2 秒重试。
+```
+
+后续 4060 推荐架构：
+
+```text
+机器人本体:
+  Gateway HTTP 抓 RGB + raw depth
+  run_client_gateway.sh / detect_once()
+      |
+      | MQTT: <4060_IP>:1883
+      v
+4060:
+  独立视觉 Mosquitto broker
+  yolo_detect_server.py + shelf.pt + cuda:0
+```
+
+4060 服务端先用测试 topic 启动：
+
+```bash
+cd /opt/wxf/yolo_detect_mqtt_service
+
+YOLO_DETECT_PYTHON=/opt/wxf/yolo-env/bin/python \
+YOLO_DETECT_BROKER=127.0.0.1 \
+YOLO_DETECT_REQUEST_TOPIC=/yolo_detect_gpu_test/ \
+YOLO_DETECT_RESULT_TOPIC=/yolo_detect_gpu_test_result \
+YOLO_DETECT_MODEL=/opt/wxf/yolo_detect_mqtt_service/shelf.pt \
+YOLO_DETECT_DEVICE=cuda:0 \
+YOLO_DETECT_WORK_DIR=/data/wxf_yolo_detect/runs \
+./run_server_gpu.sh --traceback-on-error
+```
+
+机器人侧测试 4060：
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo_detect_mqtt_service
+
+YOLO_DETECT_BROKER=<4060_IP> \
+YOLO_DETECT_REQUEST_TOPIC=/yolo_detect_gpu_test/ \
+YOLO_DETECT_RESULT_TOPIC=/yolo_detect_gpu_test_result \
+./run_client_gateway.sh --timeout-s 180 --http-timeout-s 15
+```
+
+测试通过后，正式调用只需要把 broker 指到 4060：
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo_detect_mqtt_service
+
+YOLO_DETECT_BROKER=<4060_IP> \
+./run_client_gateway.sh --timeout-s 180 --http-timeout-s 15
+```
+
+Python 业务脚本：
+
+```python
+from yolo_detect_gateway_client import detect_once
+
+result = detect_once(
+    gateway_url="http://127.0.0.1:8767",
+    broker="<4060_IP>",
+    port=1883,
+    http_timeout_s=15,
+    timeout_s=180,
+    raise_on_error=False,
+)
+```
+
+4060 systemd 模板位置：
+
+```text
+/opt/wxf/yolo_detect_mqtt_service/deploy_4060/
+```
+
+注意：
+
+```text
+推荐 4060 使用独立视觉 broker，不要把机器人动作 Gateway broker 随便开放给外部网络。
+不要让机器人 CPU YOLO 服务和 4060 GPU YOLO 服务同时消费同一个正式 topic。
+先用 /yolo_detect_gpu_test/ 测试，通过后再切 /yolo_detect/。
+```

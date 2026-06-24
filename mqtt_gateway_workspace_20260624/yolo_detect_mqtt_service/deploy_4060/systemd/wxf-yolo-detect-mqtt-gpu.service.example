@@ -1,0 +1,23 @@
+[Unit]
+Description=WXF YOLO Detect MQTT GPU Service
+After=network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
+
+[Service]
+Type=simple
+# Change this to the Linux user that owns /opt/wxf/yolo_detect_mqtt_service.
+User=wxf
+Group=wxf
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/opt/wxf/yolo_detect_mqtt_service/yolo-detect-mqtt-gpu.env
+WorkingDirectory=/opt/wxf/yolo_detect_mqtt_service
+ExecStart=/bin/bash -lc 'exec ./run_server_gpu.sh --traceback-on-error'
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=180
+TimeoutStopSec=20
+KillSignal=SIGINT
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,15 @@
+{
+  "request_id": "detect-gateway-1782285920473-dad05b51",
+  "gateway_url": "http://127.0.0.1:8767",
+  "rgb_url": "http://127.0.0.1:8767/api/cameras/head_rgb/snapshot.jpg",
+  "depth_url": "http://127.0.0.1:8767/api/cameras/head_depth/raw",
+  "rgb_bytes": 48834,
+  "depth_bytes": 512000,
+  "depth_shape": [
+    400,
+    640
+  ],
+  "depth_dtype": "uint16",
+  "rgb_content_type": "image/jpeg",
+  "depth_content_type": "application/octet-stream"
+}

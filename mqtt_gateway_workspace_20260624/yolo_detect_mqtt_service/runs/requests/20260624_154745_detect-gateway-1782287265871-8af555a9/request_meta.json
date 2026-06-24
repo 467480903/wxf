@@ -1,0 +1,16 @@
+{
+  "request_id": "detect-gateway-1782287265871-8af555a9",
+  "received_at": "2026-06-24 15:47:45 CST",
+  "image_bytes": 51390,
+  "depth_bytes": 512000,
+  "payload_keys": [
+    "cmd",
+    "depth_offset_px",
+    "depth_shape",
+    "depthimg",
+    "image",
+    "model_path",
+    "request_id",
+    "source"
+  ]
+}

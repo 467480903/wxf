@@ -1,0 +1,11 @@
+{
+  "cmd": "detect",
+  "error": "DetectionError: not enough detection points for line calculation: {'a': 0, 'b': 0, 'c': 0, 'd': 0}",
+  "request_id": "detect-gateway-1782286443322-646be5f5",
+  "server": {
+    "device": "cpu",
+    "hostname": "G2",
+    "latency_ms": 906.12
+  },
+  "status": "error"
+}

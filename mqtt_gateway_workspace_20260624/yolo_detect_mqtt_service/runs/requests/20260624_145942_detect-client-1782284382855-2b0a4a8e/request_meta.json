@@ -1,0 +1,15 @@
+{
+  "request_id": "detect-client-1782284382855-2b0a4a8e",
+  "received_at": "2026-06-24 14:59:42 CST",
+  "image_bytes": 50406,
+  "depth_bytes": 512000,
+  "payload_keys": [
+    "cmd",
+    "depth_offset_px",
+    "depth_shape",
+    "depthimg",
+    "image",
+    "model_path",
+    "request_id"
+  ]
+}
