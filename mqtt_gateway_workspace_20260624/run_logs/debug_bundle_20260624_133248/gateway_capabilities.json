@@ -1,0 +1,432 @@
+# command: curl -sS --max-time 5 http://127.0.0.1:8767/api/capabilities
+# captured_at: 2026-06-24 13:32:48 CST
+{
+  "capabilities": [
+    {
+      "name": "system.read_status",
+      "title": "System status",
+      "risk_level": 0,
+      "needs_gdk": false,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [],
+      "description": "Read gateway and mock robot runtime status.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "gdk.read_status",
+      "title": "GDK status",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [],
+      "description": "Read persistent GDK session state without motion.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "gdk.read_power_state",
+      "title": "Chassis power state",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [],
+      "description": "Read Robot.get_chassis_power_state() without side effects.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "gdk.read_motion_status",
+      "title": "Motion-control status",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [],
+      "description": "Read Robot.get_motion_control_status() without motion commands.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "gdk.read_whole_body_status",
+      "title": "Whole-body status",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [],
+      "description": "Read Robot.get_whole_body_status() without actuator writes.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "gdk.read_joint_states",
+      "title": "Joint states",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [],
+      "description": "Read Robot.get_joint_states() without actuator writes.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "gdk.read_task_state",
+      "title": "PNC task state",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [],
+      "description": "Read Pnc.get_task_state() without cancelling or starting tasks.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "gdk.read_odom",
+      "title": "SLAM odometry",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [],
+      "description": "Read Slam.get_odom_info() for passive odometry inspection.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "gdk.read_ultrasonic",
+      "title": "Ultrasonic radar",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [],
+      "description": "Read UltrasonicRadar.get_latest_ultrasonic_radar() passively.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "nav.preflight",
+      "title": "Navigation preflight",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 3.0,
+      "required_args": [],
+      "description": "Read map, power, PNC, SLAM, odom, and motion-control gates before navigation.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "arm.preflight",
+      "title": "Arm preflight",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 3.0,
+      "required_args": [],
+      "description": "Read arm, end-effector, joint, and motion-control gates before upper-body motion.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "arm.capture_named_pose",
+      "title": "Capture named arm pose",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 3.0,
+      "required_args": [
+        "pose"
+      ],
+      "description": "Read current 14 arm joint positions and save a named pose JSON; no motion command is sent.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "arm.validate_named_pose",
+      "title": "Validate named arm pose",
+      "risk_level": 0,
+      "needs_gdk": false,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 2.0,
+      "required_args": [
+        "pose"
+      ],
+      "description": "Validate a named 14-joint arm pose JSON without moving hardware.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "ee.preflight",
+      "title": "End-effector preflight",
+      "risk_level": 0,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "read_only"
+      ],
+      "timeout_s": 3.0,
+      "required_args": [],
+      "description": "Read end-effector frame and arm gates before relative end-effector motion.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "camera.capture_snapshot",
+      "title": "Camera snapshot",
+      "risk_level": 1,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run"
+      ],
+      "timeout_s": 5.0,
+      "required_args": [
+        "camera"
+      ],
+      "description": "Mock passive camera capture.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "vision.yolo_correct",
+      "title": "YOLO visual correction",
+      "risk_level": 1,
+      "needs_gdk": false,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run"
+      ],
+      "timeout_s": 5.0,
+      "required_args": [
+        "stage",
+        "camera",
+        "target"
+      ],
+      "description": "Dry-run YOLO correction proposal. It reports offsets but does not move the robot or mutate targets.",
+      "live_requires_confirm": false
+    },
+    {
+      "name": "gripper.open",
+      "title": "Open gripper",
+      "risk_level": 2,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "live"
+      ],
+      "timeout_s": 5.0,
+      "required_args": [
+        "side"
+      ],
+      "description": "Open one or both omnipicker grippers through the live GDK gateway.",
+      "live_requires_confirm": true
+    },
+    {
+      "name": "gripper.close",
+      "title": "Close gripper",
+      "risk_level": 2,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "live"
+      ],
+      "timeout_s": 5.0,
+      "required_args": [
+        "side"
+      ],
+      "description": "Close one or both omnipicker grippers through the live GDK gateway.",
+      "live_requires_confirm": true
+    },
+    {
+      "name": "arm.move_named_pose",
+      "title": "Move arm to named pose",
+      "risk_level": 2,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "live"
+      ],
+      "timeout_s": 20.0,
+      "required_args": [
+        "pose"
+      ],
+      "description": "Move both arms to a named pose file or direct 14-joint target through the live GDK gateway.",
+      "live_requires_confirm": true
+    },
+    {
+      "name": "arm.move_cartesian",
+      "title": "Move arm to Cartesian target",
+      "risk_level": 3,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run"
+      ],
+      "timeout_s": 20.0,
+      "required_args": [
+        "side",
+        "position_m",
+        "rpy_deg"
+      ],
+      "description": "Dry-run Cartesian arm target. Live mode remains disabled until the GDK motion binding is audited.",
+      "live_requires_confirm": true
+    },
+    {
+      "name": "waist.move_named_pose",
+      "title": "Move waist to named pose",
+      "risk_level": 2,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "live"
+      ],
+      "timeout_s": 15.0,
+      "required_args": [
+        "pose"
+      ],
+      "description": "Move waist to a direct 5-joint target, or apply an audited single-joint delta, through the live GDK gateway.",
+      "live_requires_confirm": true
+    },
+    {
+      "name": "head.set_pan_tilt",
+      "title": "Set head pan/tilt",
+      "risk_level": 2,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "live"
+      ],
+      "timeout_s": 5.0,
+      "required_args": [
+        "yaw_deg",
+        "pitch_deg"
+      ],
+      "description": "Head yaw/pitch target with normal-speed safety limits. Live mode remains blocked unless allow_live is enabled.",
+      "live_requires_confirm": true
+    },
+    {
+      "name": "ee.relative_offset",
+      "title": "End-effector relative offset",
+      "risk_level": 2,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "live"
+      ],
+      "timeout_s": 10.0,
+      "required_args": [
+        "side",
+        "dx_m",
+        "dy_m",
+        "dz_m"
+      ],
+      "description": "Move a left or right end-effector by a small relative offset through the live GDK gateway.",
+      "live_requires_confirm": true
+    },
+    {
+      "name": "nav.goto_pose",
+      "title": "Navigate to map pose",
+      "risk_level": 3,
+      "needs_gdk": true,
+      "enabled": true,
+      "modes": [
+        "mock",
+        "dry_run",
+        "live"
+      ],
+      "timeout_s": 120.0,
+      "required_args": [],
+      "description": "Navigate to a map-frame pose or current-map waypoint index. Live mode requires gdk-live, allow-live, and confirm_physical=true.",
+      "live_requires_confirm": true
+    },
+    {
+      "name": "nav.to_station",
+      "title": "Navigate to station",
+      "risk_level": 3,
+      "needs_gdk": true,
+      "enabled": false,
+      "modes": [
+        "mock"
+      ],
+      "timeout_s": 60.0,
+      "required_args": [
+        "station"
+      ],
+      "description": "Registered but disabled in v0.1.",
+      "live_requires_confirm": true
+    }
+  ]
+}

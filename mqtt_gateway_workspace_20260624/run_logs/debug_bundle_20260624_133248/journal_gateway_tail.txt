@@ -1,0 +1,302 @@
+# command: journalctl -u g2-industrial-gateway.service -n 300 --no-pager
+# captured_at: 2026-06-24 13:32:49 CST
+Jun 24 13:31:30 G2 bash[995800]: E0624 13:31:30.157768 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:30 G2 bash[995800]: E0624 13:31:30.157815 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:30 G2 bash[995800]: E0624 13:31:30.278716 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:30 G2 bash[995800]: E0624 13:31:30.278756 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:32 G2 bash[995800]: E0624 13:31:32.161882 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:32 G2 bash[995800]: E0624 13:31:32.162029 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:32 G2 bash[995800]: E0624 13:31:32.287398 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:32 G2 bash[995800]: E0624 13:31:32.287446 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:34 G2 bash[995800]: E0624 13:31:34.166100 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:34 G2 bash[995800]: E0624 13:31:34.166141 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:34 G2 bash[995800]: E0624 13:31:34.360769 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:34 G2 bash[995800]: E0624 13:31:34.360816 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:36 G2 bash[995800]: E0624 13:31:36.179235 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:36 G2 bash[995800]: E0624 13:31:36.179383 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:36 G2 bash[995800]: E0624 13:31:36.406989 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:36 G2 bash[995800]: E0624 13:31:36.407039 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:38 G2 bash[995800]: E0624 13:31:38.190627 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:38 G2 bash[995800]: E0624 13:31:38.190667 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:38 G2 bash[995800]: E0624 13:31:38.410648 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:38 G2 bash[995800]: E0624 13:31:38.410692 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:40 G2 bash[995800]: E0624 13:31:40.212026 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:40 G2 bash[995800]: E0624 13:31:40.212066 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:40 G2 bash[995800]: E0624 13:31:40.415158 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:40 G2 bash[995800]: E0624 13:31:40.415199 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:42 G2 bash[995800]: E0624 13:31:42.226680 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:42 G2 bash[995800]: E0624 13:31:42.226711 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:42 G2 bash[995800]: E0624 13:31:42.423278 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:42 G2 bash[995800]: E0624 13:31:42.423336 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:44 G2 bash[995800]: E0624 13:31:44.295990 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:44 G2 bash[995800]: E0624 13:31:44.296056 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:44 G2 bash[995800]: E0624 13:31:44.429098 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:44 G2 bash[995800]: E0624 13:31:44.429165 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/capabilities HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/capabilities HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/capabilities HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/capabilities HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/capabilities HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/capabilities HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/capabilities HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/runtime HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: [gateway-http] 127.0.0.1 "GET /api/ready HTTP/1.1" 200 -
+Jun 24 13:31:46 G2 bash[995800]: E0624 13:31:46.304867 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:46 G2 bash[995800]: E0624 13:31:46.304919 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:46 G2 bash[995800]: E0624 13:31:46.472468 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:46 G2 bash[995800]: E0624 13:31:46.472518 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:48 G2 bash[995800]: E0624 13:31:48.313829 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:48 G2 bash[995800]: E0624 13:31:48.313871 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:48 G2 bash[995800]: E0624 13:31:48.472803 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:48 G2 bash[995800]: E0624 13:31:48.472851 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:50 G2 bash[995800]: E0624 13:31:50.317022 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:50 G2 bash[995800]: E0624 13:31:50.317061 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:50 G2 bash[995800]: E0624 13:31:50.482867 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:50 G2 bash[995800]: E0624 13:31:50.482909 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:52 G2 bash[995800]: E0624 13:31:52.325824 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:52 G2 bash[995800]: E0624 13:31:52.325873 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:52 G2 bash[995800]: E0624 13:31:52.502058 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:52 G2 bash[995800]: E0624 13:31:52.502122 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:54 G2 bash[995800]: E0624 13:31:54.329187 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:54 G2 bash[995800]: E0624 13:31:54.329238 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:54 G2 bash[995800]: E0624 13:31:54.507738 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:54 G2 bash[995800]: E0624 13:31:54.507793 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:56 G2 bash[995800]: E0624 13:31:56.342434 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:56 G2 bash[995800]: E0624 13:31:56.342504 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:56 G2 bash[995800]: E0624 13:31:56.516583 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:56 G2 bash[995800]: E0624 13:31:56.516625 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:58 G2 bash[995800]: E0624 13:31:58.367033 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:31:58 G2 bash[995800]: E0624 13:31:58.367322 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:31:58 G2 bash[995800]: E0624 13:31:58.530901 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:31:58 G2 bash[995800]: E0624 13:31:58.530956 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:00 G2 bash[995800]: E0624 13:32:00.368518 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:00 G2 bash[995800]: E0624 13:32:00.368595 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:00 G2 bash[995800]: E0624 13:32:00.545074 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:00 G2 bash[995800]: E0624 13:32:00.545122 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:02 G2 bash[995800]: E0624 13:32:02.376132 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:02 G2 bash[995800]: E0624 13:32:02.376169 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:02 G2 bash[995800]: E0624 13:32:02.549100 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:02 G2 bash[995800]: E0624 13:32:02.549145 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:04 G2 bash[995800]: E0624 13:32:04.459463 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:04 G2 bash[995800]: E0624 13:32:04.459513 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:04 G2 bash[995800]: E0624 13:32:04.558769 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:04 G2 bash[995800]: E0624 13:32:04.558822 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:06 G2 bash[995800]: E0624 13:32:06.464831 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:06 G2 bash[995800]: E0624 13:32:06.464973 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:06 G2 bash[995800]: E0624 13:32:06.561925 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:06 G2 bash[995800]: E0624 13:32:06.561975 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:08 G2 bash[995800]: E0624 13:32:08.480377 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:08 G2 bash[995800]: E0624 13:32:08.480414 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:08 G2 bash[995800]: E0624 13:32:08.566195 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:08 G2 bash[995800]: E0624 13:32:08.566248 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:10 G2 bash[995800]: E0624 13:32:10.485100 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:10 G2 bash[995800]: E0624 13:32:10.485155 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:10 G2 bash[995800]: E0624 13:32:10.570287 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:10 G2 bash[995800]: E0624 13:32:10.570336 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:12 G2 bash[995800]: E0624 13:32:12.492374 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:12 G2 bash[995800]: E0624 13:32:12.492419 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:12 G2 bash[995800]: E0624 13:32:12.580734 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:12 G2 bash[995800]: E0624 13:32:12.580773 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:14 G2 bash[995800]: E0624 13:32:14.498688 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:14 G2 bash[995800]: E0624 13:32:14.498734 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:14 G2 bash[995800]: E0624 13:32:14.588541 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:14 G2 bash[995800]: E0624 13:32:14.588589 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:16 G2 bash[995800]: E0624 13:32:16.502503 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:16 G2 bash[995800]: E0624 13:32:16.502967 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:16 G2 bash[995800]: E0624 13:32:16.595794 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:16 G2 bash[995800]: E0624 13:32:16.595847 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:18 G2 bash[995800]: E0624 13:32:18.515204 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:18 G2 bash[995800]: E0624 13:32:18.515252 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:18 G2 bash[995800]: E0624 13:32:18.598894 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:18 G2 bash[995800]: E0624 13:32:18.598943 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:20 G2 bash[995800]: E0624 13:32:20.518252 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:20 G2 bash[995800]: E0624 13:32:20.518293 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:20 G2 bash[995800]: E0624 13:32:20.612473 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:20 G2 bash[995800]: E0624 13:32:20.612515 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:22 G2 bash[995800]: E0624 13:32:22.535172 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:22 G2 bash[995800]: E0624 13:32:22.535221 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:22 G2 bash[995800]: E0624 13:32:22.626502 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:22 G2 bash[995800]: E0624 13:32:22.626544 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:24 G2 bash[995800]: E0624 13:32:24.540819 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:24 G2 bash[995800]: E0624 13:32:24.540877 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:24 G2 bash[995800]: E0624 13:32:24.629884 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:24 G2 bash[995800]: E0624 13:32:24.629928 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:26 G2 bash[995800]: E0624 13:32:26.590490 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:26 G2 bash[995800]: E0624 13:32:26.590545 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:26 G2 bash[995800]: E0624 13:32:26.636611 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:26 G2 bash[995800]: E0624 13:32:26.636654 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:28 G2 bash[995800]: E0624 13:32:28.598625 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:28 G2 bash[995800]: E0624 13:32:28.598667 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:28 G2 bash[995800]: E0624 13:32:28.640059 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:28 G2 bash[995800]: E0624 13:32:28.640105 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:30 G2 bash[995800]: E0624 13:32:30.602399 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:30 G2 bash[995800]: E0624 13:32:30.602571 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:30 G2 bash[995800]: E0624 13:32:30.651575 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:30 G2 bash[995800]: E0624 13:32:30.651616 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:32 G2 bash[995800]: E0624 13:32:32.605294 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:32 G2 bash[995800]: E0624 13:32:32.605352 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:32 G2 bash[995800]: E0624 13:32:32.654943 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:32 G2 bash[995800]: E0624 13:32:32.654989 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:34 G2 bash[995800]: E0624 13:32:34.609866 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:34 G2 bash[995800]: E0624 13:32:34.609912 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:34 G2 bash[995800]: E0624 13:32:34.658970 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:34 G2 bash[995800]: E0624 13:32:34.659021 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:36 G2 bash[995800]: E0624 13:32:36.613271 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:36 G2 bash[995800]: E0624 13:32:36.613317 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:36 G2 bash[995800]: E0624 13:32:36.662882 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:36 G2 bash[995800]: E0624 13:32:36.663038 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:38 G2 bash[995800]: E0624 13:32:38.618710 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:38 G2 bash[995800]: E0624 13:32:38.618753 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:38 G2 bash[995800]: E0624 13:32:38.693524 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:38 G2 bash[995800]: E0624 13:32:38.693573 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:40 G2 bash[995800]: E0624 13:32:40.622996 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:40 G2 bash[995800]: E0624 13:32:40.623055 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:40 G2 bash[995800]: E0624 13:32:40.773168 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:40 G2 bash[995800]: E0624 13:32:40.773214 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:42 G2 bash[995800]: E0624 13:32:42.627483 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:42 G2 bash[995800]: E0624 13:32:42.627534 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:42 G2 bash[995800]: E0624 13:32:42.781603 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:42 G2 bash[995800]: E0624 13:32:42.781646 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:44 G2 bash[995800]: E0624 13:32:44.630174 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:44 G2 bash[995800]: E0624 13:32:44.630352 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:44 G2 bash[995800]: E0624 13:32:44.784704 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:44 G2 bash[995800]: E0624 13:32:44.784745 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:46 G2 bash[995800]: E0624 13:32:46.634028 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:46 G2 bash[995800]: E0624 13:32:46.634091 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:46 G2 bash[995800]: E0624 13:32:46.795641 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:46 G2 bash[995800]: E0624 13:32:46.795691 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:48 G2 bash[995800]: E0624 13:32:48.643817 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:48 G2 bash[995800]: E0624 13:32:48.643862 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:48 G2 bash[995800]: E0624 13:32:48.813861 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:48 G2 bash[995800]: E0624 13:32:48.813907 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr

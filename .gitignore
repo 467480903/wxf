@@ -12,3 +12,5 @@ yolo/images/*.png
 yolo/yolo-env/
 yolo/*.jpg
 *.pyc
+*.log
+*.gz

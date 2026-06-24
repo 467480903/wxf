@@ -1,0 +1,13 @@
+# command: curl -sS --max-time 5 http://127.0.0.1:8767/api/ready
+# captured_at: 2026-06-24 13:32:48 CST
+{
+  "ok": true,
+  "service": "g2-industrial-gateway",
+  "state": "RUNNING",
+  "backend": "gdk-live",
+  "accepting_tasks": true,
+  "gdk_required": true,
+  "gdk_connected": true,
+  "queue_depth": 0,
+  "ts": "2026-06-24T05:32:48.933876+00:00"
+}

@@ -24,7 +24,6 @@ TERMINAL_STATES = {"DONE", "FAILED", "BLOCKED", "CANCELED"}
 PREFLIGHT_POLICIES = {"require", "warn", "skip"}
 ORIGINAL_ROOT = Path("/data/wxf/wxf")
 DEFAULT_HTTP_URL = os.environ.get("G2_GATEWAY_HTTP_URL", "http://127.0.0.1:8767").rstrip("/")
-SEQUENCE_DEADLINE_ENV = "G2_WXF_SEQUENCE_DEADLINE_TS"
 
 
 def workspace_root() -> Path:
@@ -226,53 +225,6 @@ def env_flag(name: str, default: bool = False) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def env_float(name: str, default: float) -> float:
-    raw = os.environ.get(name)
-    if raw in (None, ""):
-        return float(default)
-    return float(raw)
-
-
-def sequence_remaining_s() -> float | None:
-    raw = os.environ.get(SEQUENCE_DEADLINE_ENV)
-    if raw in (None, ""):
-        return None
-    try:
-        return float(raw) - time.time()
-    except ValueError:
-        return None
-
-
-def require_sequence_budget(label: str, min_remaining_s: float = 1.0) -> None:
-    remaining = sequence_remaining_s()
-    if remaining is not None and remaining < min_remaining_s:
-        raise SystemExit(
-            f"sequence timeout before {label}: remaining={remaining:.1f}s, "
-            f"required>={min_remaining_s:.1f}s"
-        )
-
-
-def effective_task_timeout(timeout_s: float, min_remaining_s: float = 1.0) -> float:
-    require_sequence_budget("task submit", min_remaining_s=min_remaining_s)
-    remaining = sequence_remaining_s()
-    if remaining is None:
-        return float(timeout_s)
-    return max(min_remaining_s, min(float(timeout_s), remaining))
-
-
-def nav_timeouts_from_env() -> tuple[float, float]:
-    nav_timeout_s = env_float("G2_WXF_NAV_TIMEOUT_S", 120.0)
-    client_timeout_s = env_float("G2_WXF_NAV_CLIENT_TIMEOUT_S", 150.0)
-    remaining = sequence_remaining_s()
-    if remaining is not None:
-        if remaining <= 5.0:
-            raise SystemExit(f"sequence timeout before nav waypoint: remaining={remaining:.1f}s")
-        nav_timeout_s = min(nav_timeout_s, max(5.0, remaining - 5.0))
-        client_timeout_s = min(client_timeout_s, nav_timeout_s + 30.0)
-        client_timeout_s = max(client_timeout_s, nav_timeout_s + 5.0)
-    return nav_timeout_s, client_timeout_s
-
-
 def safe_motion_mode(mode: str | None = None) -> str:
     selected = (mode or os.environ.get("G2_WXF_GATEWAY_MODE", "dry_run")).strip()
     if selected == "live":
@@ -298,12 +250,11 @@ def submit_task(
         if confirm_physical is not None
         else (selected_mode == "live" and env_flag("G2_WXF_GATEWAY_CONFIRM_PHYSICAL", False))
     )
-    effective_timeout_s = effective_task_timeout(timeout_s)
     payload = build_payload(
         command,
         args=args,
         mode=selected_mode,
-        timeout_s=effective_timeout_s,
+        timeout_s=timeout_s,
         confirm_physical=selected_confirm,
     )
     client = GatewayMqttClient(
@@ -312,9 +263,9 @@ def submit_task(
     )
     result = client.submit_and_wait(
         payload,
-        timeout_s=effective_timeout_s,
+        timeout_s=timeout_s,
         preflight=preflight or os.environ.get("G2_WXF_GATEWAY_PREFLIGHT", "require"),
-        preflight_timeout_s=env_float("G2_WXF_GATEWAY_PREFLIGHT_TIMEOUT_S", 3.0),
+        preflight_timeout_s=float(os.environ.get("G2_WXF_GATEWAY_PREFLIGHT_TIMEOUT_S", "3")),
     )
     print(json.dumps(result, ensure_ascii=False, sort_keys=True), flush=True)
     return result
@@ -549,7 +500,6 @@ def run_ee_offsets(source_script: str, offset_l: Iterable[float], offset_r: Iter
 
 def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> None:
     for item in waypoints:
-        nav_timeout_s, client_timeout_s = nav_timeouts_from_env()
         result = submit_task(
             "nav.goto_pose",
             {
@@ -558,13 +508,9 @@ def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> No
                 "waypoint_index": item.get("index"),
                 "high_precision": bool(item.get("high_precision", False)),
                 "allow_estop_pedal_fault": env_flag("G2_WXF_ALLOW_ESTOP_PEDAL_FAULT", False),
-                "nav_timeout_s": nav_timeout_s,
-                "startup_timeout_s": env_float("G2_WXF_NAV_STARTUP_TIMEOUT_S", 10.0),
-                "poll_interval_s": env_float("G2_WXF_NAV_POLL_INTERVAL_S", 0.5),
-                "no_progress_timeout_s": env_float("G2_WXF_NAV_NO_PROGRESS_TIMEOUT_S", 45.0),
-                "progress_min_distance_m": env_float("G2_WXF_NAV_PROGRESS_MIN_DISTANCE_M", 0.03),
-                "progress_min_yaw_rad": env_float("G2_WXF_NAV_PROGRESS_MIN_YAW_RAD", 0.05),
-                "progress_min_speed_mps": env_float("G2_WXF_NAV_PROGRESS_MIN_SPEED_MPS", 0.02),
+                "nav_timeout_s": float(os.environ.get("G2_WXF_NAV_TIMEOUT_S", "120")),
+                "startup_timeout_s": float(os.environ.get("G2_WXF_NAV_STARTUP_TIMEOUT_S", "10")),
+                "poll_interval_s": float(os.environ.get("G2_WXF_NAV_POLL_INTERVAL_S", "0.5")),
                 "x_m": float(item.get("x_m", 0.0)),
                 "y_m": float(item.get("y_m", 0.0)),
                 "yaw_rad": float(item.get("yaw_rad", 0.0)),
@@ -574,13 +520,12 @@ def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> No
                 "note": "placeholder dry-run for old RobotController.go(index); no chassis motion",
             },
             mode=safe_motion_mode(),
-            timeout_s=client_timeout_s,
+            timeout_s=float(os.environ.get("G2_WXF_NAV_CLIENT_TIMEOUT_S", "140")),
         )
         require_done(result)
 
 
 def run_nav_forward(source_script: str, dist_m: float, speed: float | None = None) -> None:
-    nav_timeout_s, client_timeout_s = nav_timeouts_from_env()
     result = submit_task(
         "nav.goto_pose",
         {
@@ -591,17 +536,10 @@ def run_nav_forward(source_script: str, dist_m: float, speed: float | None = Non
             "yaw_rad": 0.0,
             "speed_profile": "normal",
             "requested_speed_mps": speed,
-            "nav_timeout_s": nav_timeout_s,
-            "startup_timeout_s": env_float("G2_WXF_NAV_STARTUP_TIMEOUT_S", 10.0),
-            "poll_interval_s": env_float("G2_WXF_NAV_POLL_INTERVAL_S", 0.5),
-            "no_progress_timeout_s": env_float("G2_WXF_NAV_NO_PROGRESS_TIMEOUT_S", 45.0),
-            "progress_min_distance_m": env_float("G2_WXF_NAV_PROGRESS_MIN_DISTANCE_M", 0.03),
-            "progress_min_yaw_rad": env_float("G2_WXF_NAV_PROGRESS_MIN_YAW_RAD", 0.05),
-            "progress_min_speed_mps": env_float("G2_WXF_NAV_PROGRESS_MIN_SPEED_MPS", 0.02),
             "note": "placeholder dry-run for old move_forward; no chassis motion",
         },
         mode=safe_motion_mode(),
-        timeout_s=client_timeout_s,
+        timeout_s=15.0,
     )
     require_done(result)
 
@@ -731,19 +669,13 @@ def classify_sequence_command(script_dir: Path, task_entry: str) -> tuple[str, l
 
 def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[str], execute: bool = False) -> int:
     base = Path(script_dir).resolve()
-    sequence_timeout_s = env_float("G2_WXF_SEQUENCE_TIMEOUT_S", 0.0) if execute else 0.0
-    if execute and sequence_timeout_s > 0.0 and not os.environ.get(SEQUENCE_DEADLINE_ENV):
-        os.environ[SEQUENCE_DEADLINE_ENV] = f"{time.time() + sequence_timeout_s:.6f}"
     print(f"# {name}")
     print(f"# steps={len(sequence)}, mode={'execute' if execute else 'dry-run plan'}")
-    if execute and sequence_timeout_s > 0.0:
-        print(f"# sequence_timeout_s={sequence_timeout_s:.1f}")
     for index, entry in enumerate(sequence, 1):
         kind, parts, reason = classify_sequence_command(base, entry)
         print(f"[{index:02d}/{len(sequence):02d}] {kind}: {entry} ({reason})")
         if not execute:
             continue
-        require_sequence_budget(f"step {index}: {entry}", min_remaining_s=1.0)
         if kind in {"blocked_external", "blocked_unknown", "empty", "missing_local"}:
             print("blocked by migrated sequence runner")
             return 1
@@ -777,7 +709,6 @@ def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[s
         if rc != 0:
             print(f"step failed rc={rc}: {entry}")
             return rc
-        require_sequence_budget(f"after step {index}: {entry}", min_remaining_s=0.0)
     return 0
 
 

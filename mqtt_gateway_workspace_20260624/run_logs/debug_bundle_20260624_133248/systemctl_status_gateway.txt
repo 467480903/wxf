@@ -1,0 +1,22 @@
+# command: systemctl status g2-industrial-gateway.service --no-pager -l
+# captured_at: 2026-06-24 13:32:48 CST
+● g2-industrial-gateway.service - G2 Industrial Gateway HTTP/UI Service
+     Loaded: loaded (/etc/systemd/system/g2-industrial-gateway.service; enabled; vendor preset: enabled)
+     Active: active (running) since Wed 2026-06-24 11:40:41 CST; 1h 52min ago
+   Main PID: 995800 (python3)
+      Tasks: 26 (limit: 5020)
+     Memory: 130.3M
+        CPU: 29min 29.687s
+     CGroup: /system.slice/g2-industrial-gateway.service
+             └─995800 /usr/bin/python3 -m g2_industrial_gateway.server --host 0.0.0.0 --port 8767 --journal-dir /data/g2_industrial_gateway/journal/http --backend gdk-live --allow-live --enable-camera-snapshots
+
+Jun 24 13:32:42 G2 bash[995800]: E0624 13:32:42.781603 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:42 G2 bash[995800]: E0624 13:32:42.781646 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:44 G2 bash[995800]: E0624 13:32:44.630174 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:44 G2 bash[995800]: E0624 13:32:44.630352 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:44 G2 bash[995800]: E0624 13:32:44.784704 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:44 G2 bash[995800]: E0624 13:32:44.784745 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:46 G2 bash[995800]: E0624 13:32:46.634028 1354600 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_left_fisheye
+Jun 24 13:32:46 G2 bash[995800]: E0624 13:32:46.634091 1354600 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr
+Jun 24 13:32:46 G2 bash[995800]: E0624 13:32:46.795641 1354677 camera_impl.cpp:113] [python3.10][GDK]Frame is null: /camera/head_right_fisheye
+Jun 24 13:32:46 G2 bash[995800]: E0624 13:32:46.795691 1354677 sensors.cpp:156] [python3.10][GDK]LatestImage failed, ret is nullptr

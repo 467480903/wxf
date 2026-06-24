@@ -1,0 +1,31 @@
+# command: cat /data/g2_industrial_gateway/g2-industrial-gateway.env
+# captured_at: 2026-06-24 13:32:48 CST
+# G2 Industrial Gateway runtime configuration.
+# Copy to /data/g2_industrial_gateway/g2-industrial-gateway.env on the robot.
+
+G2_GATEWAY_APP_DIR=/data/g2_industrial_gateway/current
+G2_GATEWAY_JOURNAL_DIR=/data/g2_industrial_gateway/journal
+
+# Use mock for offline UI demos. Use gdk-readonly for robot-side passive reads.
+G2_GATEWAY_BACKEND=gdk-live
+
+# Bind to all robot interfaces so the operator workstation can reach the UI.
+G2_GATEWAY_HTTP_HOST=0.0.0.0
+G2_GATEWAY_HTTP_PORT=8767
+G2_GATEWAY_HTTP_URL=http://127.0.0.1:8767
+
+G2_GATEWAY_MQTT_BROKER=127.0.0.1
+G2_GATEWAY_MQTT_PORT=1883
+G2_GATEWAY_MQTT_CLIENT_ID=g2-industrial-gateway
+G2_GATEWAY_MQTT_QOS=1
+G2_GATEWAY_MQTT_HEARTBEAT_INTERVAL_S=1.0
+
+G2_GATEWAY_ENABLE_CAMERA_SNAPSHOTS=1
+G2_GATEWAY_ALLOW_LIVE=1
+
+G2_SCRIPT_RUNNER_LOG_DIR=/data/g2_script_runner/logs
+G2_SCRIPT_RUNNER_CLIENT_ID=g2-script-runner
+G2_SCRIPT_RUNNER_QOS=1
+G2_SCRIPT_RUNNER_ALLOW_MOTION=0
+G2_SCRIPT_RUNNER_FAULT_TOPIC=g2/script_runner/fault
+G2_SCRIPT_RUNNER_STATUS_FILE=/data/g2_script_runner/status.json
