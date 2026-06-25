@@ -10,11 +10,12 @@ time.sleep(1)
 
 # 播放TTS
 try:
-    interaction.play_tts("你好，我是精灵G2")
-    time.sleep(3)
-    # interaction.play_tts("こんにちは、ホンダのお客様、これは工業応用シーンで、自動車のインテリア部品の加工を展示しています")
+    # interaction.play_tts("你好，我是精灵G2")
+    # time.sleep(3)
+    # interaction.play_tts("こんにちは、ほんだのおきゃくさま、これはこうぎょうおうようしーんで、じどうしゃのいんてりあぶひんのかこうをてんじしています")
+    interaction.play_tts("Konnichiwa, Honda no okyaku-sama, kore wa kōgyō ōyō shīn de, jidōsha no interia buhin no kakō o tenji shite imasu.")
     # time.sleep(10)    
-    interaction.play_tts("No such file or directory")
+    # interaction.play_tts("No such file or directory")
     print("TTS播放成功")
     time.sleep(3)  # 等待播放完成
 except Exception as e:

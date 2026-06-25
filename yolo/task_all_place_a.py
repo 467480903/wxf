@@ -18,6 +18,7 @@ TASK_SEQUENCE = [
 
 #上面顾工下面魏工
     "python move_whole_body_by_json.py ../positions/pick_standby.json",
+    "python ../interaction/play_tts_cli.py 执行基于视觉模型的推理,通过识别两个销子,然后计算销子的中点,和销子的深度值,来计算机器人的腰部旋转值,和纵声偏移量,和水平偏移量",
     "python cam_get_head.py",
     "yolo-env/bin/python yolo_depth.py shelf.pt 1",
     "python correct_waist.py",

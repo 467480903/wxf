@@ -1,0 +1,1 @@
+scp /data/wxf/wxf/interaction/tts.wav agi@10.42.0.111:/home/agi/data

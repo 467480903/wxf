@@ -37,6 +37,13 @@ wxf_log_file_only() {
   printf '%s\n' "$*" >> "${WXF_LOG_FILE}"
 }
 
+wxf_env_true() {
+  case "${1:-}" in
+    1|true|TRUE|yes|YES|on|ON) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 wxf_log_section() {
   wxf_log ""
   wxf_log "===== $* ====="
@@ -180,8 +187,19 @@ wxf_run_logged() {
   shift
 
   wxf_log_command_context "${cwd}" "$@"
-  wxf_log_service_snapshot
-  wxf_log_robot_readonly_snapshot "before"
+  if wxf_env_true "${G2_WXF_SKIP_SERVICE_SNAPSHOT:-0}"; then
+    wxf_log_section "service snapshot before run"
+    wxf_log "# service snapshot skipped by G2_WXF_SKIP_SERVICE_SNAPSHOT=1"
+  else
+    wxf_log_service_snapshot
+  fi
+
+  if wxf_env_true "${G2_WXF_SKIP_RUN_SNAPSHOTS:-0}"; then
+    wxf_log_section "robot readonly snapshot before"
+    wxf_log "# before readonly snapshot skipped by G2_WXF_SKIP_RUN_SNAPSHOTS=1"
+  else
+    wxf_log_robot_readonly_snapshot "before"
+  fi
 
   wxf_log_section "script output"
   cd "${cwd}"
@@ -189,7 +207,13 @@ wxf_run_logged() {
   "$@" 2>&1 | tee -a "${WXF_LOG_FILE}"
   local rc=${PIPESTATUS[0]}
   set -e
-  wxf_log_robot_readonly_snapshot "after"
+
+  if wxf_env_true "${G2_WXF_SKIP_RUN_SNAPSHOTS:-0}"; then
+    wxf_log_section "robot readonly snapshot after"
+    wxf_log "# after readonly snapshot skipped by G2_WXF_SKIP_RUN_SNAPSHOTS=1"
+  else
+    wxf_log_robot_readonly_snapshot "after"
+  fi
 
   wxf_log_section "run result"
   wxf_log "finished_at: $(date '+%Y-%m-%d %H:%M:%S %Z')"

@@ -1,5 +1,6 @@
 import agibot_gdk
 import time
+import json
 from end_effector_controller import EndEffectorController
 
 
@@ -32,7 +33,10 @@ def main():
         # controller.adjust_arms_relative(offset_l=(0, 0, 0), offset_r=(0, 0, -0.05))
         
         # 示例 3：左臂向左 (Y+) 50mm，右臂向右 (Y-) 50mm，同时执行
-        # controller.adjust_arms_relative(offset_l=(0, -0.01, 0), offset_r=(0,    0.01, 0))
+        with open("/data/wxf/wxf/yolo/yolo_depth_result.json", "r") as f:
+            yolo_result = json.load(f)
+        horizontal_offset_m = yolo_result["offset"]["horizontal_offset_px"] / 1000.0
+        controller.adjust_arms_relative(offset_l=(0, horizontal_offset_m, 0), offset_r=(0, horizontal_offset_m, 0))
         # controller.adjust_arms_relative(offset_l=(0, 0, -0.01   ), offset_r=(0,    0, -0.01))
         
         controller.adjust_arms_relative(offset_l=(0.09, 0, 0  ), offset_r=(0.09, 0, 0))

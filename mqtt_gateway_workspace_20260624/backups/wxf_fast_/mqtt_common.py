@@ -457,54 +457,61 @@ def run_whole_body_json(json_path: str, source_script: str, sync_requested: bool
     left = _extract_values(data, LEFT_ARM_KEYS)
     right = _extract_values(data, RIGHT_ARM_KEYS)
     pose = pose_name_from_path(json_path, "whole_body_json")
-    result = submit_task(
-        "body.move_whole_body_pose",
-        {
-            "pose": pose,
-            "source_script": source_script,
-            "source_json": str(json_path),
-            "resolved_json": str(resolve_data_path(json_path)),
-            "head_joint_names": HEAD_KEYS,
-            "waist_joint_names": WAIST_KEYS,
-            "left_arm_joint_names": LEFT_ARM_KEYS,
-            "right_arm_joint_names": RIGHT_ARM_KEYS,
-            "head_rad": head,
-            "waist_rad": waist,
-            "left_arm_rad": left,
-            "right_arm_rad": right,
-            "head_speed_radps": env_float("G2_WXF_FAST_HEAD_SPEED_RADPS", 0.5),
-            "waist_speed_radps": env_float("G2_WXF_FAST_WAIST_SPEED_RADPS", 1.0),
-            "arm_speed_radps": env_float("G2_WXF_FAST_ARM_SPEED_RADPS", 0.5),
-            "inter_command_delay_s": env_float("G2_WXF_FAST_BODY_INTER_COMMAND_DELAY_S", 0.0),
-            "settle_s": env_float("G2_WXF_FAST_BODY_SETTLE_S", 0.0),
-            "sync_requested": bool(sync_requested),
-            "fast_demo_path": True,
-        },
-        mode=safe_motion_mode(),
-        timeout_s=20.0,
-    )
-    require_done(result)
+    for result in (
+        submit_task(
+            "head.set_pan_tilt",
+            {
+                "source_script": source_script,
+                "source_json": str(json_path),
+                "head_joint_names": HEAD_KEYS,
+                "head_rad": head,
+                "yaw_deg": math.degrees(head[0]),
+                "pitch_deg": math.degrees(head[1]),
+                "roll_deg": math.degrees(head[2]),
+                "sync_requested": bool(sync_requested),
+            },
+            mode=safe_motion_mode(),
+            timeout_s=5.0,
+        ),
+        submit_task(
+            "waist.move_named_pose",
+            {
+                "pose": f"{pose}_waist",
+                "source_script": source_script,
+                "source_json": str(json_path),
+                "waist_joint_names": WAIST_KEYS,
+                "joint_positions_rad": waist,
+                "joint_velocities_radps": [0.3] * 5,
+                "sync_requested": bool(sync_requested),
+            },
+            mode=safe_motion_mode(),
+            timeout_s=15.0,
+        ),
+        submit_task(
+            "arm.move_named_pose",
+            {
+                "pose": f"{pose}_arms",
+                "source_script": source_script,
+                "source_json": str(json_path),
+                "left_arm_joint_names": LEFT_ARM_KEYS,
+                "right_arm_joint_names": RIGHT_ARM_KEYS,
+                "left_arm_rad": left,
+                "right_arm_rad": right,
+                "joint_positions_rad": left + right,
+                "joint_velocities_radps": [0.2] * 14,
+                "time_scale_s": 2,
+                "sync_requested": bool(sync_requested),
+            },
+            mode=safe_motion_mode(),
+            timeout_s=20.0,
+        ),
+    ):
+        require_done(result)
 
 
 def run_gripper(action: str, source_script: str, targets: dict[str, float] | None = None) -> None:
     command = "gripper.open" if action == "open" else "gripper.close"
     targets = targets or {"left": -0.785 if action == "open" else 0.0, "right": -0.785 if action == "open" else 0.0}
-    if set(targets) == {"left", "right"} and float(targets["left"]) == float(targets["right"]):
-        result = submit_task(
-            command,
-            {
-                "side": "both",
-                "target_position": float(targets["left"]),
-                "target_type": "omnipicker",
-                "inter_side_delay_s": env_float("G2_WXF_FAST_GRIPPER_INTER_SIDE_DELAY_S", 0.0),
-                "source_script": source_script,
-                "fast_demo_path": True,
-            },
-            mode=safe_motion_mode(),
-            timeout_s=5.0,
-        )
-        require_done(result)
-        return
     for side, target_position in targets.items():
         result = submit_task(
             command,
@@ -521,28 +528,23 @@ def run_gripper(action: str, source_script: str, targets: dict[str, float] | Non
 
 
 def run_ee_offsets(source_script: str, offset_l: Iterable[float], offset_r: Iterable[float]) -> None:
-    left = tuple(float(v) for v in offset_l)
-    right = tuple(float(v) for v in offset_r)
-    if len(left) != 3 or len(right) != 3:
-        raise ValueError("offset must contain exactly dx, dy, dz")
-    result = submit_task(
-        "ee.relative_offset_dual",
-        {
-            "left_offset_m": list(left),
-            "right_offset_m": list(right),
-            "frame": "tool",
-            "max_step_m": env_float("G2_WXF_FAST_EE_MAX_STEP_M", 0.002),
-            "rate_hz": env_float("G2_WXF_FAST_EE_RATE_HZ", 100.0),
-            "life_time_s": env_float("G2_WXF_FAST_EE_LIFE_TIME_S", 0.02),
-            "inter_side_delay_s": env_float("G2_WXF_FAST_EE_INTER_SIDE_DELAY_S", 0.0),
-            "use_both_group": env_flag("G2_WXF_FAST_EE_USE_BOTH_GROUP", True),
-            "source_script": source_script,
-            "fast_demo_path": True,
-        },
-        mode=safe_motion_mode(),
-        timeout_s=10.0,
-    )
-    require_done(result)
+    for side, offset in (("left", tuple(float(v) for v in offset_l)), ("right", tuple(float(v) for v in offset_r))):
+        if len(offset) != 3:
+            raise ValueError("offset must contain exactly dx, dy, dz")
+        result = submit_task(
+            "ee.relative_offset",
+            {
+                "side": side,
+                "dx_m": offset[0],
+                "dy_m": offset[1],
+                "dz_m": offset[2],
+                "frame": "tool",
+                "source_script": source_script,
+            },
+            mode=safe_motion_mode(),
+            timeout_s=10.0,
+        )
+        require_done(result)
 
 
 def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> None:
