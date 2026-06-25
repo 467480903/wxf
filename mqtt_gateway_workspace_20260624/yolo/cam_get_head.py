@@ -11,20 +11,22 @@ for _parent in Path(__file__).resolve().parents:
         sys.path.insert(0, str(_common))
         break
 
-from mqtt_common import fetch_gateway_snapshot
-
+from mqtt_common import fetch_gateway_raw_depth, fetch_gateway_snapshot
 
 
 def main() -> int:
     import argparse
-    parser = argparse.ArgumentParser(description="Fetch head snapshots through Gateway HTTP for yolo/cam_get_head.py")
+
+    parser = argparse.ArgumentParser(description="Fetch head RGB + depth raw through Gateway HTTP for yolo/cam_get_head.py")
     parser.add_argument("--timeout-s", type=float, default=5.0)
     args = parser.parse_args()
+
     fetch_gateway_snapshot("head_rgb", "head.jpg", timeout_s=args.timeout_s)
+    fetch_gateway_raw_depth("head_depth.raw", timeout_s=args.timeout_s)
     try:
         fetch_gateway_snapshot("head_depth", "head_depth.jpg", timeout_s=args.timeout_s)
     except Exception as exc:
-        print(f"depth snapshot skipped: {type(exc).__name__}: {exc}")
+        print(f"depth jpg snapshot skipped: {type(exc).__name__}: {exc}")
     return 0
 
 

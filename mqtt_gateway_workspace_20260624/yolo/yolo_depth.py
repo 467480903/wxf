@@ -15,6 +15,8 @@ import numpy as np
 import os
 import sys
 import json
+import time
+
 from ultralytics import YOLO
 
 # ===================== 全局配置 =====================
@@ -92,8 +94,16 @@ def _auto_reshape(raw_bytes: bytes) -> np.ndarray | None:
 
 def yolo_detect(image_path: str):
     """YOLO 检测，返回原始图像、检测框信息、图像尺寸"""
+    start_time = time.time()
     model = YOLO(MODEL_PATH)
+    load_time = time.time() - start_time
+    print(f"模型加载耗时: {load_time:.4f} 秒")
+
+    # 测量推理时间
+    start_time = time.time()
     results = model(image_path)
+    inference_time = time.time() - start_time
+    print(f"推理耗时: {inference_time:.4f} 秒")
     results[0].save(filename='result.jpg')
 
     img = results[0].orig_img.copy()
@@ -337,6 +347,7 @@ def get_average_depth(depth_raw: np.ndarray, x: int, y: int, radius: int = 5) ->
 # ===================== 主流程 =====================
 
 def main():
+    start_time_main = time.time()
     print("=" * 60)
     print("YOLO + head_depth.raw 深度采样")
     print("=" * 60)
@@ -558,6 +569,8 @@ def main():
         json.dump(result_data, f, ensure_ascii=False, indent=2)
     print(f"✅ 诊断结果已保存: {result_json_path}")
 
+    inference_time = time.time() - start_time_main
+    print(f"总耗时: {inference_time:.4f} 秒")
 
 if __name__ == '__main__':
     main()

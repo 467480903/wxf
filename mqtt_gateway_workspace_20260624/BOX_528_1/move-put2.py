@@ -14,7 +14,16 @@ for _parent in Path(__file__).resolve().parents:
 from mqtt_common import run_nav_waypoints
 
 
-WAYPOINTS = [{'index': 19, 'high_precision': False}, {'index': 20, 'high_precision': False}, {'index': 21, 'high_precision': False}, {'index': 22, 'high_precision': False}, {'index': 23, 'high_precision': False}, {'index': 25, 'high_precision': False}]
+# Original /data/wxf/wxf/BOX_528_1/move-put2.py:
+# go(19), go(20), go(21), go(22), go_adjusted(23), go_adjusted(25)
+WAYPOINTS = [
+    {"index": 19, "high_precision": False},
+    {"index": 20, "high_precision": False},
+    {"index": 21, "high_precision": False},
+    {"index": 22, "high_precision": False},
+    {"index": 23, "high_precision": True},
+    {"index": 25, "high_precision": True},
+]
 
 
 def main() -> int:

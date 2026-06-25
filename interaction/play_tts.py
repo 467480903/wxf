@@ -10,10 +10,10 @@ time.sleep(1)
 
 # 播放TTS
 try:
-    # interaction.play_tts("你好，我是精灵G2")
+    interaction.play_tts("你好，我是精灵G2")
     # time.sleep(3)
     # interaction.play_tts("こんにちは、ほんだのおきゃくさま、これはこうぎょうおうようしーんで、じどうしゃのいんてりあぶひんのかこうをてんじしています")
-    interaction.play_tts("Konnichiwa, Honda no okyaku-sama, kore wa kōgyō ōyō shīn de, jidōsha no interia buhin no kakō o tenji shite imasu.")
+    # interaction.play_tts("Konnichiwa, Honda no okyaku-sama, kore wa kōgyō ōyō shīn de, jidōsha no interia buhin no kakō o tenji shite imasu.")
     # time.sleep(10)    
     # interaction.play_tts("No such file or directory")
     print("TTS播放成功")

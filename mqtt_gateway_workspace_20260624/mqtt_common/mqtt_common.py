@@ -367,6 +367,35 @@ def load_json(path: str | os.PathLike[str]) -> dict[str, Any]:
         raise ValueError(f"JSON root must be an object: {resolved}")
     return data
 
+def resolve_yolo_result_path(preferred: str = "yolo_depth_result.json", base: Path | None = None) -> Path:
+    names: list[str] = []
+    for name in (preferred, "yyolo_depth_result.json", "yolo_depth_result.json"):
+        if name not in names:
+            names.append(name)
+    candidates: list[Path] = []
+    for name in names:
+        raw = Path(name)
+        if base is not None and not raw.is_absolute():
+            candidates.append((base / raw).resolve())
+        candidates.append(resolve_data_path(raw))
+    unique: list[Path] = []
+    for candidate in candidates:
+        if candidate not in unique:
+            unique.append(candidate)
+    existing = [candidate for candidate in unique if candidate.exists()]
+    if not existing:
+        return unique[0] if unique else resolve_data_path(preferred)
+    return max(existing, key=lambda candidate: candidate.stat().st_mtime)
+
+
+def load_yolo_result_json(preferred: str = "yolo_depth_result.json", base: Path | None = None) -> tuple[Path, dict[str, Any]]:
+    result_path = resolve_yolo_result_path(preferred, base=base)
+    with result_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        raise ValueError(f"YOLO result JSON root must be an object: {result_path}")
+    return result_path, data
+
 
 def _extract_values(data: dict[str, Any], keys: list[str]) -> list[float]:
     return [float(data.get(key, 0.0)) for key in keys]
@@ -457,6 +486,72 @@ def run_whole_body_json(json_path: str, source_script: str, sync_requested: bool
     left = _extract_values(data, LEFT_ARM_KEYS)
     right = _extract_values(data, RIGHT_ARM_KEYS)
     pose = pose_name_from_path(json_path, "whole_body_json")
+    if env_flag("G2_WXF_FAST_WHOLE_BODY_SPLIT", False):
+        split_delay_s = env_float("G2_WXF_FAST_WHOLE_BODY_SPLIT_DELAY_S", 0.08)
+        if not env_flag("G2_WXF_FAST_WHOLE_BODY_SKIP_HEAD", False):
+            result = submit_task(
+                "head.set_pan_tilt",
+                {
+                    "source_script": source_script,
+                    "source_json": str(json_path),
+                    "resolved_json": str(resolve_data_path(json_path)),
+                    "yaw_deg": math.degrees(head[0]),
+                    "pitch_deg": math.degrees(head[1]),
+                    "roll_deg": math.degrees(head[2]),
+                    "speed_rad_s": env_float("G2_WXF_FAST_HEAD_SPEED_RADPS", 0.5),
+                    "fast_demo_path": True,
+                    "whole_body_split": True,
+                },
+                mode=safe_motion_mode(),
+                timeout_s=5.0,
+            )
+            require_done(result)
+            if split_delay_s:
+                time.sleep(split_delay_s)
+
+        result = submit_task(
+            "waist.move_named_pose",
+            {
+                "pose": f"{pose}_waist",
+                "source_script": source_script,
+                "source_json": str(json_path),
+                "resolved_json": str(resolve_data_path(json_path)),
+                "waist_joint_names": WAIST_KEYS,
+                "joint_positions_rad": waist,
+                "joint_velocities_radps": [env_float("G2_WXF_FAST_WAIST_SPEED_RADPS", 1.0)] * 5,
+                "fast_demo_path": True,
+                "whole_body_split": True,
+            },
+            mode=safe_motion_mode(),
+            timeout_s=15.0,
+        )
+        require_done(result)
+        if split_delay_s:
+            time.sleep(split_delay_s)
+
+        result = submit_task(
+            "arm.move_named_pose",
+            {
+                "pose": f"{pose}_arms",
+                "source_script": source_script,
+                "source_json": str(json_path),
+                "resolved_json": str(resolve_data_path(json_path)),
+                "left_arm_joint_names": LEFT_ARM_KEYS,
+                "right_arm_joint_names": RIGHT_ARM_KEYS,
+                "left_arm_rad": left,
+                "right_arm_rad": right,
+                "joint_positions_rad": left + right,
+                "joint_velocities_radps": [env_float("G2_WXF_FAST_ARM_SPEED_RADPS", 0.5)] * 14,
+                "time_scale_s": 2,
+                "fast_demo_path": True,
+                "whole_body_split": True,
+            },
+            mode=safe_motion_mode(),
+            timeout_s=20.0,
+        )
+        require_done(result)
+        return
+
     result = submit_task(
         "body.move_whole_body_pose",
         {
@@ -488,15 +583,18 @@ def run_whole_body_json(json_path: str, source_script: str, sync_requested: bool
 
 def run_gripper(action: str, source_script: str, targets: dict[str, float] | None = None) -> None:
     command = "gripper.open" if action == "open" else "gripper.close"
-    targets = targets or {"left": -0.785 if action == "open" else 0.0, "right": -0.785 if action == "open" else 0.0}
-    if set(targets) == {"left", "right"} and float(targets["left"]) == float(targets["right"]):
+    targets = targets or {"right": -0.785 if action == "open" else 0.0, "left": -0.785 if action == "open" else 0.0}
+    force_sequential = env_flag("G2_WXF_FAST_GRIPPER_FORCE_SEQUENTIAL", True)
+    inter_side_delay_s = env_float("G2_WXF_FAST_GRIPPER_INTER_SIDE_DELAY_S", 0.15)
+    post_wait_s = env_float("G2_WXF_FAST_GRIPPER_POST_WAIT_S", 0.30)
+    if not force_sequential and set(targets) == {"left", "right"} and float(targets["left"]) == float(targets["right"]):
         result = submit_task(
             command,
             {
                 "side": "both",
                 "target_position": float(targets["left"]),
                 "target_type": "omnipicker",
-                "inter_side_delay_s": env_float("G2_WXF_FAST_GRIPPER_INTER_SIDE_DELAY_S", 0.0),
+                "inter_side_delay_s": inter_side_delay_s,
                 "source_script": source_script,
                 "fast_demo_path": True,
             },
@@ -504,6 +602,8 @@ def run_gripper(action: str, source_script: str, targets: dict[str, float] | Non
             timeout_s=5.0,
         )
         require_done(result)
+        if post_wait_s > 0:
+            time.sleep(post_wait_s)
         return
     for side, target_position in targets.items():
         result = submit_task(
@@ -518,6 +618,10 @@ def run_gripper(action: str, source_script: str, targets: dict[str, float] | Non
             timeout_s=5.0,
         )
         require_done(result)
+        if inter_side_delay_s > 0:
+            time.sleep(inter_side_delay_s)
+    if post_wait_s > 0:
+        time.sleep(post_wait_s)
 
 
 def run_ee_offsets(source_script: str, offset_l: Iterable[float], offset_r: Iterable[float]) -> None:
@@ -531,7 +635,7 @@ def run_ee_offsets(source_script: str, offset_l: Iterable[float], offset_r: Iter
             "left_offset_m": list(left),
             "right_offset_m": list(right),
             "frame": "tool",
-            "max_step_m": env_float("G2_WXF_FAST_EE_MAX_STEP_M", 0.002),
+            "max_step_m": env_float("G2_WXF_FAST_EE_MAX_STEP_M", 0.0005),
             "rate_hz": env_float("G2_WXF_FAST_EE_RATE_HZ", 100.0),
             "life_time_s": env_float("G2_WXF_FAST_EE_LIFE_TIME_S", 0.02),
             "inter_side_delay_s": env_float("G2_WXF_FAST_EE_INTER_SIDE_DELAY_S", 0.0),
@@ -605,14 +709,14 @@ def run_nav_forward(source_script: str, dist_m: float, speed: float | None = Non
 
 
 def run_waist_correction(source_script: str, result_json: str = "yolo_depth_result.json") -> None:
-    data = load_json(result_json)
+    result_path, data = load_yolo_result_json(result_json)
     target_delta = float(data["slope"]["angle_rad"])
     result = submit_task(
         "waist.move_named_pose",
         {
             "pose": "yolo_correct_waist_delta",
             "source_script": source_script,
-            "source_result_json": result_json,
+            "source_result_json": str(result_path),
             "target_joint": "idx05_body_joint5",
             "delta_rad": -target_delta,
             "original_target_delta_rad": target_delta,
@@ -635,6 +739,20 @@ def fetch_gateway_snapshot(camera_id: str, output_path: str | os.PathLike[str], 
         raise RuntimeError(f"failed to fetch gateway camera snapshot: {url}: {exc}") from exc
     target.write_bytes(data)
     print(f"saved {camera_id} snapshot: {target} ({len(data)} bytes)")
+    return target
+
+
+def fetch_gateway_raw_depth(output_path: str | os.PathLike[str], timeout_s: float = 5.0) -> Path:
+    url = f"{DEFAULT_HTTP_URL}/api/cameras/head_depth/raw"
+    target = Path(output_path)
+    request = Request(url, headers={"Accept": "application/octet-stream"})
+    try:
+        with urlopen(request, timeout=timeout_s) as response:
+            data = response.read()
+    except URLError as exc:
+        raise RuntimeError(f"failed to fetch gateway head depth raw frame: {url}: {exc}") from exc
+    target.write_bytes(data)
+    print(f"saved head_depth raw: {target} ({len(data)} bytes)")
     return target
 
 
@@ -727,6 +845,225 @@ def classify_sequence_command(script_dir: Path, task_entry: str) -> tuple[str, l
     return "blocked_unknown", parts, "unknown command"
 
 
+def _sequence_python_target(script_dir: Path, parts: list[str]) -> tuple[Path, list[str]]:
+    if parts[0].endswith(".py"):
+        return _safe_path_for_sequence(script_dir, parts[0]), parts[1:]
+    return _safe_path_for_sequence(script_dir, parts[1]), parts[2:]
+
+
+def _source_script_from_target(target: Path) -> str:
+    try:
+        return target.relative_to(ROOT).as_posix()
+    except ValueError:
+        return target.name
+
+
+def _sequence_result_json(base: Path) -> dict[str, Any]:
+    result_path, data = load_yolo_result_json("yolo_depth_result.json", base=base)
+    if not isinstance(data, dict):
+        raise ValueError(f"invalid yolo result JSON: {result_path}")
+    return data
+
+
+def _sequence_depth_pair(base: Path) -> tuple[float, float]:
+    data = _sequence_result_json(base)
+    return float(data["depth"]["point1_center_mm"]), float(data["depth"]["point2_center_mm"])
+
+
+def _sequence_horizontal_px(base: Path) -> float:
+    data = _sequence_result_json(base)
+    return float(data["offset"]["horizontal_offset_px"])
+
+
+def _run_checked_depth_offset(base: Path, source_script: str, bias_a: float, bias_b: float, travel_m: float) -> None:
+    point1, point2 = _sequence_depth_pair(base)
+    print(f"read yolo_depth_result depth: point1={point1}, point2={point2}")
+    if point1 - point2 > 100 or point2 - point1 > 100:
+        raise SystemExit(1)
+    depth_offset = (point1 + point2 - bias_a - bias_b) * travel_m / ((bias_a + 42.0) + (bias_b + 40.0) - bias_a - bias_b)
+    run_ee_offsets(source_script, (depth_offset, 0.0, 0.0), (depth_offset, 0.0, 0.0))
+
+
+def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool:
+    source_script = _source_script_from_target(target)
+    name = target.name
+    rel = source_script
+
+    if rel == "interaction/play_tts_cli.py":
+        text_args = [arg for arg in args if not arg.startswith("--")]
+        text = " ".join(text_args).strip()
+        if env_flag("G2_WXF_FAST_SKIP_TTS", False):
+            print(f"# fast_skip_tts: {text}", flush=True)
+            return True
+        result = submit_task(
+            "interaction.play_tts",
+            {
+                "text": text,
+                "pre_play_delay_s": env_float("G2_WXF_TTS_PRE_PLAY_DELAY_S", 1.0),
+                "post_play_wait_s": env_float("G2_WXF_TTS_POST_PLAY_WAIT_S", 0.0),
+                "source_script": source_script,
+                "fast_demo_path": True,
+            },
+            mode=safe_motion_mode(),
+            timeout_s=8.0,
+        )
+        if result.get("state") != "DONE":
+            print(
+                f"# tts_warning_nonfatal: state={result.get('state')} error={result.get('error')}; continuing like original play_tts_cli.py",
+                flush=True,
+            )
+            if env_flag("G2_WXF_TTS_FATAL", False):
+                require_done(result)
+            return True
+        return True
+
+    if name == "move_whole_body_by_json.py":
+        json_path = args[0] if args else "../positions/arm_default.json"
+        run_whole_body_json(json_path, source_script=source_script)
+        return True
+
+    if name == "move_arm_by_json.py" or name.startswith("move_arm_by_json"):
+        json_path = args[0] if args else "../positions/arm_default.json"
+        run_arm_json(json_path, source_script=source_script)
+        return True
+
+    if name == "correct_waist.py":
+        run_waist_correction(source_script)
+        return True
+
+    if name == "move_ee_pose_right_half.py":
+        run_gripper("open", source_script=source_script, targets={"right": -0.05, "left": 0.0})
+        return True
+
+    if name == "move_ee_pose_open_05.py":
+        run_gripper("open", source_script=source_script, targets={"right": -0.05, "left": -0.05})
+        return True
+
+    if name == "move_ee_pose_open_2.py":
+        run_gripper("open", source_script=source_script, targets=None)
+        # Final release is visually critical. If the left tool does not
+        # visibly open after the normal two-side command, resend left only
+        # so left_tool is the last gripper command before pull-back.
+        if env_flag("G2_WXF_FINAL_LEFT_OPEN_RETRY", True):
+            delay_s = env_float("G2_WXF_FINAL_LEFT_OPEN_RETRY_DELAY_S", 0.10)
+            if delay_s > 0:
+                time.sleep(delay_s)
+            result = submit_task(
+                "gripper.open",
+                {
+                    "side": "left",
+                    "target_position": -0.785,
+                    "target_type": "omnipicker",
+                    "source_script": f"{source_script}:left_retry",
+                    "fast_demo_path": True,
+                },
+                mode=safe_motion_mode(),
+                timeout_s=5.0,
+            )
+            require_done(result)
+        return True
+
+    if name == "move_ee_pose_close_2.py":
+        run_gripper("close", source_script=source_script, targets=None)
+        return True
+
+    static_offsets: dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]] = {
+        "offset_move_backward_002.py": ((-0.02, 0.0, 0.0), (-0.02, 0.0, 0.0)),
+        "offset_move_car_grab.py": ((0.0, -0.10, 0.0), (0.0, 0.10, 0.0)),
+        "offset_move_downpickb.py": ((0.0, 0.0, -0.04), (0.0, 0.0, -0.04)),
+        "offset_move_downward_002.py": ((0.0, 0.0, -0.02), (0.0, 0.0, -0.02)),
+        "offset_move_downward_004.py": ((0.0, 0.0, -0.04), (0.0, 0.0, -0.04)),
+        "offset_move_forward_001.py": ((0.01, 0.0, 0.0), (0.01, 0.0, 0.0)),
+        "offset_move_forward_002.py": ((0.02, 0.0, 0.0), (0.02, 0.0, 0.0)),
+        "offset_move_forward_006.py": ((0.06, 0.0, 0.0), (0.06, 0.0, 0.0)),
+        "offset_move_forward_009.py": ((0.09, 0.0, 0.0), (0.09, 0.0, 0.0)),
+        "offset_move_left_002.py": ((0.0, 0.02, 0.0), (0.0, 0.02, 0.0)),
+        "offset_move_left_025.py": ((0.0, 0.04, 0.0), (0.0, 0.04, 0.0)),
+        "offset_move_pull.py": ((-0.16, 0.0, 0.0), (-0.16, 0.0, 0.0)),
+        "offset_move_pull_back.py": ((-0.14, 0.0, 0.0), (-0.14, 0.0, 0.0)),
+        "offset_move_up.py": ((0.0, 0.0, 0.20), (0.0, 0.0, 0.20)),
+        "offset_move_upward_015.py": ((0.0, 0.0, 0.15), (0.0, 0.0, 0.15)),
+    }
+    if name in static_offsets:
+        left, right = static_offsets[name]
+        run_ee_offsets(source_script, left, right)
+        return True
+
+    if name == "offset_move_horizon.py":
+        offset_y = _sequence_horizontal_px(base) * (-0.2) / 100.0 + 0.03
+        run_ee_offsets(source_script, (0.0, offset_y, 0.0), (0.0, offset_y, 0.0))
+        return True
+
+    if name == "offset_move_horizon_b.py":
+        offset_y = _sequence_horizontal_px(base) * (-0.2) / 100.0
+        run_ee_offsets(source_script, (0.0, offset_y, 0.0), (0.0, offset_y, 0.0))
+        return True
+
+    if name == "offset_move_vertical.py":
+        _run_checked_depth_offset(base, source_script, 633.0, 640.0, 0.05)
+        return True
+
+    if name == "offset_move_vertical_b.py":
+        point1, point2 = _sequence_depth_pair(base)
+        print(f"read yolo_depth_result depth: point1={point1}, point2={point2}")
+        if point1 - point2 > 100 or point2 - point1 > 100:
+            raise SystemExit(1)
+        depth_offset = (point1 + point2 - 684.0 - 688.0) * 0.085 / (738.0 + 734.0 - 684.0 - 688.0)
+        run_ee_offsets(source_script, (depth_offset, 0.0, 0.0), (depth_offset, 0.0, 0.0))
+        return True
+
+    if name == "offset_move_push_grab.py":
+        horizontal_offset_m = _sequence_horizontal_px(base) / 1000.0
+        run_ee_offsets(source_script, (0.0, horizontal_offset_m, 0.0), (0.0, horizontal_offset_m, 0.0))
+        run_ee_offsets(source_script, (0.09, 0.0, 0.0), (0.09, 0.0, 0.0))
+        return True
+
+    return False
+
+
+def _fast_sequence_label(base: Path, kind: str, parts: list[str]) -> str | None:
+    if kind != "local_python":
+        return None
+    try:
+        target, _args = _sequence_python_target(base, parts)
+    except Exception:
+        return None
+    fast_names = {
+        "correct_waist.py",
+        "move_arm_by_json.py",
+        "move_ee_pose_close_2.py",
+        "move_ee_pose_open_05.py",
+        "move_ee_pose_open_2.py",
+        "move_ee_pose_right_half.py",
+        "move_whole_body_by_json.py",
+        "offset_move_backward_002.py",
+        "offset_move_car_grab.py",
+        "offset_move_downpickb.py",
+        "offset_move_downward_002.py",
+        "offset_move_downward_004.py",
+        "offset_move_forward_001.py",
+        "offset_move_forward_002.py",
+        "offset_move_forward_006.py",
+        "offset_move_forward_009.py",
+        "offset_move_horizon.py",
+        "offset_move_horizon_b.py",
+        "offset_move_left_002.py",
+        "offset_move_left_025.py",
+        "offset_move_pull.py",
+        "offset_move_pull_back.py",
+        "offset_move_push_grab.py",
+        "offset_move_up.py",
+        "offset_move_upward_015.py",
+        "offset_move_vertical.py",
+        "offset_move_vertical_b.py",
+    }
+    if _source_script_from_target(target) == "interaction/play_tts_cli.py":
+        return "MQTT interaction.play_tts"
+    if target.name in fast_names or target.name.startswith("move_arm_by_json"):
+        return f"MQTT {_source_script_from_target(target)}"
+    return None
+
+
 def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[str], execute: bool = False) -> int:
     base = Path(script_dir).resolve()
     sequence_timeout_s = env_float("G2_WXF_SEQUENCE_TIMEOUT_S", 0.0) if execute else 0.0
@@ -738,7 +1075,10 @@ def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[s
         print(f"# sequence_timeout_s={sequence_timeout_s:.1f}")
     for index, entry in enumerate(sequence, 1):
         kind, parts, reason = classify_sequence_command(base, entry)
-        print(f"[{index:02d}/{len(sequence):02d}] {kind}: {entry} ({reason})")
+        fast_label = _fast_sequence_label(base, kind, parts)
+        display_kind = "fast_inline" if fast_label else kind
+        display_reason = fast_label or reason
+        print(f"[{index:02d}/{len(sequence):02d}] {display_kind}: {entry} ({display_reason})")
         if not execute:
             continue
         require_sequence_budget(f"step {index}: {entry}", min_remaining_s=1.0)
@@ -757,14 +1097,16 @@ def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[s
                 shutil.move(src, dst)
             continue
         if kind == "local_python":
-            if parts[0].endswith(".py"):
-                target = _safe_path_for_sequence(base, parts[0])
-                cmd = [sys.executable, str(target), *parts[1:]]
-            else:
-                target = _safe_path_for_sequence(base, parts[1])
-                cmd = [sys.executable, str(target), *parts[2:]]
+            target, script_args = _sequence_python_target(base, parts)
+            if _run_fast_sequence_python(base, target, script_args):
+                require_sequence_budget(f"after step {index}: {entry}", min_remaining_s=0.0)
+                continue
+            cmd = [sys.executable, str(target), *script_args]
         elif kind == "vision_python":
-            venv_python = _safe_path_for_sequence(base, parts[0])
+            # Keep the venv entrypoint path instead of resolving symlinks.
+            # Resolving yolo-env/bin/python can collapse to /usr/bin/python3.10
+            # and lose the virtualenv site-packages that contain ultralytics.
+            venv_python = base / parts[0]
             if not venv_python.exists():
                 venv_python = ORIGINAL_ROOT / "yolo" / "yolo-env" / "bin" / "python"
             target = _safe_path_for_sequence(base, parts[1])

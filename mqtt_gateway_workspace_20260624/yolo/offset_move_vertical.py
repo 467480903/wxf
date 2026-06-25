@@ -12,14 +12,14 @@ point1_center_mm = float(result_data["depth"]["point1_center_mm"])
 point2_center_mm = float(result_data["depth"]["point2_center_mm"])
 print(f"从 yolo_depth_result.json 读取 depth/point1_center_mm = {point1_center_mm}, depth/point2_center_mm = {point2_center_mm}")
 
-if( point1_center_mm -  point2_center_mm > 250):
+if( point1_center_mm -  point2_center_mm > 100):
     exit(1)
-if( point2_center_mm -  point1_center_mm > 250):
+if( point2_center_mm -  point1_center_mm > 100):
     exit(1)    
 # depth_offset = (point1_center_mm + point2_center_mm) / 200
-depth_offset = (point1_center_mm + point2_center_mm - 1100) / 150
+depth_offset = (point1_center_mm + point2_center_mm - 633 - 640)  * 0.05 / ( 675 + 680  - 633 - 640 )
 
 
 
 if __name__ == "__main__":
-    run_offset(offset_l=(depth_offset/100, 0, 0), offset_r=(depth_offset/100, 0, 0))
+    run_offset(offset_l=(depth_offset, 0, 0), offset_r=(depth_offset, 0, 0))

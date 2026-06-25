@@ -14,15 +14,18 @@ import shlex
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 TASK_SEQUENCE = [
-    # "python ../interaction/play_tts_cli.py 将执行B件的抓取",
+    "python ../interaction/play_tts_cli.py 将执行B件的抓取",
+
     # "python ../BOX_528_1/move-pick2.py",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py holes.pt 1",
-    "python correct_waist.py",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py holes.pt 1",
+    # "python cam_get_head.py",
+    # "yolo-env/bin/python yolo_depth.py holes.pt 1",
+    # "python correct_waist.py",
+    # "python cam_get_head.py",
+    # "yolo-env/bin/python yolo_depth.py holes.pt 1",
+    "python ../Robot/move_ee_pose_open_2.py",
     "python ../BOX_528_1/move_arm_by_json_grab_1st.py",
-    "python ../BOX_528_1/offset_move_push_grab.py",
+    "python ../BOX_528_1/offset_move_downpickb.py",
+    "python ../BOX_528_1/offset_move_push_grab_b.py",
 
 
     "python ../interaction/play_tts_cli.py 抓取工件",

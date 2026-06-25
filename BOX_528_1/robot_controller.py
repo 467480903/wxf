@@ -316,6 +316,11 @@ class RobotController:
             pos[1] = -1.452903378780695
             ori[2] = 0
             ori[3] = 1
+        if(waypoint == 32):
+            pos[0] =0.09965588715268747-0.02
+            pos[1] = -0.5806166148205059-0.025
+            ori[2] = -0.6997130863506108
+            ori[3] = 0.7144239615170411
         req.target.position.x    = pos[0]
         req.target.position.y    = pos[1]
         req.target.position.z    = pos[2]
