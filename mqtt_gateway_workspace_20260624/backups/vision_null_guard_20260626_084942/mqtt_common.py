@@ -397,29 +397,6 @@ def load_yolo_result_json(preferred: str = "yolo_depth_result.json", base: Path 
     return result_path, data
 
 
-def require_yolo_number(data: dict[str, Any], result_path: Path, field_path: str) -> float:
-    value: Any = data
-    for key in field_path.split("."):
-        if not isinstance(value, dict) or key not in value or value.get(key) is None:
-            raise RuntimeError(
-                "YOLO vision result unusable: missing "
-                f"{field_path} in {result_path}; "
-                f"detection={data.get('detection')!r}, "
-                f"offset={data.get('offset')!r}, "
-                f"slope={data.get('slope')!r}, "
-                f"depth={data.get('depth')!r}, "
-                f"error={data.get('error')!r}. "
-                "Adjust target/camera/lighting and rerun the vision-only check before continuing."
-            )
-        value = value[key]
-    try:
-        return float(value)
-    except (TypeError, ValueError) as exc:
-        raise RuntimeError(
-            f"YOLO vision result unusable: {field_path}={value!r} in {result_path} is not numeric"
-        ) from exc
-
-
 def _extract_values(data: dict[str, Any], keys: list[str]) -> list[float]:
     return [float(data.get(key, 0.0)) for key in keys]
 
@@ -733,7 +710,7 @@ def run_nav_forward(source_script: str, dist_m: float, speed: float | None = Non
 
 def run_waist_correction(source_script: str, result_json: str = "yolo_depth_result.json") -> None:
     result_path, data = load_yolo_result_json(result_json)
-    target_delta = require_yolo_number(data, result_path, "slope.angle_rad")
+    target_delta = float(data["slope"]["angle_rad"])
     result = submit_task(
         "waist.move_named_pose",
         {
@@ -890,15 +867,12 @@ def _sequence_result_json(base: Path) -> dict[str, Any]:
 
 def _sequence_depth_pair(base: Path) -> tuple[float, float]:
     data = _sequence_result_json(base)
-    return (
-        require_yolo_number(data, resolve_yolo_result_path("yolo_depth_result.json", base=base), "depth.point1_center_mm"),
-        require_yolo_number(data, resolve_yolo_result_path("yolo_depth_result.json", base=base), "depth.point2_center_mm"),
-    )
+    return float(data["depth"]["point1_center_mm"]), float(data["depth"]["point2_center_mm"])
 
 
 def _sequence_horizontal_px(base: Path) -> float:
     data = _sequence_result_json(base)
-    return require_yolo_number(data, resolve_yolo_result_path("yolo_depth_result.json", base=base), "offset.horizontal_offset_px")
+    return float(data["offset"]["horizontal_offset_px"])
 
 
 def _run_checked_depth_offset(base: Path, source_script: str, bias_a: float, bias_b: float, travel_m: float) -> None:

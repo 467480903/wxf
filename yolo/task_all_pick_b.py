@@ -14,9 +14,9 @@ import shlex
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 TASK_SEQUENCE = [
-    "python ../interaction/play_tts_cli.py 接下来，我将识别工件B的位置并调整，然后取出一枚工件B。 我识别到台车B的工件已经没有了，待会我会过来更换台车。",
+    
 
-    # "python ../BOX_528_1/move-pick2.py",
+    "python ../BOX_528_1/move-pick2.py",
     # "python cam_get_head.py",
     # "yolo-env/bin/python yolo_depth.py holes.pt 1",
     # "python correct_waist.py",
@@ -32,7 +32,7 @@ TASK_SEQUENCE = [
     "python ../Robot/move_ee_pose_close_2.py",
     "python ../BOX_528_1/offset_move_up.py",
     "python ../BOX_528_1/offset_move_pull.py",
-
+    "python ../interaction/play_tts_cli.py 接下来，我将识别工件B的位置并调整，然后取出一枚工件B。 我识别到台车B的工件已经没有了，待会我会过来更换台车。",
     "python ../BOX_528_1/move-adjust2.py",
 
     "python move_whole_body_by_json.py ../positions/pick_standby.json",

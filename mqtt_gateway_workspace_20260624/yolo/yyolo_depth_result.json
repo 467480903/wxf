@@ -8,63 +8,13 @@
     640
   ],
   "image_size": {
-    "height": 400,
-    "width": 640
+    "height": 540,
+    "width": 960
   },
-  "detection": {
-    "point1": {
-      "label": "a",
-      "center": [
-        225.85,
-        186.21
-      ]
-    },
-    "point2": {
-      "label": "a",
-      "center": [
-        414.15,
-        186.63
-      ]
-    }
-  },
-  "offset": {
-    "line_center": [
-      320.0,
-      186.42
-    ],
-    "image_center_x": 320.0,
-    "horizontal_offset_px": 0.0,
-    "direction": "偏右"
-  },
-  "slope": {
-    "slope": 0.0022,
-    "angle_rad": 0.0022,
-    "angle_deg": 0.1
-  },
-  "depth": {
-    "point1_center_mm": 736.0,
-    "point1_left_offset_mm": 767.2307692307693,
-    "point1_left_sample_pixel": [
-      225,
-      198
-    ],
-    "point2_center_mm": 786.0,
-    "point2_right_offset_mm": 782.3846153846154,
-    "point2_right_sample_pixel": [
-      414,
-      198
-    ],
-    "center_mm": 1960.0246913580247,
-    "center_sample_pixel": [
-      320,
-      186
-    ]
-  },
-  "output_files": [
-    "result.jpg",
-    "yolo_depth_rgb.jpg",
-    "yolo_depth_depth.jpg",
-    "yolo_depth_rgb_with_depth.jpg",
-    "yolo_depth_depth_marked.jpg"
-  ]
+  "detection": null,
+  "offset": null,
+  "slope": null,
+  "depth": null,
+  "output_files": [],
+  "error": "无法满足任何画线条件"
 }

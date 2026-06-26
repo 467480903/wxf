@@ -14,32 +14,17 @@ import shlex
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 TASK_SEQUENCE = [
-
-
-#上面顾工下面魏工
-    "python move_whole_body_by_json.py ../positions/pick_standby.json",
-    # "python ../interaction/play_tts_cli.py 执行基于视觉模型的推理,通过识别两个销子,然后计算销子的中点,和销子的深度值,来计算机器人的腰部旋转值,和纵声偏移量,和水平偏移量",
-    "python ../interaction/play_tts_cli.py 接下来，我将到夹具旁边进行工件A的上件作业，上件作业需要提前通过VLA模型训练我的大脑。大脑训练的难点是我原本是跟幼儿一样的，只能认识物理世界，通过训练后，我能学习物理世界的法则，根据工件和台车的情况做出调整",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py shelf.pt",
-    "python correct_waist.py",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py shelf.pt",
-    "python move_ee_pose_right_half.py",
-    "python move_arm_by_json.py ../positions/place_1.json",
-    "python move_arm_by_json.py ../positions/place_2.json",
-    "python offset_move_horizon.py",
-    "python offset_move_downward_004.py",
-
-    "python move_ee_pose_open_05.py",
-    "python offset_move_downward_002.py",
-    "python offset_move_forward_001.py",
-    "python offset_move_vertical.py",
-    "python offset_move_downward_004.py",
-    "python offset_move_downward_004.py",
+    "python ../interaction/play_tts_cli.py 接下来，因为台车B的工件已经没有了，我将把台车B拉出去",
+    "python ../BOX_528_1/move_gopullcarb.py",
     "python ../Robot/move_ee_pose_open_2.py",
-    "python offset_move_pull_back.py",
-    "python move_whole_body_by_json.py ../positions/pick_standby.json",
+    "python move_whole_body_by_json.py ../positions/car_grab_5.json",
+    "python move_whole_body_by_json.py ../positions/car_grab_4.json",
+    "python offset_move_car_grab.py",
+    "python ../BOX_528_1/move_pullcarb.py",
+    "python move_whole_body_by_json.py ../positions/car_grab_4.json",
+    "python move_whole_body_by_json.py ../positions/car_grab_5.json",
+    "python move_whole_body_by_json.py ../positions/pick_standby.json"
+    
 ]
 
 
