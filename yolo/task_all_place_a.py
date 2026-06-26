@@ -18,7 +18,8 @@ TASK_SEQUENCE = [
 
 #上面顾工下面魏工
     "python move_whole_body_by_json.py ../positions/pick_standby.json",
-    "python ../interaction/play_tts_cli.py 执行基于视觉模型的推理,通过识别两个销子,然后计算销子的中点,和销子的深度值,来计算机器人的腰部旋转值,和纵声偏移量,和水平偏移量",
+    # "python ../interaction/play_tts_cli.py 执行基于视觉模型的推理,通过识别两个销子,然后计算销子的中点,和销子的深度值,来计算机器人的腰部旋转值,和纵声偏移量,和水平偏移量",
+    "python ../interaction/play_tts_cli.py 接下来，我将到夹具旁边进行工件A的上件作业，上件作业需要提前通过VLA模型训练我的大脑。大脑训练的难点是我原本是跟幼儿一样的，只能认识物理世界，通过训练后，我能学习物理世界的法则，根据工件和台车的情况做出调整",
     "python cam_get_head.py",
     "yolo-env/bin/python cam_get_head_send.py shelf.pt",
     "python correct_waist.py",

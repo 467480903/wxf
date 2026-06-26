@@ -17,7 +17,7 @@ if( point1_center_mm -  point2_center_mm > 100):
 if( point2_center_mm -  point1_center_mm > 100):
     exit(1)    
 # depth_offset = (point1_center_mm + point2_center_mm) / 200
-depth_offset = (point1_center_mm + point2_center_mm - 684 - 688)  * 0.085 / ( 738 + 734  - 684 - 688 )
+depth_offset = (point1_center_mm + point2_center_mm - 684 - 688)  * 0.065/ ( 738 + 734  - 684 - 688 )
 
 
 

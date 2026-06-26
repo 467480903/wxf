@@ -14,7 +14,7 @@ import shlex
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 TASK_SEQUENCE = [
-    "python ../interaction/play_tts_cli.py 将执行空车拉走动作",
+    "python ../interaction/play_tts_cli.py 接下来，因为台车B的工件已经没有了，我将把台车B拉出去",
     "python ../BOX_528_1/move_gopullcar.py",
     "python ../Robot/move_ee_pose_open_2.py",
     "python move_whole_body_by_json.py ../positions/car_grab_5.json",

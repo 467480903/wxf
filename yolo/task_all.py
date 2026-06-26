@@ -14,10 +14,11 @@ import shlex
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 TASK_SEQUENCE = [
-    "python ../interaction/play_tts_cli.py 任务开始,将运动到A件小车处,抓取工件,mission start,moving to picking up place for product A,",
+   
     
     "python ../BOX_528_1/move-ready1.py",
     
+    "python ../interaction/play_tts_cli.py 大家好，我将进行焊装工位的上件和更换台车演示，我将识别工件A的位置并调整，然后取出一枚工件A。",
     "python ../Robot/move_ee_pose_open_2.py",
     "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
     "python ../BOX_528_1/move-pick1.py",
