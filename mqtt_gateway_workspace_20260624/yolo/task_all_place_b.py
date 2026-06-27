@@ -14,17 +14,19 @@ for _parent in Path(__file__).resolve().parents:
 from mqtt_common import run_sequence
 
 
-# Source of truth: /data/wxf/wxf/yolo/task_all_place_b.py on G2A (10.185.207.186), synced 2026-06-25.
+# Source of truth: /data/wxf/wxf/yolo/task_all_place_b.py on G2A, synced 2026-06-26 15:07:48 CST.
+# This wrapper keeps the customer TASK_SEQUENCE order/text, while mqtt_common
+# routes supported motion scripts through the persistent MQTT/Gateway service.
 TASK_SEQUENCE = [
     'python ../Robot/move_ee_pose_close_2.py',
     'python move_whole_body_by_json.py ../positions/pick_standby.json',
-    'python ../interaction/play_tts_cli.py 执行基于视觉模型的推理,通过识别两个销子,然后计算销子的中点,和销子的深度值,来计算机器人的腰部旋转值,和纵声偏移量,和水平偏移量',
+    'python ../interaction/play_tts_cli.py 接下来，我将到夹具旁边进行工件B的上件作业。刚才展示的连续动作，需要提前通过SLAM模型训练我的小脑。小脑训练的难点是人形机器人的关节很多，在加上各种变量的影响，人形机器人的运动反力的控制会很难，还没办法做到跟人类那么流畅的水平，但今后我会不断学习改善',
     'python cam_get_head.py',
-    'yolo-env/bin/python cam_get_head_send.py shelf.pt 1',
+    'yolo-env/bin/python yolo_depth.py shelf.pt 1',
     'cp yolo_depth_result.json yolo_depth_result_2.json',
     'python correct_waist.py',
     'python cam_get_head.py',
-    'yolo-env/bin/python cam_get_head_send.py shelf.pt 1',
+    'yolo-env/bin/python yolo_depth.py shelf.pt 1',
     'cp yolo_depth_result.json yolo_depth_result_3.json',
     'python move_ee_pose_right_half.py',
     'python move_whole_body_by_json.py ../positions/place_b_2.json',

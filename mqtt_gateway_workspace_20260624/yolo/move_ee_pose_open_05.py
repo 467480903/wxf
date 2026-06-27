@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 
 for _parent in Path(__file__).resolve().parents:
@@ -16,7 +17,10 @@ from mqtt_common import run_gripper
 
 
 def main() -> int:
-    run_gripper('open', source_script="yolo/move_ee_pose_open_05.py", targets={'right': -0.05, 'left': -0.05})
+    source_script = "yolo/move_ee_pose_open_05.py"
+    run_gripper('open', source_script=source_script, targets={'right': -0.05})
+    time.sleep(0.02)
+    run_gripper('open', source_script=source_script, targets={'left': -0.05})
     return 0
 
 

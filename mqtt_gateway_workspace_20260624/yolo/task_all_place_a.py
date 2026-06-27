@@ -17,23 +17,25 @@ from mqtt_common import run_sequence
 
 # The combined body.move_whole_body_pose path is fastest, but on this onsite
 # pack/place-A pose it hit GDK "Broken promise" immediately. Keep the MQTT
-# service path and split whole-body JSON into waist+arm commands for this demo.
+# service path and split whole-body JSON into separate Gateway commands.
+# Do not skip the head by default: the original task_all_place_a.py executes
+# move_whole_body_by_json.py with the full JSON pose, including head joints.
 os.environ.setdefault("G2_WXF_FAST_WHOLE_BODY_SPLIT", "1")
-os.environ.setdefault("G2_WXF_FAST_WHOLE_BODY_SKIP_HEAD", "1")
+os.environ.setdefault("G2_WXF_FAST_WHOLE_BODY_SKIP_HEAD", "0")
 os.environ.setdefault("G2_WXF_FAST_WHOLE_BODY_SPLIT_DELAY_S", "0.08")
 
 
-# Source of truth: /data/wxf/wxf/yolo/task_all_place_a.py on current robot.
+# Source of truth: /data/wxf/wxf/yolo/task_all_place_a.py on G2A, synced 2026-06-26 17:30 CST.
 # Motion entries are executed by mqtt_common.run_sequence as fast_inline MQTT/Gateway
 # commands when possible; camera/YOLO/file operations keep the original order.
 TASK_SEQUENCE = [
     "python move_whole_body_by_json.py ../positions/pick_standby.json",
-    "python ../interaction/play_tts_cli.py 执行基于视觉模型的推理,通过识别两个销子,然后计算销子的中点,和销子的深度值,来计算机器人的腰部旋转值,和纵声偏移量,和水平偏移量",
+    "python ../interaction/play_tts_cli.py 接下来，我将到夹具旁边进行工件A的上件作业，上件作业需要提前通过VLA模型训练我的大脑。大脑训练的难点是我原本是跟幼儿一样的，只能认识物理世界，通过训练后，我能学习物理世界的法则，根据工件和台车的情况做出调整",
     "python cam_get_head.py",
-    "yolo-env/bin/python cam_get_head_send.py shelf.pt",
+    "yolo-env/bin/python yolo_depth.py shelf.pt",
     "python correct_waist.py",
     "python cam_get_head.py",
-    "yolo-env/bin/python cam_get_head_send.py shelf.pt",
+    "yolo-env/bin/python yolo_depth.py shelf.pt",
     "python move_ee_pose_right_half.py",
     "python move_arm_by_json.py ../positions/place_1.json",
     "python move_arm_by_json.py ../positions/place_2.json",

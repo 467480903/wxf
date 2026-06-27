@@ -145,6 +145,40 @@ def yolo_detect(image_path: str):
 
     print(f"检测到 a={len(boxes_a)}, b={len(boxes_b)}, c={len(boxes_c)}, d={len(boxes_d)}")
 
+
+    def can_form_line(ba, bb, bc, bd):
+        return (
+            (len(ba) >= 1 and len(bb) >= 1) or
+            len(bb) >= 2 or
+            len(ba) >= 2 or
+            (len(bc) >= 1 and len(bd) >= 1) or
+            len(bc) >= 2 or
+            len(bd) >= 2
+        )
+
+    fallback_conf = os.environ.get("G2_WXF_YOLO_FALLBACK_CONF", "0.20").strip()
+    if not can_form_line(boxes_a, boxes_b, boxes_c, boxes_d) and fallback_conf:
+        try:
+            fallback_conf_value = float(fallback_conf)
+        except ValueError:
+            fallback_conf_value = 0.20
+        print(f"默认阈值无法形成线段，使用低阈值 conf={fallback_conf_value:.2f} 重试")
+        start_time = time.time()
+        results = model(image_path, conf=fallback_conf_value)
+        inference_time = time.time() - start_time
+        print(f"低阈值推理耗时: {inference_time:.4f} 秒")
+        results[0].save(filename="result.jpg")
+        img = results[0].orig_img.copy()
+        img_h, img_w = img.shape[:2]
+        img_center_x = img_w / 2.0
+        boxes = results[0].boxes
+        names = results[0].names
+        boxes_a = collect_boxes_by_class("a")
+        boxes_b = collect_boxes_by_class("b")
+        boxes_c = collect_boxes_by_class("c")
+        boxes_d = collect_boxes_by_class("d")
+        print(f"低阈值检测到 a={len(boxes_a)}, b={len(boxes_b)}, c={len(boxes_c)}, d={len(boxes_d)}")
+
     # ========== 策略选择两个画线点 ==========
     pt1 = pt2 = None
 

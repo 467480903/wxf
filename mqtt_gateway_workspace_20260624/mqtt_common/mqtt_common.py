@@ -519,8 +519,8 @@ def run_whole_body_json(json_path: str, source_script: str, sync_requested: bool
                     "source_json": str(json_path),
                     "resolved_json": str(resolve_data_path(json_path)),
                     "yaw_deg": math.degrees(head[0]),
-                    "pitch_deg": math.degrees(head[1]),
-                    "roll_deg": math.degrees(head[2]),
+                    "pitch_deg": math.degrees(head[2]),
+                    "roll_deg": math.degrees(head[1]),
                     "speed_rad_s": env_float("G2_WXF_FAST_HEAD_SPEED_RADPS", 0.5),
                     "fast_demo_path": True,
                     "whole_body_split": True,
@@ -658,11 +658,11 @@ def run_ee_offsets(source_script: str, offset_l: Iterable[float], offset_r: Iter
             "left_offset_m": list(left),
             "right_offset_m": list(right),
             "frame": "tool",
-            "max_step_m": env_float("G2_WXF_FAST_EE_MAX_STEP_M", 0.0005),
-            "rate_hz": env_float("G2_WXF_FAST_EE_RATE_HZ", 100.0),
+            "max_step_m": env_float("G2_WXF_FAST_EE_MAX_STEP_M", 0.001),
+            "rate_hz": env_float("G2_WXF_FAST_EE_RATE_HZ", 50.0),
             "life_time_s": env_float("G2_WXF_FAST_EE_LIFE_TIME_S", 0.02),
-            "inter_side_delay_s": env_float("G2_WXF_FAST_EE_INTER_SIDE_DELAY_S", 0.0),
-            "use_both_group": env_flag("G2_WXF_FAST_EE_USE_BOTH_GROUP", True),
+            "inter_side_delay_s": env_float("G2_WXF_FAST_EE_INTER_SIDE_DELAY_S", 0.002),
+            "use_both_group": env_flag("G2_WXF_FAST_EE_USE_BOTH_GROUP", False),
             "source_script": source_script,
             "fast_demo_path": True,
         },
@@ -962,11 +962,15 @@ def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool
         return True
 
     if name == "move_ee_pose_open_05.py":
-        run_gripper("open", source_script=source_script, targets={"right": -0.05, "left": -0.05})
+        run_gripper("open", source_script=source_script, targets={"right": -0.05})
+        time.sleep(0.02)
+        run_gripper("open", source_script=source_script, targets={"left": -0.05})
         return True
 
     if name == "move_ee_pose_open_2.py":
-        run_gripper("open", source_script=source_script, targets=None)
+        run_gripper("open", source_script=source_script, targets={"right": -0.785})
+        time.sleep(0.02)
+        run_gripper("open", source_script=source_script, targets={"left": -0.785})
         # Final release is visually critical. If the left tool does not
         # visibly open after the normal two-side command, resend left only
         # so left_tool is the last gripper command before pull-back.
@@ -1034,7 +1038,9 @@ def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool
         print(f"read yolo_depth_result depth: point1={point1}, point2={point2}")
         if point1 - point2 > 100 or point2 - point1 > 100:
             raise SystemExit(1)
-        depth_offset = (point1 + point2 - 684.0 - 688.0) * 0.085 / (738.0 + 734.0 - 684.0 - 688.0)
+        raw_depth_offset = (point1 + point2 - 684.0 - 688.0) * 0.065 / (738.0 + 734.0 - 684.0 - 688.0)
+        depth_offset = max(-0.02, min(0.085, raw_depth_offset))
+        print(f"vertical_b raw_depth_offset={raw_depth_offset:.6f}m, clamped_depth_offset={depth_offset:.6f}m")
         run_ee_offsets(source_script, (depth_offset, 0.0, 0.0), (depth_offset, 0.0, 0.0))
         return True
 
@@ -1105,15 +1111,28 @@ def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[s
         display_kind = "fast_inline" if fast_label else kind
         display_reason = fast_label or reason
         print(f"[{index:02d}/{len(sequence):02d}] {display_kind}: {entry} ({display_reason})")
+        step_started_at = time.time()
+
+        def _step_timing(status: str) -> None:
+            if execute:
+                duration_s = time.time() - step_started_at
+                print(
+                    f"# step_timing: index={index:02d}/{len(sequence):02d} "
+                    f"status={status} duration_s={duration_s:.3f} kind={display_kind} entry={entry!r}",
+                    flush=True,
+                )
+
         if not execute:
             continue
         require_sequence_budget(f"step {index}: {entry}", min_remaining_s=1.0)
         if kind in {"blocked_external", "blocked_unknown", "empty", "missing_local"}:
             print("blocked by migrated sequence runner")
+            _step_timing("blocked")
             return 1
         if kind == "local_file_op":
             if len(parts) != 3:
                 print("only two-argument cp/mv is allowed")
+                _step_timing("failed")
                 return 1
             src = _safe_path_for_sequence(base, parts[1])
             dst = _safe_path_for_sequence(base, parts[2])
@@ -1121,11 +1140,15 @@ def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[s
                 shutil.copy2(src, dst)
             else:
                 shutil.move(src, dst)
+            _step_timing("done")
             continue
+        vision_result_path: Path | None = None
+        vision_started_at = 0.0
         if kind == "local_python":
             target, script_args = _sequence_python_target(base, parts)
             if _run_fast_sequence_python(base, target, script_args):
                 require_sequence_budget(f"after step {index}: {entry}", min_remaining_s=0.0)
+                _step_timing("done")
                 continue
             cmd = [sys.executable, str(target), *script_args]
         elif kind == "vision_python":
@@ -1137,13 +1160,32 @@ def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[s
                 venv_python = ORIGINAL_ROOT / "yolo" / "yolo-env" / "bin" / "python"
             target = _safe_path_for_sequence(base, parts[1])
             cmd = [str(venv_python), str(target), *parts[2:]]
+            if target.name in {"yolo_depth.py", "cam_get_head_send.py"}:
+                vision_result_path = base / "yolo_depth_result.json"
+                vision_started_at = time.time()
         else:
+            _step_timing("failed")
             return 1
         rc = subprocess.run(cmd, cwd=base).returncode
         if rc != 0:
             print(f"step failed rc={rc}: {entry}")
+            _step_timing("failed")
             return rc
+        if vision_result_path is not None:
+            if not vision_result_path.exists():
+                print(f"step failed: vision script did not create {vision_result_path.name}: {entry}")
+                _step_timing("failed")
+                return 1
+            result_mtime = vision_result_path.stat().st_mtime
+            if result_mtime < vision_started_at - 0.5:
+                print(
+                    "step failed: vision script left stale yolo_depth_result.json; "
+                    f"mtime={result_mtime:.3f}, step_start={vision_started_at:.3f}: {entry}"
+                )
+                _step_timing("failed")
+                return 1
         require_sequence_budget(f"after step {index}: {entry}", min_remaining_s=0.0)
+        _step_timing("done")
     return 0
 
 

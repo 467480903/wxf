@@ -1,20 +1,70 @@
 {
   "model_path": "shelf.pt",
-  "image_path": "/home/wxf/yolo/rgb.png",
-  "depth_raw_path": "/home/wxf/yolo/depth.raw",
-  "depth_offset_px": 12,
+  "image_path": "head.jpg",
+  "depth_raw_path": "head_depth.raw",
+  "depth_offset_px": 1,
   "depth_shape": [
     400,
     640
   ],
   "image_size": {
-    "height": 540,
-    "width": 960
+    "height": 400,
+    "width": 640
   },
-  "detection": null,
-  "offset": null,
-  "slope": null,
-  "depth": null,
-  "output_files": [],
-  "error": "无法满足任何画线条件"
+  "detection": {
+    "point1": {
+      "label": "a",
+      "center": [
+        227.42,
+        187.2
+      ]
+    },
+    "point2": {
+      "label": "a",
+      "center": [
+        416.28,
+        187.05
+      ]
+    }
+  },
+  "offset": {
+    "line_center": [
+      321.85,
+      187.12
+    ],
+    "image_center_x": 320.0,
+    "horizontal_offset_px": 1.85,
+    "direction": "偏右"
+  },
+  "slope": {
+    "slope": -0.0008,
+    "angle_rad": -0.0008,
+    "angle_deg": -0.05
+  },
+  "depth": {
+    "point1_center_mm": 731.0,
+    "point1_left_offset_mm": 737.2,
+    "point1_left_sample_pixel": [
+      227,
+      188
+    ],
+    "point2_center_mm": 762.0,
+    "point2_right_offset_mm": 770.4,
+    "point2_right_sample_pixel": [
+      416,
+      188
+    ],
+    "center_mm": 1947.5,
+    "center_sample_pixel": [
+      321,
+      187
+    ]
+  },
+  "output_files": [
+    "yolo_depth_rgb.jpg",
+    "yolo_depth_rgb_with_depth.jpg",
+    "yolo_depth_depth.jpg",
+    "yolo_depth_depth_marked.jpg",
+    "result.jpg"
+  ]
 }

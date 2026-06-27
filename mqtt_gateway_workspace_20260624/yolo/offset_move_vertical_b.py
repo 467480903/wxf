@@ -16,7 +16,9 @@ if point1_center_mm - point2_center_mm > 100:
 if point2_center_mm - point1_center_mm > 100:
     exit(1)
 
-depth_offset = (point1_center_mm + point2_center_mm - 684 - 688) * 0.085 / (738 + 734 - 684 - 688)
+raw_depth_offset = (point1_center_mm + point2_center_mm - 684 - 688) * 0.065 / (738 + 734 - 684 - 688)
+depth_offset = max(-0.02, min(0.085, raw_depth_offset))
+print(f"vertical_b raw_depth_offset={raw_depth_offset:.6f}m, clamped_depth_offset={depth_offset:.6f}m")
 
 if __name__ == "__main__":
     run_offset(offset_l=(depth_offset, 0, 0), offset_r=(depth_offset, 0, 0))
