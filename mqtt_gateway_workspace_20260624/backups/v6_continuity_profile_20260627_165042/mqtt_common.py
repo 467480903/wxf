@@ -709,7 +709,7 @@ def run_ee_offsets(
         {
             "left_offset_m": list(left),
             "right_offset_m": list(right),
-            "frame": "base_link",
+            "frame": "tool",
             "max_step_m": float(max_step_m) if max_step_m is not None else env_float("G2_WXF_FAST_EE_MAX_STEP_M", 0.001),
             "rate_hz": float(rate_hz) if rate_hz is not None else env_float("G2_WXF_FAST_EE_RATE_HZ", 50.0),
             "life_time_s": env_float("G2_WXF_FAST_EE_LIFE_TIME_S", 0.02),
@@ -884,13 +884,6 @@ def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> No
                 )
                 if nav_startup_transient:
                     wait_for_pnc_idle(source_script, waypoint_label, success_only=True)
-                elif env_flag("G2_WXF_NAV_BUSY_WAIT_IDLE_BEFORE_RETRY", False):
-                    print(
-                        f"# nav_busy_wait_idle_before_retry: source={source_script} "
-                        f"waypoint={waypoint_index or item.get('source_waypoint_index')}",
-                        flush=True,
-                    )
-                    wait_for_pnc_idle(source_script, waypoint_label)
                 time.sleep(busy_delay_s)
                 continue
             require_done(result)
@@ -1092,41 +1085,6 @@ def _source_script_from_target(target: Path) -> str:
         return target.name
 
 
-def _run_mqtt_mp3_inline(target: Path, args: list[str]) -> int:
-    """Run yolo/mqtt_mp3.py in-process to avoid per-audio Python startup delay.
-
-    This preserves mqtt_mp3.py semantics: it still connects to the MP3 broker and
-    waits for publish completion. The only skipped cost is spawning another
-    Python interpreter for every audio cue.
-    """
-    import importlib.util
-
-    spec = importlib.util.spec_from_file_location("_wxf_mqtt_mp3_inline", target)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"cannot import mqtt_mp3 helper: {target}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    main = getattr(module, "main", None)
-    if not callable(main):
-        raise RuntimeError(f"mqtt_mp3 helper has no main(): {target}")
-
-    old_argv = sys.argv[:]
-    try:
-        sys.argv = [str(target), *args]
-        try:
-            main()
-        except SystemExit as exc:
-            if exc.code in (None, 0):
-                return 0
-            if isinstance(exc.code, int):
-                return exc.code
-            print(exc.code, file=sys.stderr)
-            return 1
-        return 0
-    finally:
-        sys.argv = old_argv
-
-
 def _sequence_result_json(base: Path) -> dict[str, Any]:
     result_path, data = load_yolo_result_json("yolo_depth_result.json", base=base)
     if not isinstance(data, dict):
@@ -1160,14 +1118,6 @@ def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool
     source_script = _source_script_from_target(target)
     name = target.name
     rel = source_script
-
-    if name == "mqtt_mp3.py" and env_flag("G2_WXF_MP3_INLINE", False):
-        arg_text = " ".join(shlex.quote(arg) for arg in args)
-        print(f"# mp3_inline: {source_script} {arg_text}".rstrip(), flush=True)
-        rc = _run_mqtt_mp3_inline(target, args)
-        if rc != 0:
-            raise SystemExit(rc)
-        return True
 
     if rel == "interaction/play_tts_cli.py":
         text_args = [arg for arg in args if not arg.startswith("--")]
@@ -1298,10 +1248,9 @@ def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool
         return True
 
     if name == "offset_move_push_grab.py":
-        # Mirror /data/wxf/wxf/BOX_528_1/offset_move_push_grab.py.
-        # The original child script now uses fixed left/right offsets rather
-        # than the previous YOLO-horizontal correction plus split forward push.
-        run_ee_offsets(source_script, (0.088, 0.034, 0.0), (0.101, 0.038, 0.0))
+        horizontal_offset_m = _sequence_horizontal_px(base) / 1000.0
+        run_ee_offsets(source_script, (0.0, horizontal_offset_m, 0.0), (0.0, horizontal_offset_m, 0.0))
+        run_ee_offsets(source_script, (0.09, 0.0, 0.0), (0.09, 0.0, 0.0))
         return True
 
     return False
@@ -1344,8 +1293,6 @@ def _fast_sequence_label(base: Path, kind: str, parts: list[str]) -> str | None:
         "offset_move_vertical.py",
         "offset_move_vertical_b.py",
     }
-    if target.name == "mqtt_mp3.py" and env_flag("G2_WXF_MP3_INLINE", False):
-        return "inline mqtt_mp3 publish"
     if _source_script_from_target(target) == "interaction/play_tts_cli.py":
         return "MQTT interaction.play_tts"
     if target.name in fast_names or target.name.startswith("move_arm_by_json"):

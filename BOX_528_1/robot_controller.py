@@ -301,6 +301,10 @@ class RobotController:
 
         # 构建请求
         req = agibot_gdk.NaviReq()
+        if(waypoint == 2):
+            pos[0] = 0.2494
+            pos[1] = -0.3
+    
         if(waypoint == 11):
             pos[0] = -1.1761968932515214-0.8
             pos[1] = -4.018110224686903+0.08

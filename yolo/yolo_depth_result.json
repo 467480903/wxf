@@ -15,49 +15,49 @@
     "point1": {
       "label": "a",
       "center": [
-        230.53,
-        280.14
+        226.6,
+        273.31
       ]
     },
     "point2": {
       "label": "a",
       "center": [
-        414.17,
-        279.43
+        406.9,
+        272.19
       ]
     }
   },
   "offset": {
     "line_center": [
-      322.35,
-      279.79
+      316.75,
+      272.75
     ],
     "image_center_x": 320.0,
-    "horizontal_offset_px": 2.35,
-    "direction": "偏右"
+    "horizontal_offset_px": -3.25,
+    "direction": "偏左"
   },
   "slope": {
-    "slope": -0.0039,
-    "angle_rad": -0.0039,
-    "angle_deg": -0.22
+    "slope": -0.0062,
+    "angle_rad": -0.0062,
+    "angle_deg": -0.36
   },
   "depth": {
-    "point1_center_mm": 772.0,
-    "point1_left_offset_mm": 772.5,
+    "point1_center_mm": 47692.0,
+    "point1_left_offset_mm": 50295.3,
     "point1_left_sample_pixel": [
-      230,
-      281
+      226,
+      274
     ],
-    "point2_center_mm": 778.0,
-    "point2_right_offset_mm": 777.5,
+    "point2_center_mm": 11314.0,
+    "point2_right_offset_mm": 13220.0,
     "point2_right_sample_pixel": [
-      414,
-      280
+      406,
+      273
     ],
-    "center_mm": 774.2,
+    "center_mm": 1243.5,
     "center_sample_pixel": [
-      322,
-      279
+      316,
+      272
     ]
   },
   "output_files": [

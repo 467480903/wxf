@@ -15,3 +15,4 @@ yolo/*.jpg
 *.log
 *.gz
 *.raw
+mqtt_gateway_workspace_20260624/yolo/*.jpg

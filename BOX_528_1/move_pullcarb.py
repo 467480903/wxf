@@ -6,7 +6,7 @@ robot = RobotController()
 # 导航到地图第0个点
 
 robot.go(40)
-robot.go_rel(dx=-3.4)
+robot.go_rel(dx=-3.3)
 # robot.go(41)
 # robot.go(42)
 # # robot.go(43)

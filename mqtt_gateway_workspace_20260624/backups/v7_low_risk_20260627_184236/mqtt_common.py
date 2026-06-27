@@ -884,13 +884,6 @@ def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> No
                 )
                 if nav_startup_transient:
                     wait_for_pnc_idle(source_script, waypoint_label, success_only=True)
-                elif env_flag("G2_WXF_NAV_BUSY_WAIT_IDLE_BEFORE_RETRY", False):
-                    print(
-                        f"# nav_busy_wait_idle_before_retry: source={source_script} "
-                        f"waypoint={waypoint_index or item.get('source_waypoint_index')}",
-                        flush=True,
-                    )
-                    wait_for_pnc_idle(source_script, waypoint_label)
                 time.sleep(busy_delay_s)
                 continue
             require_done(result)

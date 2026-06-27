@@ -22,7 +22,6 @@ TASK_SEQUENCE = [
     "python ../Robot/move_ee_pose_open_2.py",
     "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
     "python ../BOX_528_1/move-pick1.py",
-    "python mqtt_mp3.py --file JPCH1.mp3",
     "python ../BOX_528_1/move_arm_by_json_grab_1st.py",
     "python ../BOX_528_1/offset_move_push_grab.py",
     "python ../Robot/move_ee_pose_close_2.py",

@@ -709,7 +709,7 @@ def run_ee_offsets(
         {
             "left_offset_m": list(left),
             "right_offset_m": list(right),
-            "frame": "base_link",
+            "frame": "tool",
             "max_step_m": float(max_step_m) if max_step_m is not None else env_float("G2_WXF_FAST_EE_MAX_STEP_M", 0.001),
             "rate_hz": float(rate_hz) if rate_hz is not None else env_float("G2_WXF_FAST_EE_RATE_HZ", 50.0),
             "life_time_s": env_float("G2_WXF_FAST_EE_LIFE_TIME_S", 0.02),
@@ -884,13 +884,6 @@ def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> No
                 )
                 if nav_startup_transient:
                     wait_for_pnc_idle(source_script, waypoint_label, success_only=True)
-                elif env_flag("G2_WXF_NAV_BUSY_WAIT_IDLE_BEFORE_RETRY", False):
-                    print(
-                        f"# nav_busy_wait_idle_before_retry: source={source_script} "
-                        f"waypoint={waypoint_index or item.get('source_waypoint_index')}",
-                        flush=True,
-                    )
-                    wait_for_pnc_idle(source_script, waypoint_label)
                 time.sleep(busy_delay_s)
                 continue
             require_done(result)
@@ -1298,10 +1291,9 @@ def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool
         return True
 
     if name == "offset_move_push_grab.py":
-        # Mirror /data/wxf/wxf/BOX_528_1/offset_move_push_grab.py.
-        # The original child script now uses fixed left/right offsets rather
-        # than the previous YOLO-horizontal correction plus split forward push.
-        run_ee_offsets(source_script, (0.088, 0.034, 0.0), (0.101, 0.038, 0.0))
+        horizontal_offset_m = _sequence_horizontal_px(base) / 1000.0
+        run_ee_offsets(source_script, (0.0, horizontal_offset_m, 0.0), (0.0, horizontal_offset_m, 0.0))
+        run_ee_offsets(source_script, (0.09, 0.0, 0.0), (0.09, 0.0, 0.0))
         return True
 
     return False

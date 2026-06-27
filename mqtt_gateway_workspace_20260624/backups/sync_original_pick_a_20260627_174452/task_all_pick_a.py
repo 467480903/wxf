@@ -14,23 +14,30 @@ for _parent in Path(__file__).resolve().parents:
 from mqtt_common import run_sequence
 
 
-# Source of truth: /data/wxf/wxf/yolo/task_all_pick_a.py on G2A, synced 2026-06-27 17:27 CST.
+# Source of truth: /data/wxf/wxf/yolo/task_all_pick_a.py on G2A.
 # Keep the active sequence identical to the original script. The original
 # move-ready1.py line is commented out there, so it stays omitted here too.
 # Only the execution layer is converted to the MQTT/Gateway wrappers.
 TASK_SEQUENCE = [
+    "python mqtt_mp3.py --file JPCH1.mp3",
     "python ../Robot/move_ee_pose_open_2.py",
+    
     "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
     "python ../BOX_528_1/move-pick1.py",
-    "python mqtt_mp3.py --file JPCH1.mp3",
+    "python ../interaction/play_tts_cli.py Hold",
     "python ../BOX_528_1/move_arm_by_json_grab_1st.py",
+    "python ../interaction/play_tts_cli.py Hold",
     "python ../BOX_528_1/offset_move_push_grab.py",
+
+
     "python ../Robot/move_ee_pose_close_2.py",
+
     "python ../BOX_528_1/offset_move_up.py",
     "python ../BOX_528_1/offset_move_pull.py",
     "python ../BOX_528_1/move-adjust1.py",
+
     "python ../BOX_528_1/move-put1.py",
-    "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
+    "python ../BOX_528_1/move_arm_by_json_grab_delever.py"
 ]
 
 

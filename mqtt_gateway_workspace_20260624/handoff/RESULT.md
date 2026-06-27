@@ -17986,3 +17986,173 @@ No robot motion or cancel command was executed by Codex. Only read-only PNC chec
   - `./run_fast_live_script.sh yolo/task_all_pick_place_ab_v5.py --execute`
 - Rollback command:
   - `./run_fast_live_script.sh yolo/task_all_pick_place_ab_v4.py --execute`
+
+## 2026-06-27 V6 continuity profile runner
+
+- Created new script `yolo/task_all_pick_place_ab_v6.py`; V4, V5, and the individual A/B pick/place scripts were not modified by this V6 runner step.
+- Added environment-gated MP3 fast path in `mqtt_common/mqtt_common.py`:
+  - `G2_WXF_MP3_INLINE=1` imports and runs `yolo/mqtt_mp3.py` in-process.
+  - It still uses the original `mqtt_mp3.py` publish logic and waits for publish completion.
+  - It only removes the per-audio extra Python process startup cost.
+  - Default behavior stays unchanged unless a runner/profile sets `G2_WXF_MP3_INLINE=1`.
+- V6 profile changes compared with V5:
+  - `G2_WXF_NAV_IDLE_STABLE_S=0.15`
+  - `G2_WXF_NAV_BUSY_RETRY_DELAY_S=0.15`
+  - `G2_WXF_NAV_POLL_INTERVAL_S=0.15`
+  - `G2_WXF_FAST_WHOLE_BODY_SPLIT_DELAY_S=0.02`
+  - `G2_WXF_MP3_INLINE=1`
+  - V6 reapplies its profile after loading each child script, so child-local pacing defaults do not override the operator-selected V6 timing profile.
+- Preserved boundaries:
+  - no waypoint/position changes
+  - no arm, waist, gripper, EE offset target changes
+  - no GDK API changes
+  - no individual child script edits
+- Backup directory: `backups/v6_continuity_profile_20260627_165042/`.
+- Validation:
+  - `python3 -m py_compile mqtt_common/mqtt_common.py yolo/task_all_pick_place_ab_v6.py`
+  - `./run_fast_live_script.sh yolo/task_all_pick_place_ab_v6.py` dry-run, exit code 0
+  - Dry-run confirmed MP3 steps are shown as `fast_inline` / `inline mqtt_mp3 publish`.
+- No live `--execute` run was started by Codex.
+- Run command:
+  - `./run_fast_live_script.sh yolo/task_all_pick_place_ab_v6.py --execute`
+- Rollback commands:
+  - `./run_fast_live_script.sh yolo/task_all_pick_place_ab_v5.py --execute`
+  - `./run_fast_live_script.sh yolo/task_all_pick_place_ab_v4.py --execute`
+
+
+## 2026-06-27 17:52:20 CST - pick_a original child-script parameter sync
+
+Scope: sync MQTT migrated `pick_a` child behavior against original `/data/wxf/wxf` scripts after onsite updates. No live robot motion was executed by Codex.
+
+Findings:
+- `yolo/task_all_pick_a.py` was already synced to the original 11-step flow: open -> arm standby -> move-pick1 -> arm grab_1st -> push -> close -> up -> pull -> adjust -> put -> arm standby.
+- Gripper params match original: open both `-0.785`, close both `0.0`; original right-to-left delays are preserved by `original_gripper_inter_side_delay_s()` (`0.02s` open, `0.05s` close).
+- Arm JSON point files match original by sha256: `positions/arm_position_to_grab_1.json` and `positions/arm_position_to_grab_2.json`.
+- Offset params match original: `offset_move_push_grab.py` left `(0.088, 0.034, 0)`, right `(0.101, 0.038, 0)`; `offset_move_up.py` `(0,0,0.20)` both; `offset_move_pull.py` `(-0.16,0,0)` both.
+- Found one mismatch: original `/data/wxf/wxf/BOX_528_1/move-pick1.py` uses `robot.go_adjusted(2)` then `robot.go(3)`, while MQTT wrapper had plain waypoint index 2 then 3.
+
+Changed:
+- Updated `/data/wxf/wxf/mqtt_gateway_workspace_20260624/BOX_528_1/move-pick1.py` first waypoint to the original `go_adjusted(2)` equivalent request pose:
+  - `source_waypoint_index=2`
+  - `x_m=0.2494`
+  - `y_m=-0.3`
+  - `yaw_rad=1.6151929039873083`
+  - second waypoint remains plain `index=3`.
+
+Backup:
+- `/data/wxf/wxf/mqtt_gateway_workspace_20260624/backups/sync_pick1_go_adjusted2_20260627_175110/move-pick1.py`
+
+Validation:
+- `python3 -m py_compile BOX_528_1/move-pick1.py` passed.
+- Dry-run `G2_WXF_GATEWAY_MODE=dry_run ... python3 BOX_528_1/move-pick1.py` passed with `executed=false`; first nav request used `map_id=request-pose`, `source_waypoint_index=2`, `x_m=0.2494`, `y_m=-0.3`, `yaw_rad=1.6151929039873083`.
+- Full non-execute plan `./run_fast_live_script.sh yolo/task_all_pick_place_ab_v6.py` passed: `pick_a steps=11`, `v6_total_timing status=done`, no `blocked_unknown` or `missing_local`.
+
+Risk boundary:
+- No `--execute` was run by Codex.
+- No GDK/Gateway/service code or point JSON was changed.
+- The only behavior change is restoring the original `go_adjusted(2)` navigation target in the MQTT wrapper.
+
+
+## 2026-06-27 18:01:16 CST - pick_a push-grab fast path sync
+
+Scope: sync fast runner behavior for `BOX_528_1/offset_move_push_grab.py` with the current original child script. No live robot motion was executed by Codex for this change.
+
+Finding:
+- The current original `/data/wxf/wxf/BOX_528_1/offset_move_push_grab.py` uses a fixed single dual-arm offset:
+  - left `(0.088, 0.034, 0.0)`
+  - right `(0.101, 0.038, 0.0)`
+- The MQTT wrapper file already had those values, but `mqtt_common._run_fast_sequence_python()` intercepted `offset_move_push_grab.py` and ignored the wrapper file.
+- The old fast path instead sent two offsets: YOLO horizontal Y correction, then X forward `(0.09, 0.0, 0.0)` for both arms. This was not consistent with the latest original child script.
+
+Changed:
+- Updated `/data/wxf/wxf/mqtt_gateway_workspace_20260624/mqtt_common/mqtt_common.py` fast path for `offset_move_push_grab.py` to send one `run_ee_offsets()` call with:
+  - left `(0.088, 0.034, 0.0)`
+  - right `(0.101, 0.038, 0.0)`
+
+Backup:
+- `/data/wxf/wxf/mqtt_gateway_workspace_20260624/backups/sync_pick_a_push_grab_offset_20260627_175947/mqtt_common.py`
+
+Validation:
+- `python3 -m py_compile mqtt_common/mqtt_common.py` passed.
+- Dry-run `G2_WXF_GATEWAY_MODE=dry_run ... python3 yolo/task_all_pick_a.py --execute` passed with `executed=false`; step 05 sent `left_offset_m=[0.088,0.034,0.0]`, `right_offset_m=[0.101,0.038,0.0]`.
+
+Latest live log note:
+- `run_logs/20260627/20260627_175609_fast_live_script_yolo_task_all_pick_place_ab_v6.py_2608086.log` loaded the adjusted waypoint fix, but it was started before this push-grab fast-path change.
+- That log has no final `run result` / `exit_code` and no Python traceback; it appears interrupted before normal completion.
+
+
+## 2026-06-27 - pick_a grab offset frame confirmation
+
+Confirmed:
+- arm_position_to_grab_1.json sha256 matches original /data/wxf/wxf/positions.
+- arm_position_to_grab_2.json sha256 matches original /data/wxf/wxf/positions.
+- Latest V6 live log sent arm_position_to_grab_1.json joint positions unchanged to Robot.move_arm_joint mode=2.
+- offset_move_push_grab values match original: left=[0.088,0.034,0.0], right=[0.101,0.038,0.0].
+
+Finding:
+Original end_effector_controller.py adds offsets directly to arm_l_end_link / arm_r_end_link positions. Active Gateway ee.relative_offset_dual does the same, but mqtt_common.run_ee_offsets previously labeled the request as frame=tool. Updated it to frame=base_link to match original base-frame semantics and avoid future drift if Gateway starts honoring dual-offset frame transforms.
+
+Changed:
+- /data/wxf/wxf/mqtt_gateway_workspace_20260624/mqtt_common/mqtt_common.py
+
+Backup:
+- /data/wxf/wxf/mqtt_gateway_workspace_20260624/backups/ee_offset_frame_base_link_20260627_confirm/mqtt_common.py
+
+Validation:
+- python3 -m py_compile mqtt_common/mqtt_common.py passed.
+- Dry-run run_ee_offsets confirmed frame=base_link and executed=false.
+
+
+## 2026-06-27 - pick_a JPCH1 voice insertion
+
+Scope: add voice to MQTT pick_a only, while keeping all non-voice actions identical to the current original /data/wxf/wxf/yolo/task_all_pick_a.py. No live robot motion was executed by Codex.
+
+Changed:
+- /data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo/task_all_pick_a.py
+
+Inserted step:
+- python mqtt_mp3.py --file JPCH1.mp3
+
+Position:
+- after python ../BOX_528_1/move-pick1.py
+- before python ../BOX_528_1/move_arm_by_json_grab_1st.py
+
+Backup:
+- /data/wxf/wxf/mqtt_gateway_workspace_20260624/backups/pick_a_add_voice_20260627/task_all_pick_a.py
+
+Validation:
+- python3 -m py_compile yolo/task_all_pick_a.py passed.
+- ./run_fast_live_script.sh yolo/task_all_pick_a.py dry-run showed steps=12 and JPCH1 at step 04.
+- ./run_fast_live_script.sh yolo/task_all_pick_place_ab_v6.py dry-run showed pick_a steps=12, JPCH1 at step 04, exit_code=0.
+- AST check: removing the mqtt_mp3 voice step leaves all 11 action steps exactly equal to original pick_a.
+
+
+## 2026-06-27 18:43 CST - V7 low-risk PNC busy optimization
+
+Scope: create V7 without changing point positions, child action order, GDK/Gateway service behavior, gripper targets, arm JSON, YOLO/camera steps, or MP3 prompts. No live robot motion was executed by Codex for this change.
+
+Changed:
+- Added /data/wxf/wxf/mqtt_gateway_workspace_20260624/yolo/task_all_pick_place_ab_v7.py.
+- Updated /data/wxf/wxf/mqtt_gateway_workspace_20260624/mqtt_common/mqtt_common.py with env-gated behavior G2_WXF_NAV_BUSY_WAIT_IDLE_BEFORE_RETRY.
+
+Behavior:
+- Default mqtt_common behavior remains unchanged when the env var is unset.
+- V7 sets G2_WXF_NAV_BUSY_WAIT_IDLE_BEFORE_RETRY=1.
+- If nav.goto_pose is rejected because an old PNC task is still running, V7 waits for PNC idle before retrying instead of repeatedly submitting doomed goto requests.
+- V7 keeps V6 child scripts and steps: pick_a, place_a, pick_b, place_b.
+
+Backup:
+- /data/wxf/wxf/mqtt_gateway_workspace_20260624/backups/v7_low_risk_20260627_184236/
+
+Validation:
+- python3 -m py_compile mqtt_common/mqtt_common.py yolo/task_all_pick_place_ab_v7.py passed.
+- ./run_fast_live_script.sh yolo/task_all_pick_place_ab_v7.py dry-run passed with exit_code=0.
+- Dry-run showed unchanged child step counts: pick_a=12, place_a=21, pick_b=12, place_b=29.
+
+Run command:
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v7.py --execute
+
+Rollback:
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v6.py --execute

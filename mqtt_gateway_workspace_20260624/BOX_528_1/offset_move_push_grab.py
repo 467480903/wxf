@@ -22,8 +22,9 @@ def main() -> int:
     #     "BOX_528_1/offset_move_push_grab.py",
     #     offset_l=(0.0, horizontal_offset_m, 0.0),
     #     offset_r=(0.0, horizontal_offset_m, 0.0),
-    # )
-    run_ee_offsets("BOX_528_1/offset_move_push_grab.py", offset_l=(0.09, 0.0, 0.0), offset_r=(0.09, 0.0, 0.0))
+    # )        controller.adjust_arms_relative(offset_l=(0.08+0.008, 0.04-0.006, 0  ), offset_r=(0.095+0.006, 0.03+0.008, 0))
+
+    run_ee_offsets("BOX_528_1/offset_move_push_grab.py", offset_l=(0.08+0.008, 0.04-0.006, 0  ), offset_r=(0.095+0.006, 0.03+0.008, 0))
     return 0
 
 

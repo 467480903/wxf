@@ -33,13 +33,13 @@ def main():
         # controller.adjust_arms_relative(offset_l=(0, 0, 0), offset_r=(0, 0, -0.05))
         
         # 示例 3：左臂向左 (Y+) 50mm，右臂向右 (Y-) 50mm，同时执行
-        with open("/data/wxf/wxf/yolo/yolo_depth_result.json", "r") as f:
-            yolo_result = json.load(f)
-        horizontal_offset_m = yolo_result["offset"]["horizontal_offset_px"] / 1000.0
-        controller.adjust_arms_relative(offset_l=(0, horizontal_offset_m, 0), offset_r=(0, horizontal_offset_m, 0))
+        # with open("/data/wxf/wxf/yolo/yolo_depth_result.json", "r") as f:
+        #     yolo_result = json.load(f)
+        # horizontal_offset_m = yolo_result["offset"]["horizontal_offset_px"] / 1000.0
+        # controller.adjust_arms_relative(offset_l=(0, horizontal_offset_m, 0), offset_r=(0, horizontal_offset_m, 0))
         # controller.adjust_arms_relative(offset_l=(0, 0, -0.01   ), offset_r=(0,    0, -0.01))
         
-        controller.adjust_arms_relative(offset_l=(0.09, 0, 0  ), offset_r=(0.09, 0, 0))
+        controller.adjust_arms_relative(offset_l=(0.08+0.008, 0.04-0.006, 0  ), offset_r=(0.095+0.006, 0.03+0.008, 0))
         # 示例 4：双臂同时向前 (X+) 伸出 50mm
         # controller.adjust_arms_relative(offset_l=(0.05, 0, 0), offset_r=(0.05, 0, 0))
 
