@@ -18,7 +18,7 @@ import numpy as np
 import agibot_gdk
 
 # ========== TCP 配置 ==========
-TCP_HOST = "192.168.57.164"
+TCP_HOST = "192.168.0.8"
 TCP_PORT = 9998
 MODEL_NAME = sys.argv[1] if len(sys.argv) > 1 else "shelf.pt"
 RESPONSE_FILE = "yyolo_depth_result.json"

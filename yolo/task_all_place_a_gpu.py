@@ -14,42 +14,27 @@ import shlex
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 TASK_SEQUENCE = [
-    "python ../Robot/move_ee_pose_close_2.py",    
+
+
+#上面顾工下面魏工
     "python move_whole_body_by_json.py ../positions/pick_standby.json",
-    "python ../interaction/play_tts_cli.py 执行基于视觉模型的推理,通过识别两个销子,然后计算销子的中点,和销子的深度值,来计算机器人的腰部旋转值,和纵声偏移量,和水平偏移量",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py shelf.pt 1",
-    "cp yolo_depth_result.json yolo_depth_result_2.json",
+    # "python ../interaction/play_tts_cli.py 执行基于视觉模型的推理,通过识别两个销子,然后计算销子的中点,和销子的深度值,来计算机器人的腰部旋转值,和纵声偏移量,和水平偏移量",
+    "python cam_get_head_send.py shelf.pt",
     "python correct_waist.py",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py shelf.pt 1",
-    "cp yolo_depth_result.json yolo_depth_result_3.json",
+    "python cam_get_head_send.py shelf.pt",
     "python move_ee_pose_right_half.py",
-
-    "python move_whole_body_by_json.py ../positions/place_b_2.json",
-    "python move_whole_body_by_json.py ../positions/place_b_3.json",
-    
-    "mv yolo_depth_result_2.json yolo_depth_result.json",
-    "python correct_waist.py",
-    "python move_arm_by_json.py ../positions/place_b_4.json",
-    "python offset_move_left_002.py",
-    "python move_arm_by_json.py ../positions/place_b_5.json",
-
-    "mv yolo_depth_result_3.json yolo_depth_result.json",
-
-    
-    "python offset_move_horizon_b.py",
-    "python offset_move_vertical_b.py",
-
-
-    "python offset_move_downward_002.py",
-    "python offset_move_downward_002.py",
+    "python move_arm_by_json.py ../positions/place_1.json",
+    "python move_arm_by_json.py ../positions/place_2.json",
+    "python offset_move_horizon.py",
+    "python offset_move_downward_004.py",
 
     "python move_ee_pose_open_05.py",
     "python offset_move_downward_002.py",
-    "python offset_move_downward_002.py",
-
-    "python ../Robot/move_ee_pose_open_2.py",    
+    "python offset_move_forward_001.py",
+    "python offset_move_vertical.py",
+    "python offset_move_downward_004.py",
+    "python offset_move_downward_004.py",
+    "python ../Robot/move_ee_pose_open_2.py",
     "python offset_move_pull_back.py",
     "python move_whole_body_by_json.py ../positions/pick_standby.json",
 ]

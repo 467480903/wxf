@@ -1,0 +1,19 @@
+{
+  "backup_name": "g2a_map39_backup_20260625_202853",
+  "created_at": "2026-06-25T20:28:54",
+  "robot_alias": "G2A",
+  "robot_host": "agi@10.185.207.186",
+  "source_db": "/data/dlb/dlb.db",
+  "table": "maps",
+  "id": 39,
+  "version": 35,
+  "is_current": 1,
+  "name": "",
+  "aid": "G2A0004BC00689",
+  "timestamp": 1782114862,
+  "status": "stg",
+  "map_info_bytes": 12729526,
+  "updated_map_info_bytes": 3973,
+  "hd_maps_id39_count": 0,
+  "notes": "Contains maps.id=39 only, not full /data/dlb/dlb.db."
+}

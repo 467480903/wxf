@@ -17,12 +17,11 @@ TASK_SEQUENCE = [
     "python ../Robot/move_ee_pose_close_2.py",    
     "python move_whole_body_by_json.py ../positions/pick_standby.json",
     "python ../interaction/play_tts_cli.py 执行基于视觉模型的推理,通过识别两个销子,然后计算销子的中点,和销子的深度值,来计算机器人的腰部旋转值,和纵声偏移量,和水平偏移量",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py shelf.pt 1",
+
+    "cam_get_head_send.py shelf.pt",
     "cp yolo_depth_result.json yolo_depth_result_2.json",
     "python correct_waist.py",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py shelf.pt 1",
+    "cam_get_head_send.py shelf.pt",
     "cp yolo_depth_result.json yolo_depth_result_3.json",
     "python move_ee_pose_right_half.py",
 
