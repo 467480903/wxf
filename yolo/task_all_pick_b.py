@@ -28,16 +28,17 @@ TASK_SEQUENCE = [
     "python ../BOX_528_1/offset_move_push_grab_b.py",
 
 
-    "python ../interaction/play_tts_cli.py 抓取工件",
+    # "python ../interaction/play_tts_cli.py 抓取工件",
     "python ../Robot/move_ee_pose_close_2.py",
     "python ../BOX_528_1/offset_move_up.py",
     "python ../BOX_528_1/offset_move_pull.py",
     "python ../interaction/play_tts_cli.py 接下来，我将识别工件B的位置并调整，然后取出一枚工件B。 我识别到台车B的工件已经没有了，待会我会过来更换台车。",
     "python ../BOX_528_1/move-adjust2.py",
 
-    "python move_whole_body_by_json.py ../positions/pick_standby.json",
-    "python ../interaction/play_tts_cli.py 将移动到B件的放置位",
+    # "python move_whole_body_by_json.py ../positions/pick_standby.json",
+    # "python ../interaction/play_tts_cli.py 将移动到B件的放置位",
     "python ../BOX_528_1/move-put2.py",
+    "python move_whole_body_by_json.py ../positions/pick_standby.json"
 ]
 
 

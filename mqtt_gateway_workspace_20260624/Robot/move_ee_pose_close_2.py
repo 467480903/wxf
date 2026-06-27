@@ -14,9 +14,8 @@ for _parent in Path(__file__).resolve().parents:
 from mqtt_common import run_gripper
 
 
-
 def main() -> int:
-    run_gripper('close', source_script="Robot/move_ee_pose_close_2.py", targets=None)
+    run_gripper("close", source_script="Robot/move_ee_pose_close_2.py", targets={"right": 0.0, "left": 0.0})
     return 0
 
 

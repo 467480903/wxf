@@ -16,7 +16,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TASK_SEQUENCE = [
    
     
-    "python ../BOX_528_1/move-ready1.py",
+    # "python ../BOX_528_1/move-ready1.py",
     
     
     "python ../Robot/move_ee_pose_open_2.py",
@@ -39,8 +39,9 @@ TASK_SEQUENCE = [
     "python ../BOX_528_1/offset_move_pull.py",
     "python ../BOX_528_1/move-adjust1.py",
     "python ../interaction/play_tts_cli.py 将运行到A件的放置位",
-    "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
+    # "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
     "python ../BOX_528_1/move-put1.py",
+    "python ../BOX_528_1/move_arm_by_json_grab_delever.py"
 
 
 ]

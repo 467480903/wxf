@@ -607,9 +607,10 @@ def run_whole_body_json(json_path: str, source_script: str, sync_requested: bool
 def run_gripper(action: str, source_script: str, targets: dict[str, float] | None = None) -> None:
     command = "gripper.open" if action == "open" else "gripper.close"
     targets = targets or {"right": -0.785 if action == "open" else 0.0, "left": -0.785 if action == "open" else 0.0}
-    force_sequential = env_flag("G2_WXF_FAST_GRIPPER_FORCE_SEQUENTIAL", True)
-    inter_side_delay_s = env_float("G2_WXF_FAST_GRIPPER_INTER_SIDE_DELAY_S", 0.15)
-    post_wait_s = env_float("G2_WXF_FAST_GRIPPER_POST_WAIT_S", 0.30)
+    force_sequential = env_flag("G2_WXF_FAST_GRIPPER_FORCE_SEQUENTIAL", False)
+    inter_side_delay_s = original_gripper_inter_side_delay_s(source_script)
+    post_wait_s = env_float("G2_WXF_FAST_GRIPPER_POST_WAIT_S", 0.0)
+    gripper_timeout_s = env_float("G2_WXF_FAST_GRIPPER_TIMEOUT_S", 15.0)
     if not force_sequential and set(targets) == {"left", "right"} and float(targets["left"]) == float(targets["right"]):
         result = submit_task(
             command,
@@ -620,9 +621,10 @@ def run_gripper(action: str, source_script: str, targets: dict[str, float] | Non
                 "inter_side_delay_s": inter_side_delay_s,
                 "source_script": source_script,
                 "fast_demo_path": True,
+                "single_mqtt_task_for_both_grippers": True,
             },
             mode=safe_motion_mode(),
-            timeout_s=5.0,
+            timeout_s=gripper_timeout_s,
         )
         require_done(result)
         if post_wait_s > 0:
@@ -638,7 +640,7 @@ def run_gripper(action: str, source_script: str, targets: dict[str, float] | Non
                 "source_script": source_script,
             },
             mode=safe_motion_mode(),
-            timeout_s=5.0,
+            timeout_s=gripper_timeout_s,
         )
         require_done(result)
         if inter_side_delay_s > 0:
@@ -647,7 +649,24 @@ def run_gripper(action: str, source_script: str, targets: dict[str, float] | Non
         time.sleep(post_wait_s)
 
 
-def run_ee_offsets(source_script: str, offset_l: Iterable[float], offset_r: Iterable[float]) -> None:
+def original_gripper_inter_side_delay_s(source_script: str) -> float:
+    """Return the small right->left delay used by the original WXF gripper scripts."""
+    script_name = Path(source_script).name
+    if script_name == "move_ee_pose_close_2.py":
+        return 0.05
+    if script_name in {"move_ee_pose_open_2.py", "move_ee_pose_open_05.py", "move_ee_pose_right_half.py"}:
+        return 0.02
+    return env_float("G2_WXF_FAST_GRIPPER_INTER_SIDE_DELAY_S", 0.0)
+
+
+def run_ee_offsets(
+    source_script: str,
+    offset_l: Iterable[float],
+    offset_r: Iterable[float],
+    *,
+    max_step_m: float | None = None,
+    rate_hz: float | None = None,
+) -> None:
     left = tuple(float(v) for v in offset_l)
     right = tuple(float(v) for v in offset_r)
     if len(left) != 3 or len(right) != 3:
@@ -658,8 +677,8 @@ def run_ee_offsets(source_script: str, offset_l: Iterable[float], offset_r: Iter
             "left_offset_m": list(left),
             "right_offset_m": list(right),
             "frame": "tool",
-            "max_step_m": env_float("G2_WXF_FAST_EE_MAX_STEP_M", 0.001),
-            "rate_hz": env_float("G2_WXF_FAST_EE_RATE_HZ", 50.0),
+            "max_step_m": float(max_step_m) if max_step_m is not None else env_float("G2_WXF_FAST_EE_MAX_STEP_M", 0.001),
+            "rate_hz": float(rate_hz) if rate_hz is not None else env_float("G2_WXF_FAST_EE_RATE_HZ", 50.0),
             "life_time_s": env_float("G2_WXF_FAST_EE_LIFE_TIME_S", 0.02),
             "inter_side_delay_s": env_float("G2_WXF_FAST_EE_INTER_SIDE_DELAY_S", 0.002),
             "use_both_group": env_flag("G2_WXF_FAST_EE_USE_BOTH_GROUP", False),
@@ -672,20 +691,114 @@ def run_ee_offsets(source_script: str, offset_l: Iterable[float], offset_r: Iter
     require_done(result)
 
 
-def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> None:
-    for item in waypoints:
-        nav_timeout_s, client_timeout_s = nav_timeouts_from_env()
+def _nav_busy_for_retry(result: dict[str, Any]) -> bool:
+    error = str(result.get("error") or "")
+    return "pnc_task_state_not_idle" in error or "PNC task is not idle" in error
+
+
+def _pnc_task_state_value(result: dict[str, Any]) -> int | None:
+    payload = result.get("result")
+    if not isinstance(payload, dict):
+        return None
+    task_state = payload.get("task_state")
+    if not isinstance(task_state, dict):
+        return None
+    try:
+        return int(task_state.get("state"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _pnc_task_id_value(result: dict[str, Any]) -> int | None:
+    payload = result.get("result")
+    if not isinstance(payload, dict):
+        return None
+    task_state = payload.get("task_state")
+    if not isinstance(task_state, dict):
+        return None
+    try:
+        return int(task_state.get("id"))
+    except (TypeError, ValueError):
+        return None
+
+
+def wait_for_pnc_idle(source_script: str, waypoint_label: Any) -> None:
+    idle_states = {0, 7, 8, 9}
+    timeout_s = env_float("G2_WXF_NAV_IDLE_WAIT_TIMEOUT_S", 60.0)
+    poll_s = env_float("G2_WXF_NAV_IDLE_WAIT_POLL_S", 0.25)
+    stable_s = env_float("G2_WXF_NAV_IDLE_STABLE_S", 1.0)
+    deadline = time.time() + max(0.0, timeout_s)
+    last_state: int | None = None
+    last_task_id: int | None = None
+    stable_since: float | None = None
+    while True:
         result = submit_task(
-            "nav.goto_pose",
-            {
+            "gdk.read_task_state",
+            {"source_script": source_script, "before_waypoint": waypoint_label},
+            mode="read_only",
+            timeout_s=3.0,
+            confirm_physical=False,
+        )
+        require_done(result)
+        state = _pnc_task_state_value(result)
+        task_id = _pnc_task_id_value(result)
+        now = time.time()
+        if state in idle_states:
+            if stable_since is None or state != last_state or task_id != last_task_id:
+                stable_since = now
+            stable_elapsed = now - stable_since
+            if stable_elapsed >= stable_s:
+                if last_state not in (None, state) or stable_s > 0:
+                    print(
+                        f"# nav_idle_wait_done: source={source_script} waypoint={waypoint_label} "
+                        f"state={state} task_id={task_id} stable_s={stable_elapsed:.2f}",
+                        flush=True,
+                    )
+                return
+            if state != last_state or task_id != last_task_id:
+                print(
+                    f"# nav_idle_wait_stabilizing: source={source_script} waypoint={waypoint_label} "
+                    f"state={state} task_id={task_id}",
+                    flush=True,
+                )
+        else:
+            stable_since = None
+            if state != last_state or task_id != last_task_id:
+                print(
+                    f"# nav_idle_wait: source={source_script} waypoint={waypoint_label} "
+                    f"state={state} task_id={task_id}",
+                    flush=True,
+                )
+        last_state = state
+        last_task_id = task_id
+        if now >= deadline:
+            raise RuntimeError(
+                f"PNC did not become stable idle before nav waypoint {waypoint_label}: "
+                f"last_state={state}, last_task_id={task_id}"
+            )
+        time.sleep(poll_s)
+
+
+def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> None:
+    busy_retries = int(os.environ.get("G2_WXF_NAV_BUSY_RETRIES", "6"))
+    busy_delay_s = env_float("G2_WXF_NAV_BUSY_RETRY_DELAY_S", 0.5)
+    for item in waypoints:
+        attempt = 0
+        while True:
+            nav_timeout_s, client_timeout_s = nav_timeouts_from_env()
+            waypoint_index = item.get("index")
+            waypoint_label = waypoint_index if waypoint_index is not None else item.get("source_waypoint_index")
+            wait_for_pnc_idle(source_script, waypoint_label)
+            nav_args = {
                 "source_script": source_script,
                 "map_id": "waypoints-json-index",
-                "waypoint_index": item.get("index"),
+                "waypoint_index": waypoint_index,
+                "source_waypoint_index": item.get("source_waypoint_index"),
                 "high_precision": bool(item.get("high_precision", False)),
                 "allow_estop_pedal_fault": env_flag("G2_WXF_ALLOW_ESTOP_PEDAL_FAULT", False),
                 "nav_timeout_s": nav_timeout_s,
                 "startup_timeout_s": env_float("G2_WXF_NAV_STARTUP_TIMEOUT_S", 10.0),
-                "poll_interval_s": env_float("G2_WXF_NAV_POLL_INTERVAL_S", 0.5),
+                "poll_interval_s": env_float("G2_WXF_NAV_POLL_INTERVAL_S", 0.25),
                 "no_progress_timeout_s": env_float("G2_WXF_NAV_NO_PROGRESS_TIMEOUT_S", 45.0),
                 "progress_min_distance_m": env_float("G2_WXF_NAV_PROGRESS_MIN_DISTANCE_M", 0.03),
                 "progress_min_yaw_rad": env_float("G2_WXF_NAV_PROGRESS_MIN_YAW_RAD", 0.05),
@@ -696,12 +809,28 @@ def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> No
                 "tolerance_xy_m": 0.05 if item.get("high_precision") else 0.10,
                 "tolerance_yaw_rad": 0.10 if item.get("high_precision") else 0.20,
                 "speed_profile": "slow" if item.get("high_precision") else "normal",
-                "note": "placeholder dry-run for old RobotController.go(index); no chassis motion",
-            },
-            mode=safe_motion_mode(),
-            timeout_s=client_timeout_s,
-        )
-        require_done(result)
+                "note": item.get("note") or "placeholder dry-run for old RobotController.go(index); no chassis motion",
+            }
+            if waypoint_index is None:
+                nav_args["map_id"] = "request-pose"
+            result = submit_task(
+                "nav.goto_pose",
+                nav_args,
+                mode=safe_motion_mode(),
+                timeout_s=client_timeout_s,
+            )
+            if result.get("state") == "DONE":
+                break
+            if attempt < busy_retries and _nav_busy_for_retry(result):
+                attempt += 1
+                print(
+                    f"# nav_busy_retry: source={source_script} waypoint={waypoint_index or item.get('source_waypoint_index')} "
+                    f"attempt={attempt}/{busy_retries} sleep_s={busy_delay_s}",
+                    flush=True,
+                )
+                time.sleep(busy_delay_s)
+                continue
+            require_done(result)
 
 
 def run_nav_forward(source_script: str, dist_m: float, speed: float | None = None) -> None:
@@ -718,7 +847,7 @@ def run_nav_forward(source_script: str, dist_m: float, speed: float | None = Non
             "requested_speed_mps": speed,
             "nav_timeout_s": nav_timeout_s,
             "startup_timeout_s": env_float("G2_WXF_NAV_STARTUP_TIMEOUT_S", 10.0),
-            "poll_interval_s": env_float("G2_WXF_NAV_POLL_INTERVAL_S", 0.5),
+            "poll_interval_s": env_float("G2_WXF_NAV_POLL_INTERVAL_S", 0.25),
             "no_progress_timeout_s": env_float("G2_WXF_NAV_NO_PROGRESS_TIMEOUT_S", 45.0),
             "progress_min_distance_m": env_float("G2_WXF_NAV_PROGRESS_MIN_DISTANCE_M", 0.03),
             "progress_min_yaw_rad": env_float("G2_WXF_NAV_PROGRESS_MIN_YAW_RAD", 0.05),
@@ -731,9 +860,26 @@ def run_nav_forward(source_script: str, dist_m: float, speed: float | None = Non
     require_done(result)
 
 
+def normalize_yolo_line_angle_rad(angle_rad: float) -> float:
+    """Return the smallest equivalent angle for an undirected detected line.
+
+    The YOLO script computes atan2(point2 - point1). If the two detected holes are
+    returned in the opposite order, the same physical line can appear near +/-pi
+    instead of near 0. The original waist correction still uses idx05 -= angle; this
+    helper only removes that 180-degree point-order ambiguity before applying it.
+    """
+    normalized = float(angle_rad)
+    while normalized > math.pi / 2:
+        normalized -= math.pi
+    while normalized < -math.pi / 2:
+        normalized += math.pi
+    return normalized
+
+
 def run_waist_correction(source_script: str, result_json: str = "yolo_depth_result.json") -> None:
     result_path, data = load_yolo_result_json(result_json)
-    target_delta = require_yolo_number(data, result_path, "slope.angle_rad")
+    raw_target_delta = require_yolo_number(data, result_path, "slope.angle_rad")
+    target_delta = normalize_yolo_line_angle_rad(raw_target_delta)
     result = submit_task(
         "waist.move_named_pose",
         {
@@ -743,6 +889,8 @@ def run_waist_correction(source_script: str, result_json: str = "yolo_depth_resu
             "target_joint": "idx05_body_joint5",
             "delta_rad": -target_delta,
             "original_target_delta_rad": target_delta,
+            "raw_target_delta_rad": raw_target_delta,
+            "normalized_target_delta_rad": target_delta,
             "joint_velocities_radps": [0.3] * 5,
         },
         mode=safe_motion_mode(),
@@ -949,7 +1097,14 @@ def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool
         return True
 
     if name == "move_arm_by_json.py" or name.startswith("move_arm_by_json"):
-        json_path = args[0] if args else "../positions/arm_default.json"
+        if args:
+            json_path = args[0]
+        elif name == "move_arm_by_json_grab_delever.py":
+            json_path = "../positions/arm_position_to_grab_2.json"
+        elif name == "move_arm_by_json_grab_1st.py":
+            json_path = "../positions/arm_position_to_grab_1.json"
+        else:
+            json_path = "../positions/arm_default.json"
         run_arm_json(json_path, source_script=source_script)
         return True
 
@@ -962,39 +1117,15 @@ def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool
         return True
 
     if name == "move_ee_pose_open_05.py":
-        run_gripper("open", source_script=source_script, targets={"right": -0.05})
-        time.sleep(0.02)
-        run_gripper("open", source_script=source_script, targets={"left": -0.05})
+        run_gripper("open", source_script=source_script, targets={"right": -0.05, "left": -0.05})
         return True
 
     if name == "move_ee_pose_open_2.py":
-        run_gripper("open", source_script=source_script, targets={"right": -0.785})
-        time.sleep(0.02)
-        run_gripper("open", source_script=source_script, targets={"left": -0.785})
-        # Final release is visually critical. If the left tool does not
-        # visibly open after the normal two-side command, resend left only
-        # so left_tool is the last gripper command before pull-back.
-        if env_flag("G2_WXF_FINAL_LEFT_OPEN_RETRY", True):
-            delay_s = env_float("G2_WXF_FINAL_LEFT_OPEN_RETRY_DELAY_S", 0.10)
-            if delay_s > 0:
-                time.sleep(delay_s)
-            result = submit_task(
-                "gripper.open",
-                {
-                    "side": "left",
-                    "target_position": -0.785,
-                    "target_type": "omnipicker",
-                    "source_script": f"{source_script}:left_retry",
-                    "fast_demo_path": True,
-                },
-                mode=safe_motion_mode(),
-                timeout_s=5.0,
-            )
-            require_done(result)
+        run_gripper("open", source_script=source_script, targets={"right": -0.785, "left": -0.785})
         return True
 
     if name == "move_ee_pose_close_2.py":
-        run_gripper("close", source_script=source_script, targets=None)
+        run_gripper("close", source_script=source_script, targets={"right": 0.0, "left": 0.0})
         return True
 
     static_offsets: dict[str, tuple[tuple[float, float, float], tuple[float, float, float]]] = {
@@ -1011,12 +1142,28 @@ def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool
         "offset_move_left_025.py": ((0.0, 0.04, 0.0), (0.0, 0.04, 0.0)),
         "offset_move_pull.py": ((-0.16, 0.0, 0.0), (-0.16, 0.0, 0.0)),
         "offset_move_pull_back.py": ((-0.14, 0.0, 0.0), (-0.14, 0.0, 0.0)),
+        "offset_move_push_grab_b.py": ((0.110, 0.0, 0.0), (0.105, 0.0, 0.0)),
         "offset_move_up.py": ((0.0, 0.0, 0.20), (0.0, 0.0, 0.20)),
         "offset_move_upward_015.py": ((0.0, 0.0, 0.15), (0.0, 0.0, 0.15)),
     }
     if name in static_offsets:
         left, right = static_offsets[name]
-        run_ee_offsets(source_script, left, right)
+        noncontact_offsets = {
+            "offset_move_pull.py",
+            "offset_move_pull_back.py",
+            "offset_move_up.py",
+            "offset_move_upward_015.py",
+        }
+        if name in noncontact_offsets:
+            run_ee_offsets(
+                source_script,
+                left,
+                right,
+                max_step_m=env_float("G2_WXF_FAST_EE_NONCONTACT_MAX_STEP_M", 0.002),
+                rate_hz=env_float("G2_WXF_FAST_EE_NONCONTACT_RATE_HZ", env_float("G2_WXF_FAST_EE_RATE_HZ", 50.0)),
+            )
+        else:
+            run_ee_offsets(source_script, left, right)
         return True
 
     if name == "offset_move_horizon.py":
@@ -1083,6 +1230,7 @@ def _fast_sequence_label(base: Path, kind: str, parts: list[str]) -> str | None:
         "offset_move_left_025.py",
         "offset_move_pull.py",
         "offset_move_pull_back.py",
+        "offset_move_push_grab_b.py",
         "offset_move_push_grab.py",
         "offset_move_up.py",
         "offset_move_upward_015.py",

@@ -14,7 +14,7 @@ for _parent in Path(__file__).resolve().parents:
 from mqtt_common import run_nav_waypoints
 
 
-WAYPOINTS = [{'index': 1, 'high_precision': False}, {'index': 2, 'high_precision': False}, {'index': 3, 'high_precision': False}]
+WAYPOINTS = [{'index': 2, 'high_precision': False}, {'index': 3, 'high_precision': False}]
 
 
 def main() -> int:

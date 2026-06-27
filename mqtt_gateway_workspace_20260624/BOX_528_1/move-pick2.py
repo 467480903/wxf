@@ -14,14 +14,21 @@ for _parent in Path(__file__).resolve().parents:
 from mqtt_common import run_nav_waypoints
 
 
-# Original /data/wxf/wxf/BOX_528_1/move-pick2.py:
-# go(11), go(13), go(14), go(15), go_adjusted(32)
+# Mirrors /data/wxf/wxf/BOX_528_1/move-pick2.py:
+#   robot.go(11), robot.go(14), robot.go(15), robot.go_adjusted(32)
+# The original robot.go(13) is commented out and stays omitted.
 WAYPOINTS = [
     {"index": 11, "high_precision": False},
-    {"index": 13, "high_precision": False},
     {"index": 14, "high_precision": False},
     {"index": 15, "high_precision": False},
-    {"index": 32, "high_precision": True},
+    {
+        "source_waypoint_index": 32,
+        "x_m": 0.07965588715268747,
+        "y_m": -0.6056166148205059,
+        "yaw_rad": -1.5499916324135872,
+        "high_precision": False,
+        "note": "go_adjusted(32)",
+    },
 ]
 
 

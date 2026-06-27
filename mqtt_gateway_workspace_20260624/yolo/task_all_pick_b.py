@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 
 for _parent in Path(__file__).resolve().parents:
@@ -14,26 +15,34 @@ for _parent in Path(__file__).resolve().parents:
 from mqtt_common import run_sequence
 
 
-# Source of truth: /data/wxf/wxf/yolo/task_all_pick_b.py on G2A (10.185.207.186), synced 2026-06-25.
+# The final move_whole_body_by_json.py step in the original script runs
+# head -> waist -> arms sequentially with 0.2s sleeps between groups.
+os.environ["G2_WXF_FAST_WHOLE_BODY_SPLIT_DELAY_S"] = "0.2"
+
+# This pick-B wrapper should preserve the original arm/end-effector motion
+# pacing. Earlier demos allow faster non-contact lift/retreat offsets, but this
+# flow keeps those offsets at the conservative original step size.
+os.environ["G2_WXF_FAST_EE_NONCONTACT_MAX_STEP_M"] = "0.001"
+os.environ["G2_WXF_FAST_EE_NONCONTACT_RATE_HZ"] = "50"
+
+
+# Source of truth: /data/wxf/wxf/yolo/task_all_pick_b.py on G2A.
+# Keep the active sequence identical to the original script. Commented-out
+# camera/YOLO/TTS/body-pose lines in the original stay omitted here.
+# Only the execution layer is converted to the MQTT/Gateway wrappers.
 TASK_SEQUENCE = [
-    "python ../interaction/play_tts_cli.py 将执行B件的抓取",
     "python ../BOX_528_1/move-pick2.py",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py holes.pt 1",
-    "python correct_waist.py",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py holes.pt 1",
+    "python ../Robot/move_ee_pose_open_2.py",
     "python ../BOX_528_1/move_arm_by_json_grab_1st.py",
     "python ../BOX_528_1/offset_move_downpickb.py",
-    "python ../BOX_528_1/offset_move_push_grab.py",
-    "python ../interaction/play_tts_cli.py 抓取工件",
+    "python ../BOX_528_1/offset_move_push_grab_b.py",
     "python ../Robot/move_ee_pose_close_2.py",
     "python ../BOX_528_1/offset_move_up.py",
     "python ../BOX_528_1/offset_move_pull.py",
+    "python ../interaction/play_tts_cli.py 接下来，我将识别工件B的位置并调整，然后取出一枚工件B。 我识别到台车B的工件已经没有了，待会我会过来更换台车。",
     "python ../BOX_528_1/move-adjust2.py",
-    "python move_whole_body_by_json.py ../positions/pick_standby.json",
-    "python ../interaction/play_tts_cli.py 将移动到B件的放置位",
     "python ../BOX_528_1/move-put2.py",
+    "python move_whole_body_by_json.py ../positions/pick_standby.json",
 ]
 
 

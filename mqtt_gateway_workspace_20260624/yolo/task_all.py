@@ -14,13 +14,15 @@ for _parent in Path(__file__).resolve().parents:
 from mqtt_common import run_sequence
 
 
-# Source of truth: /data/wxf/wxf/yolo/task_all.py on 192.168.0.6.
+# Source of truth: /data/wxf/wxf/yolo/task_all.py.
+# Keep this sequence order identical to the original script; only the execution
+# layer is converted to the MQTT/Gateway wrappers.
 TASK_SEQUENCE = [
-    "python ../interaction/play_tts_cli.py 任务开始,将运动到A件小车处,抓取工件,mission start,moving to picking up place for product A,",
     "python ../BOX_528_1/move-ready1.py",
     "python ../Robot/move_ee_pose_open_2.py",
     "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
     "python ../BOX_528_1/move-pick1.py",
+    "python ../interaction/play_tts_cli.py 大家好，我将进行焊装工位的上件和更换台车演示，我将识别工件A的位置并调整，然后取出一枚工件A。",
     "python cam_get_head.py",
     "yolo-env/bin/python yolo_depth.py holes.pt 1",
     "python correct_waist.py",
@@ -35,7 +37,7 @@ TASK_SEQUENCE = [
     "python ../BOX_528_1/move-adjust1.py",
     "python ../interaction/play_tts_cli.py 将运行到A件的放置位",
     "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
-    "python ../BOX_528_1/move-put1.py",
+    "python ../BOX_528_1/move-put1.py"
 ]
 
 

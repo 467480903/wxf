@@ -2,7 +2,7 @@
   "model_path": "shelf.pt",
   "image_path": "head.jpg",
   "depth_raw_path": "head_depth.raw",
-  "depth_offset_px": 1,
+  "depth_offset_px": 12,
   "depth_shape": [
     400,
     640
@@ -15,49 +15,49 @@
     "point1": {
       "label": "a",
       "center": [
-        227.42,
-        187.2
+        208.87,
+        213.27
       ]
     },
     "point2": {
-      "label": "a",
+      "label": "b",
       "center": [
-        416.28,
-        187.05
+        415.49,
+        211.63
       ]
     }
   },
   "offset": {
     "line_center": [
-      321.85,
-      187.12
+      312.18,
+      212.45
     ],
     "image_center_x": 320.0,
-    "horizontal_offset_px": 1.85,
-    "direction": "偏右"
+    "horizontal_offset_px": -7.82,
+    "direction": "偏左"
   },
   "slope": {
-    "slope": -0.0008,
-    "angle_rad": -0.0008,
-    "angle_deg": -0.05
+    "slope": -0.0079,
+    "angle_rad": -0.0079,
+    "angle_deg": -0.45
   },
   "depth": {
-    "point1_center_mm": 731.0,
-    "point1_left_offset_mm": 737.2,
+    "point1_center_mm": 662.0,
+    "point1_left_offset_mm": 697.6,
     "point1_left_sample_pixel": [
-      227,
-      188
+      208,
+      225
     ],
-    "point2_center_mm": 762.0,
-    "point2_right_offset_mm": 770.4,
+    "point2_center_mm": 712.0,
+    "point2_right_offset_mm": 721.2,
     "point2_right_sample_pixel": [
-      416,
-      188
+      415,
+      223
     ],
-    "center_mm": 1947.5,
+    "center_mm": 1498.3,
     "center_sample_pixel": [
-      321,
-      187
+      312,
+      212
     ]
   },
   "output_files": [

@@ -29,7 +29,7 @@ def parse_args():
         "--pos",
         type=float,
         default=0,
-        help="夹爪目标开合度。保守闭合用 0.6，更紧可试 1.0"
+        help="夹爪目标开合度。保守闭合用 -0.78，更紧可试 1.0"
     )
     parser.add_argument(
         "--target-type",
