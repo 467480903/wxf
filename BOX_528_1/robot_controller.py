@@ -7,6 +7,7 @@ robot_controller.py — G2机器人控制封装类
   - 自动从地图读取导航点
   - normal_navi 导航
   - high_precision_navi 高精度导航
+  - relative_move 相对运动
   - 蟹行横移
   - 前进/后退
   - 原地旋转
@@ -39,6 +40,13 @@ robot_controller.py — G2机器人控制封装类
     import math
     robot.rotate(math.pi / 2)   # 左转90度
     robot.rotate(-math.pi / 4)  # 右转45度
+
+    # 相对运动（基于当前位姿做相对位移）
+    robot.go_rel(dx=0.5)                        # 前进0.5米
+    robot.go_rel(dx=-0.3)                       # 后退0.3米
+    robot.go_rel(dx=0.5, dy=0.2)                # 前进0.5米并左移0.2米
+    robot.go_rel(yaw_rad=math.pi / 2)           # 原地左转90度
+    robot.go_rel(dx=0.5, yaw_rad=math.pi / 4)   # 前进0.5米并左转45度
 """
 
 import json
@@ -597,6 +605,116 @@ class RobotController:
         self._log("\n🎉 序列导航完成！" if all_ok else "\n⚠️  序列导航未完全成功")
         return all_ok
 
+    def go_rel(self,
+               dx: float = 0.0,
+               dy: float = 0.0,
+               dz: float = 0.0,
+               yaw_rad: float = 0.0,
+               timeout: float = 60.0) -> bool:
+        """
+        相对运动（基于当前位姿做相对位移）
+
+        使用 pnc.relative_move()，目标位姿为相对当前位姿的偏移量。
+
+        Parameters
+        ----------
+        dx : float
+            x 方向相对位移（米），正=前进，负=后退
+        dy : float
+            y 方向相对位移（米），正=左，负=右
+        dz : float
+            z 方向相对位移（米），通常为 0
+        yaw_rad : float
+            相对旋转角度（弧度），正=左转，负=右转
+            默认 0 表示保持当前朝向（对应四元数 w=1）
+        timeout : float
+            超时时间（秒）
+
+        Returns
+        -------
+        bool : True=成功到达，False=失败
+        """
+        # 无位移无旋转，直接返回
+        if abs(dx) < 0.001 and abs(dy) < 0.001 and abs(dz) < 0.001 \
+                and abs(yaw_rad) < 0.001:
+            return True
+
+        # 取消旧任务
+        state, _, _ = self._task_state()
+        if state not in _DONE and state != 0:
+            self._log("   取消旧任务...")
+            self._cancel_navi()
+
+        # yaw（绕 z 轴）转四元数：q = (0, 0, sin(yaw/2), cos(yaw/2))
+        half = yaw_rad / 2.0
+        qz = math.sin(half)
+        qw = math.cos(half)
+
+        # 构建相对移动请求
+        req = agibot_gdk.NaviReq()
+        req.target.position.x    = dx
+        req.target.position.y    = dy
+        req.target.position.z    = dz
+        req.target.orientation.x = 0.0
+        req.target.orientation.y = 0.0
+        req.target.orientation.z = qz
+        req.target.orientation.w = qw
+
+        self._log(f"\n🚀 相对运动: dx={dx:+.2f}m  dy={dy:+.2f}m  dz={dz:+.2f}m  "
+                  f"yaw={math.degrees(yaw_rad):+.1f}°")
+
+        try:
+            self.pnc.relative_move(req)
+        except Exception as e:
+            self._log(f"❌ 发送失败: {e}")
+            return False
+
+        self._log("   相对移动请求发送成功")
+
+        # 等待启动
+        started = False
+        for _ in range(20):
+            time.sleep(0.5)
+            state, _, msg = self._task_state()
+            if state == 2:
+                started = True
+                self._log(" 已启动")
+                break
+            if state in _DONE:
+                break
+
+        if not started:
+            state, _, msg = self._task_state()
+            if state == 9:
+                self._log("✅ 相对运动已完成（已在目标点附近）")
+                return True
+            self._log(f"❌ 任务未能启动: {_S.get(state, state)}  {msg}")
+            return False
+
+        # 等待完成
+        start = time.time()
+        while time.time() - start < timeout:
+            time.sleep(0.5)
+            state, _, msg = self._task_state()
+            elapsed = time.time() - start
+            if self._verbose:
+                print(f"\r   {_S.get(state, state)}... {elapsed:.0f}s/{timeout:.0f}s",
+                      end="", flush=True)
+
+            if state == 9:
+                self._wait_stop()
+                elapsed = time.time() - start
+                self._log(f"\n✅ 相对运动完成！耗时 {elapsed:.1f}s")
+                return True
+
+            if state in {7, 8}:
+                self._log(f"\n❌ 相对运动失败: {_S.get(state, state)}  {msg}")
+                return False
+
+        self._log(f"\n⏰ 超时，取消任务")
+        self._cancel_navi()
+        return False
+
     # ── 公开接口：底盘运动 ────────────────────────
 
     def crab_walk(self,
@@ -761,6 +879,8 @@ if __name__ == "__main__":
     ap.add_argument("--crab",           type=float,           help="蟹行横移距离（米，正=左，负=右）")
     ap.add_argument("--forward",        type=float,           help="前进距离（米，正=前，负=后）")
     ap.add_argument("--rotate",         type=float,           help="旋转角度（度，正=左，负=右）")
+    ap.add_argument("--rel",            type=float, nargs="+", metavar=("DX", "DY", "YAW_DEG"),
+                                              help="相对运动：dx dy [yaw_deg]，如 --rel 0.5 0 0")
     ap.add_argument("--speed",          type=float,           help="运动速度覆盖")
     ap.add_argument("--timeout",        type=float, default=120.0)
     args = ap.parse_args()
@@ -788,9 +908,17 @@ if __name__ == "__main__":
         spd = args.speed or DEFAULT_ANGULAR_SPEED
         robot.rotate(math.radians(args.rotate), spd)
 
+    elif args.rel is not None:
+        dx = args.rel[0] if len(args.rel) > 0 else 0.0
+        dy = args.rel[1] if len(args.rel) > 1 else 0.0
+        yaw_deg = args.rel[2] if len(args.rel) > 2 else 0.0
+        robot.go_rel(dx=dx, dy=dy, yaw_rad=math.radians(yaw_deg),
+                     timeout=args.timeout)
+
     else:
         robot.list_waypoints()
         print("用法: python3 robot_controller.py --wp 0")
         print("      python3 robot_controller.py --crab 1.5")
         print("      python3 robot_controller.py --forward 2.0")
         print("      python3 robot_controller.py --rotate 90")
+        print("      python3 robot_controller.py --rel 0.5 0 0")

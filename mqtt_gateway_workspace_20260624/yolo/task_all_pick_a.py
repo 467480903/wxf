@@ -19,23 +19,16 @@ from mqtt_common import run_sequence
 # move-ready1.py line is commented out there, so it stays omitted here too.
 # Only the execution layer is converted to the MQTT/Gateway wrappers.
 TASK_SEQUENCE = [
+    "python mqtt_mp3.py --file JPCH1.mp3",
     "python ../Robot/move_ee_pose_open_2.py",
     "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
     "python ../BOX_528_1/move-pick1.py",
-    "python ../interaction/play_tts_cli.py 大家好，我将进行焊装工位的上件和更换台车演示，我将识别工件A的位置并调整，然后取出一枚工件A。",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py holes.pt 1",
-    "python correct_waist.py",
-    "python cam_get_head.py",
-    "yolo-env/bin/python yolo_depth.py holes.pt 1",
     "python ../BOX_528_1/move_arm_by_json_grab_1st.py",
     "python ../BOX_528_1/offset_move_push_grab.py",
-    "python ../interaction/play_tts_cli.py 抓取工件",
     "python ../Robot/move_ee_pose_close_2.py",
     "python ../BOX_528_1/offset_move_up.py",
     "python ../BOX_528_1/offset_move_pull.py",
     "python ../BOX_528_1/move-adjust1.py",
-    "python ../interaction/play_tts_cli.py 将运行到A件的放置位",
     "python ../BOX_528_1/move-put1.py",
     "python ../BOX_528_1/move_arm_by_json_grab_delever.py",
 ]

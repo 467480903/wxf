@@ -15,13 +15,25 @@ from mqtt_common import require_done, run_ee_offsets, run_gripper, run_whole_bod
 
 
 TASK_SEQUENCE = [
-    "python ../interaction/play_tts_cli.py 将执行空车拉走动作",
-    # "python ../BOX_528_1/move_gopullcar.py",
+    "python mqtt_mp3.py --file JPCH5.mp3",
+
+    "python ../BOX_528_1/move_gopullcar.py",
     "python ../Robot/move_ee_pose_open_2.py",
     "python move_whole_body_by_json.py ../positions/car_grab_5.json",
     "python move_whole_body_by_json.py ../positions/car_grab_4.json",
     "python offset_move_car_grab.py",
-    # "python ../BOX_528_1/move_pullcar.py",
+    "python ../BOX_528_1/move_pullcar.py",
+    "python move_whole_body_by_json.py ../positions/car_grab_4.json",
+    "python move_whole_body_by_json.py ../positions/car_grab_5.json",
+    "python move_whole_body_by_json.py ../positions/pick_standby.json",
+
+    "python ../BOX_528_1/move_gopullcarb.py",
+    "python ../Robot/move_ee_pose_open_2.py",
+    "python move_whole_body_by_json.py ../positions/car_grab_5.json",
+    "python move_whole_body_by_json.py ../positions/car_grab_4.json",
+    "python offset_move_car_grab.py",
+    "python mqtt_mp3.py --file JPCH6.mp3"
+    "python ../BOX_528_1/move_pullcarb.py",
     "python move_whole_body_by_json.py ../positions/car_grab_4.json",
     "python move_whole_body_by_json.py ../positions/car_grab_5.json",
     "python move_whole_body_by_json.py ../positions/pick_standby.json",

@@ -1083,3 +1083,289 @@ timeouts while the backend command itself completed DONE.
 ```
 
 Codex did not execute live robot motion for this repair.
+
+## 2026-06-27 13:56-14:03 CST Update: MQTT-only execution path
+
+David requested removing HTTP from task execution:
+
+```text
+HTTP is only for video/UI. task_all_* should execute through MQTT directly.
+```
+
+Current execution architecture:
+
+```text
+task_all_* scripts
+  -> MQTT broker 127.0.0.1:1883
+  -> g2-industrial-gateway-mqtt.service
+       --target embedded
+       --backend gdk-live
+       --allow-live
+  -> GdkLiveBackend
+
+HTTP gateway remains up for UI/video, but MQTT tasks no longer go through
+http://127.0.0.1:8767/api/tasks.
+```
+
+Files changed:
+
+```text
+/data/g2_industrial_gateway/current/g2_industrial_gateway/mqtt_service.py
+  added --backend gdk-live support for --target embedded
+
+/etc/systemd/system/g2-industrial-gateway-mqtt.service.d/override.conf
+  overrides ExecStart to:
+    --target embedded --backend gdk-live --allow-live
+
+/data/g2_industrial_gateway/current/g2_industrial_gateway/gateway.py
+  changed timeline text:
+    "task accepted by HTTP layer" -> "task accepted by gateway"
+
+/data/g2_industrial_gateway/current/g2_industrial_gateway/gdk_readonly_backend.py
+  added short PNC read retry for the first GDK get_task_state after service restart
+```
+
+Backup:
+
+```text
+/data/g2_industrial_gateway/backups/mqtt_embedded_live_20260627_1358/
+```
+
+Service state:
+
+```text
+g2-industrial-gateway-mqtt.service active
+mosquitto active
+g2-industrial-gateway.service active for UI/video
+
+MQTT process:
+  /usr/bin/python3 -m g2_industrial_gateway.mqtt_service \
+    --target embedded --backend gdk-live --allow-live ...
+```
+
+Validation:
+
+```text
+read-only direct MQTT validation:
+  command=gdk.read_task_state
+  mode=read_only
+  state=DONE
+  task_state.state=9
+  timeline="task accepted by gateway"
+
+mock gripper MQTT validation:
+  command=gripper.open
+  mode=mock
+  state=DONE
+  executed=false
+```
+
+Next live operator action:
+
+```text
+Rerun:
+  cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+  ./run_fast_live_script.sh yolo/task_all_pick_a.py --execute
+
+If it fails now, inspect MQTT embedded task result directly. Do not debug HTTP
+unless the issue is video/UI only.
+```
+
+Codex did not execute live robot motion for this switch.
+
+## 2026-06-27 13:47-13:50 CST Update: read_task_state fallback added
+
+David reran `task_all_pick_a.py --execute` after the HTTP gateway repair.
+Progress:
+
+```text
+step 01 gripper.open DONE
+  side=both
+  execution_mode=sequential_original
+  calls=[right:right_tool:0,left:left_tool:0]
+
+step 02 arm.move_named_pose DONE
+
+step 03 move-pick1.py failed in wait_for_pnc_idle()
+```
+
+Failure:
+
+```text
+TimeoutError: timed out waiting for MQTT result for gdk-read_task_state-1080186-1782539219057-bb046329
+```
+
+Read-only HTTP inspection:
+
+```text
+task_id=gdk-read_task_state-1080186-1782539219057-bb046329
+state=DONE
+mode=read_only
+result.task_state.state=9
+```
+
+Patch:
+
+```text
+remote:
+  /data/wxf/wxf/mqtt_gateway_workspace_20260624/mqtt_common/mqtt_common.py
+
+backup:
+  /data/wxf/wxf/mqtt_gateway_workspace_20260624/backups/read_task_state_mqtt_fallback_20260627_1349/mqtt_common.py
+```
+
+Behavior changed:
+
+```text
+wait_for_pnc_idle() read timeout is now G2_WXF_NAV_IDLE_READ_TIMEOUT_S,
+default 10.0s instead of fixed 3.0s.
+
+submit_task() now checks /api/tasks/<task_id> if MQTT result waiting times out.
+It only uses the fallback when HTTP already reports a terminal state.
+```
+
+Validation:
+
+```text
+python3 -m py_compile /data/wxf/wxf/mqtt_gateway_workspace_20260624/mqtt_common/mqtt_common.py
+
+G2_WXF_GATEWAY_PREFLIGHT=skip python3 -c 'from mqtt_common.mqtt_common import submit_task; submit_task("gdk.read_task_state", {"source_script": "codex_readonly_validation", "before_waypoint": "validation"}, mode="read_only", timeout_s=10.0, confirm_physical=False)'
+
+result:
+  state=DONE
+  mode=read_only
+  task_state.state=9
+```
+
+Operational note:
+
+```text
+192.168.0.6 was polling the HTTP gateway UI heavily. After validation the
+gateway fd_count was 184, still below the 1024 soft limit but not idle. Close
+browser/dashboard tabs during task_all live runs where possible.
+```
+
+Next live operator action:
+
+```text
+Rerun task_all_pick_a.py from the top. The first gripper/arm section already
+passed after the gateway repair; the PNC idle read now has more wait budget and
+HTTP terminal-state fallback.
+```
+
+Codex did not execute live robot motion for this repair.
+
+## 2026-06-27 13:38-13:45 CST Update: HTTP gateway fd exhaustion fixed
+
+After the gripper MQTT caller timeout was raised to 15s, David reran:
+
+```text
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+./run_fast_live_script.sh yolo/task_all_pick_a.py --execute
+```
+
+It still failed at step 01:
+
+```text
+TimeoutError: timed out waiting for MQTT result for gripper-open-1034052-1782538705657-f3666509
+```
+
+This was a different failure mode. Read-only inspection showed:
+
+```text
+/api/tasks/gripper-open-1034052-1782538705657-f3666509 -> 404
+
+HTTP gateway:
+  fd_count=987
+  open-file soft limit=1024
+  :8767 listen backlog full
+  many CLOSE-WAIT sockets
+  BrokenPipeError and Too many open files in logs
+
+MQTT adapter:
+  process active
+  connected to MQTT broker
+  HTTP submit connection to 127.0.0.1:8767 stuck in SYN-SENT
+```
+
+Root cause:
+
+```text
+HTTP gateway was exhausted by disconnected/polling UI/API sockets. MQTT requests
+could reach the adapter, but the adapter could not reliably connect to the HTTP
+gateway, so some gripper task_ids never entered the HTTP task table.
+```
+
+Patch:
+
+```text
+remote:
+  /data/g2_industrial_gateway/current/g2_industrial_gateway/server.py
+
+backup:
+  /data/g2_industrial_gateway/backups/http_close_wait_20260627_1344/server.py
+
+local source:
+  g2_industrial_gateway/server.py
+```
+
+Behavior changed:
+
+```text
+GatewayHttpHandler.protocol_version = "HTTP/1.0"
+ordinary JSON/static/byte responses now send Connection: close
+response writes catch BrokenPipeError/ConnectionResetError
+server daemon_threads = True
+server request_queue_size = 64
+```
+
+Service operation:
+
+```text
+David confirmed the restart.
+Executed:
+  printf '1\n' | sudo -S systemctl restart g2-industrial-gateway.service
+
+Post-restart:
+  g2-industrial-gateway.service active
+  g2-industrial-gateway-mqtt.service active
+  mosquitto active
+```
+
+Validation:
+
+```text
+python3 -m py_compile /data/g2_industrial_gateway/current/g2_industrial_gateway/server.py
+
+HTTP API:
+  /api/health OK
+  /api/ready OK
+  /api/capabilities OK
+
+post-restart:
+  pid=1063841
+  fd_count=15
+  :8767 listen backlog=64
+  no new BrokenPipe/Too many open files after 13:44:45
+
+mock MQTT gripper:
+  G2_WXF_GATEWAY_MODE=mock G2_WXF_GATEWAY_PREFLIGHT=skip \
+    python3 Robot/move_ee_pose_open_2.py
+
+  state=DONE
+  mode=mock
+  executed=false
+  request.timeout_s=15.0
+  task accepted by HTTP layer
+```
+
+Next live operator action:
+
+```text
+David can rerun task_all_pick_a.py from the top.
+If step 01 fails again, first check whether the task_id exists in /api/tasks.
+  - Exists and DONE/FAILED: inspect task result.
+  - 404: inspect HTTP gateway fd/backlog and MQTT adapter HTTP connectivity.
+```
+
+Codex did not execute live robot motion for this repair.

@@ -30,7 +30,7 @@ os.environ.setdefault("G2_WXF_FAST_WHOLE_BODY_SPLIT_DELAY_S", "0.08")
 # commands when possible; camera/YOLO/file operations keep the original order.
 TASK_SEQUENCE = [
     "python move_whole_body_by_json.py ../positions/pick_standby.json",
-    "python ../interaction/play_tts_cli.py 接下来，我将到夹具旁边进行工件A的上件作业，上件作业需要提前通过VLA模型训练我的大脑。大脑训练的难点是我原本是跟幼儿一样的，只能认识物理世界，通过训练后，我能学习物理世界的法则，根据工件和台车的情况做出调整",
+    "python mqtt_mp3.py --file JPCH2.mp3",
     "python cam_get_head.py",
     "yolo-env/bin/python yolo_depth.py shelf.pt",
     "python correct_waist.py",

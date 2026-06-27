@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
-import atexit
 import argparse
 import json
 import math
@@ -729,14 +728,6 @@ def _nav_busy_for_retry(result: dict[str, Any]) -> bool:
     return "pnc_task_state_not_idle" in error or "PNC task is not idle" in error
 
 
-def _nav_startup_transient_for_retry(result: dict[str, Any]) -> bool:
-    error = str(result.get("error") or "")
-    return (
-        "navigation did not start: state=7" in error
-        or "navigation did not start: state=8" in error
-    )
-
-
 def _pnc_task_state_value(result: dict[str, Any]) -> int | None:
     payload = result.get("result")
     if not isinstance(payload, dict):
@@ -763,8 +754,8 @@ def _pnc_task_id_value(result: dict[str, Any]) -> int | None:
         return None
 
 
-def wait_for_pnc_idle(source_script: str, waypoint_label: Any, *, success_only: bool = False) -> None:
-    idle_states = {0, 9} if success_only else {0, 7, 8, 9}
+def wait_for_pnc_idle(source_script: str, waypoint_label: Any) -> None:
+    idle_states = {0, 7, 8, 9}
     timeout_s = env_float("G2_WXF_NAV_IDLE_WAIT_TIMEOUT_S", 60.0)
     poll_s = env_float("G2_WXF_NAV_IDLE_WAIT_POLL_S", 0.25)
     stable_s = env_float("G2_WXF_NAV_IDLE_STABLE_S", 1.0)
@@ -823,26 +814,15 @@ def wait_for_pnc_idle(source_script: str, waypoint_label: Any, *, success_only: 
 def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> None:
     busy_retries = int(os.environ.get("G2_WXF_NAV_BUSY_RETRIES", "6"))
     busy_delay_s = env_float("G2_WXF_NAV_BUSY_RETRY_DELAY_S", 0.5)
-    skip_first_pre_idle = env_flag("G2_WXF_NAV_SKIP_PRE_IDLE_FIRST", False)
-    cancel_existing_first = env_flag("G2_WXF_NAV_CANCEL_EXISTING_FIRST", False)
-    for item_index, item in enumerate(waypoints):
+    for item in waypoints:
         attempt = 0
         while True:
             nav_timeout_s, client_timeout_s = nav_timeouts_from_env()
             waypoint_index = item.get("index")
             waypoint_label = waypoint_index if waypoint_index is not None else item.get("source_waypoint_index")
-            if skip_first_pre_idle and item_index == 0:
-                if attempt == 0:
-                    print(
-                        f"# nav_pre_idle_skip_first: source={source_script} waypoint={waypoint_label}",
-                        flush=True,
-                    )
-            else:
-                wait_for_pnc_idle(source_script, waypoint_label)
+            wait_for_pnc_idle(source_script, waypoint_label)
             nav_args = {
                 "source_script": source_script,
-                "cancel_existing": bool(cancel_existing_first and item_index == 0),
-                "cancel_wait_s": env_float("G2_WXF_NAV_CANCEL_WAIT_S", 0.3),
                 "map_id": "waypoints-json-index",
                 "waypoint_index": waypoint_index,
                 "source_waypoint_index": item.get("source_waypoint_index"),
@@ -873,17 +853,13 @@ def run_nav_waypoints(source_script: str, waypoints: list[dict[str, Any]]) -> No
             )
             if result.get("state") == "DONE":
                 break
-            nav_startup_transient = _nav_startup_transient_for_retry(result)
-            if attempt < busy_retries and (_nav_busy_for_retry(result) or nav_startup_transient):
+            if attempt < busy_retries and _nav_busy_for_retry(result):
                 attempt += 1
-                retry_kind = "nav_startup_retry" if nav_startup_transient else "nav_busy_retry"
                 print(
-                    f"# {retry_kind}: source={source_script} waypoint={waypoint_index or item.get('source_waypoint_index')} "
+                    f"# nav_busy_retry: source={source_script} waypoint={waypoint_index or item.get('source_waypoint_index')} "
                     f"attempt={attempt}/{busy_retries} sleep_s={busy_delay_s}",
                     flush=True,
                 )
-                if nav_startup_transient:
-                    wait_for_pnc_idle(source_script, waypoint_label, success_only=True)
                 time.sleep(busy_delay_s)
                 continue
             require_done(result)
@@ -1309,9 +1285,6 @@ def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[s
     print(f"# steps={len(sequence)}, mode={'execute' if execute else 'dry-run plan'}")
     if execute and sequence_timeout_s > 0.0:
         print(f"# sequence_timeout_s={sequence_timeout_s:.1f}")
-    sequence_started_at = time.time()
-    last_good_vision_result_bytes: bytes | None = None
-    last_good_vision_result_mtime = 0.0
     for index, entry in enumerate(sequence, 1):
         kind, parts, reason = classify_sequence_command(base, entry)
         fast_label = _fast_sequence_label(base, kind, parts)
@@ -1430,32 +1403,12 @@ def run_sequence(name: str, sequence: list[str], script_dir: str | os.PathLike[s
                 break
 
         if last_problem is not None:
-            if (
-                vision_result_path is not None
-                and env_flag("G2_WXF_VISION_REUSE_PREVIOUS_ON_RETRY_FAIL", True)
-                and last_good_vision_result_bytes is not None
-                and last_good_vision_result_mtime >= sequence_started_at - 0.5
-            ):
-                vision_result_path.write_bytes(last_good_vision_result_bytes)
-                print(
-                    "# vision_fallback_previous_result: "
-                    f"entry={entry!r} problem={last_problem!r} "
-                    f"reused_mtime={last_good_vision_result_mtime:.3f}",
-                    flush=True,
-                )
-                require_sequence_budget(f"after step {index}: {entry}", min_remaining_s=0.0)
-                _step_timing("done_previous_result")
-                continue
             if last_rc != 0:
                 print(f"step failed rc={last_rc}: {entry}")
             else:
                 print(f"step failed: {last_problem}: {entry}")
             _step_timing("failed")
             return last_rc or 1
-
-        if vision_result_path is not None and vision_result_path.exists():
-            last_good_vision_result_bytes = vision_result_path.read_bytes()
-            last_good_vision_result_mtime = vision_result_path.stat().st_mtime
 
         require_sequence_budget(f"after step {index}: {entry}", min_remaining_s=0.0)
         _step_timing("done")

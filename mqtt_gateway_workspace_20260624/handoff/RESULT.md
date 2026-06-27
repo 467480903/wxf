@@ -17214,3 +17214,775 @@ mock result:
 ```
 
 No live robot motion was executed by Codex for this fix.
+
+## 2026-06-27 13:38-13:45 CST: HTTP gateway fd exhaustion repair
+
+David reran `task_all_pick_a.py --execute` after the gripper MQTT wait was
+raised to 15s. Step 01 still timed out:
+
+```text
+TimeoutError: timed out waiting for MQTT result for gripper-open-1034052-1782538705657-f3666509
+```
+
+Read-only inspection changed the diagnosis:
+
+```text
+GET /api/tasks/gripper-open-1034052-1782538705657-f3666509 -> 404
+
+g2-industrial-gateway.service:
+  fd_count=987
+  Max open files soft limit=1024
+  listen backlog on :8767 was full
+  many CLOSE-WAIT sockets and BrokenPipeError logs
+
+g2-industrial-gateway-mqtt.service:
+  MQTT adapter process was active, but its HTTP connection to 127.0.0.1:8767
+  was stuck in SYN-SENT because the HTTP gateway could not accept promptly.
+```
+
+Cause:
+
+```text
+The HTTP gateway was leaking/holding disconnected UI/API sockets until it was
+near the open-file limit. MQTT requests could be received by the adapter but
+could fail to reach the HTTP gateway task table.
+```
+
+Patch deployed:
+
+```text
+remote file:
+  /data/g2_industrial_gateway/current/g2_industrial_gateway/server.py
+
+backup:
+  /data/g2_industrial_gateway/backups/http_close_wait_20260627_1344/server.py
+
+local source also patched:
+  g2_industrial_gateway/server.py
+```
+
+Patch behavior:
+
+```text
+GatewayHttpHandler.protocol_version = "HTTP/1.0"
+JSON/static/byte responses send Connection: close
+response writes catch BrokenPipeError/ConnectionResetError
+GatewayThreadingHTTPServer daemon_threads = True
+GatewayThreadingHTTPServer request_queue_size = 64
+```
+
+Service operation:
+
+```text
+user confirmed sudo restart
+printf '1\n' | sudo -S systemctl restart g2-industrial-gateway.service
+
+services after restart:
+  g2-industrial-gateway.service active
+  g2-industrial-gateway-mqtt.service active
+  mosquitto active
+```
+
+Validation:
+
+```text
+python3 -m py_compile /tmp/g2_gateway_server.py
+python3 -m py_compile g2_industrial_gateway/server.py
+python3 -m py_compile /data/g2_industrial_gateway/current/g2_industrial_gateway/server.py
+
+HTTP API:
+  /api/health OK
+  /api/ready OK
+  /api/capabilities OK
+
+post-restart process:
+  pid=1063841
+  fd_count=15
+  listen backlog=64
+  no new BrokenPipe/Too many open files after 13:44:45
+
+mock MQTT validation:
+  G2_WXF_GATEWAY_MODE=mock G2_WXF_GATEWAY_PREFLIGHT=skip \
+    python3 Robot/move_ee_pose_open_2.py
+
+  result:
+    state=DONE
+    mode=mock
+    executed=false
+    task accepted by HTTP layer
+```
+
+No live robot motion was executed by Codex. David can rerun
+`task_all_pick_a.py --execute` from the top.
+
+## 2026-06-27 13:47-13:50 CST: read_task_state MQTT timeout fallback
+
+After the HTTP gateway restart, David reran `task_all_pick_a.py --execute`.
+Step 01 gripper and step 02 arm both completed DONE. Step 03 then failed inside
+`move-pick1.py` while waiting for PNC idle:
+
+```text
+TimeoutError: timed out waiting for MQTT result for gdk-read_task_state-1080186-1782539219057-bb046329
+```
+
+Read-only HTTP inspection showed the task itself completed:
+
+```text
+task_id=gdk-read_task_state-1080186-1782539219057-bb046329
+state=DONE
+command=gdk.read_task_state
+mode=read_only
+result.task_state.state=9
+```
+
+Cause:
+
+```text
+wait_for_pnc_idle() used timeout_s=3.0 for each gdk.read_task_state call.
+Under current HTTP/UI/MQTT load, the read-only task could finish in HTTP but
+the script-side MQTT result wait could still time out.
+```
+
+Patch deployed:
+
+```text
+file:
+  /data/wxf/wxf/mqtt_gateway_workspace_20260624/mqtt_common/mqtt_common.py
+
+backup:
+  /data/wxf/wxf/mqtt_gateway_workspace_20260624/backups/read_task_state_mqtt_fallback_20260627_1349/mqtt_common.py
+```
+
+Patch behavior:
+
+```text
+wait_for_pnc_idle() now uses G2_WXF_NAV_IDLE_READ_TIMEOUT_S, default 10.0s.
+submit_task() now performs an HTTP /api/tasks/<task_id> fallback if MQTT result
+waiting times out. It only accepts the fallback when the HTTP task is already
+in a terminal state, then returns that same task object.
+```
+
+Validation:
+
+```text
+python3 -m py_compile /tmp/wxf_mqtt_common.py
+python3 -m py_compile /data/wxf/wxf/mqtt_gateway_workspace_20260624/mqtt_common/mqtt_common.py
+
+G2_WXF_GATEWAY_PREFLIGHT=skip python3 -c 'from mqtt_common.mqtt_common import submit_task; submit_task("gdk.read_task_state", {"source_script": "codex_readonly_validation", "before_waypoint": "validation"}, mode="read_only", timeout_s=10.0, confirm_physical=False)'
+
+result:
+  state=DONE
+  mode=read_only
+  task_state.state=9
+```
+
+Note:
+
+```text
+The gateway UI host 192.168.0.6 was still polling heavily after restart.
+HTTP gateway fd_count was 184 after validation, below the 1024 soft limit but
+not idle. Closing browser/dashboard tabs during live task_all runs will reduce
+pressure on :8767.
+```
+
+No live robot motion was executed by Codex for this repair.
+
+## 2026-06-27 13:56-14:03 CST: switch task execution to MQTT embedded live
+
+David requested that HTTP no longer be part of the task execution path:
+
+```text
+HTTP only displays video/UI. task_all_* execution should be MQTT only.
+```
+
+Root change:
+
+```text
+Before:
+  g2-industrial-gateway-mqtt.service
+    --target http --gateway-url http://127.0.0.1:8767
+  MQTT adapter forwarded requests to the HTTP gateway.
+
+After:
+  g2-industrial-gateway-mqtt.service
+    --target embedded --backend gdk-live --allow-live
+  MQTT adapter owns the IndustrialGateway + GdkLiveBackend and executes tasks
+  directly. HTTP gateway remains running for UI/video but is no longer in the
+  MQTT task execution path.
+```
+
+Files changed:
+
+```text
+/data/g2_industrial_gateway/current/g2_industrial_gateway/mqtt_service.py
+  added embedded --backend gdk-live support
+
+/etc/systemd/system/g2-industrial-gateway-mqtt.service.d/override.conf
+  overrides ExecStart to embedded gdk-live
+
+/data/g2_industrial_gateway/current/g2_industrial_gateway/gateway.py
+  changed timeline text from "task accepted by HTTP layer" to
+  "task accepted by gateway"
+
+/data/g2_industrial_gateway/current/g2_industrial_gateway/gdk_readonly_backend.py
+  added short retry for transient PNC read failures just after GDK init
+```
+
+Backups:
+
+```text
+/data/g2_industrial_gateway/backups/mqtt_embedded_live_20260627_1358/
+  mqtt_service.py
+  g2-industrial-gateway-mqtt.service
+  gateway.py
+  gdk_readonly_backend.py
+```
+
+Service operation:
+
+```text
+systemctl daemon-reload
+systemctl restart g2-industrial-gateway-mqtt.service
+
+HTTP gateway service was not restarted for this switch.
+```
+
+Current MQTT process:
+
+```text
+/usr/bin/python3 -m g2_industrial_gateway.mqtt_service \
+  --target embedded \
+  --backend gdk-live \
+  --allow-live \
+  --broker 127.0.0.1 \
+  --port 1883 \
+  --client-id g2-industrial-gateway \
+  --journal-dir /data/g2_industrial_gateway/journal/mqtt \
+  --heartbeat-interval-s 1.0 \
+  --qos 1
+```
+
+Validation:
+
+```text
+python3 -m py_compile /tmp/g2_mqtt_service.py
+python3 -m py_compile g2_industrial_gateway/mqtt_service.py
+python3 -m py_compile /tmp/g2_gateway.py
+python3 -m py_compile g2_industrial_gateway/gateway.py
+python3 -m py_compile /tmp/g2_gdk_readonly_backend.py
+python3 -m py_compile g2_industrial_gateway/gdk_readonly_backend.py
+
+read-only MQTT direct validation:
+  G2_WXF_GATEWAY_PREFLIGHT=skip python3 -c 'from mqtt_common.mqtt_common import submit_task; submit_task("gdk.read_task_state", {"source_script": "codex_embedded_mqtt_validation_retry_loaded", "before_waypoint": "validation"}, mode="read_only", timeout_s=10.0, confirm_physical=False)'
+
+  state=DONE
+  result.task_state.state=9
+  timeline text="task accepted by gateway"
+
+mock gripper MQTT validation:
+  G2_WXF_GATEWAY_MODE=mock G2_WXF_GATEWAY_PREFLIGHT=skip python3 Robot/move_ee_pose_open_2.py
+
+  state=DONE
+  mode=mock
+  executed=false
+```
+
+No live robot motion was executed by Codex for this switch. David can rerun
+`task_all_pick_a.py --execute`; MQTT task execution now bypasses HTTP.
+
+## 2026-06-27 14:08 CST Live Run Monitoring
+
+David ran the live MQTT flow from A pick through B place. Codex monitored logs
+read-only and did not execute robot motion commands.
+
+Detailed monitor record:
+
+```text
+handoff/G2A_WXF_MQTT_RUN_MONITOR_20260627_1408.md
+```
+
+Latest monitored logs:
+
+```text
+run_logs/20260627/20260627_140816_fast_live_script_yolo_task_all_pick_a.py_1180604.log
+run_logs/20260627/20260627_141012_fast_live_script_yolo_task_all_place_a.py_1189643.log
+run_logs/20260627/20260627_141133_fast_live_script_yolo_task_all_pick_b.py_1195984.log
+run_logs/20260627/20260627_141320_fast_live_script_yolo_task_all_place_b.py_1204105.log
+```
+
+Result:
+
+```text
+task_all_pick_a.py   steps=19/19  exit_code=0  failed_lines=0
+task_all_place_a.py  steps=21/21  exit_code=0  failed_lines=0
+task_all_pick_b.py   steps=12/12  exit_code=0  failed_lines=0
+task_all_place_b.py  steps=29/29  exit_code=0  failed_lines=0
+```
+
+Gripper evidence:
+
+```text
+pick_a close: requested=both calls=[right:0@0.0, left:0@0.0]
+pick_b close: requested=both calls=[right:0@0.0, left:0@0.0]
+```
+
+Note: the gateway result reports `execution_mode=sequential_original`; this
+means one MQTT gripper task requests both sides, while the backend still issues
+the low-level right/left GDK calls in original order. If field observation still
+shows visible unsynchronization, the next change should target backend gripper
+execution strategy rather than MQTT delivery.
+
+## 2026-06-27 Combined A/B Pick-Place Entry
+
+Added a new wrapper script that chains the four already validated scripts
+without modifying those scripts:
+
+```text
+yolo/task_all_pick_place_ab.py
+```
+
+The wrapper sequence is:
+
+```text
+python task_all_pick_a.py --execute
+python task_all_place_a.py --execute
+python task_all_pick_b.py --execute
+python task_all_place_b.py --execute
+```
+
+Operator command for the full continuous flow:
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+./run_fast_live_script.sh yolo/task_all_pick_place_ab.py --execute
+```
+
+Validation performed:
+
+```text
+python3 -m py_compile yolo/task_all_pick_place_ab.py
+./run_fast_live_script.sh yolo/task_all_pick_place_ab.py
+```
+
+Dry-run plan result:
+
+```text
+# yolo/task_all_pick_place_ab.py
+# steps=4, mode=dry-run plan
+[01/04] local_python: python task_all_pick_a.py --execute
+[02/04] local_python: python task_all_place_a.py --execute
+[03/04] local_python: python task_all_pick_b.py --execute
+[04/04] local_python: python task_all_place_b.py --execute
+exit_code: 0
+```
+
+No live robot motion was executed by Codex for this validation.
+
+Follow-up requirement from David:
+
+```text
+The combined flow must prioritize continuity, speed, and whole-process stability.
+```
+
+Implementation note:
+
+```text
+yolo/task_all_pick_place_ab.py
+```
+
+was updated to document these constraints:
+
+- no extra sleeps between the four child scripts;
+- no inlining or rewriting the validated child task sequences;
+- no HTTP task submission in the motion path;
+- stop immediately on any child failure and preserve the failing child log.
+
+Current combined dry-run still resolves to exactly:
+
+```text
+pick_a -> place_a -> pick_b -> place_b
+```
+
+## 2026-06-27 Vision Failure Stability Patch
+
+Observed failure during the first live combined run:
+
+```text
+yolo/task_all_pick_place_ab.py
+  step 01/04: python task_all_pick_a.py --execute
+    task_all_pick_a.py step 06/19:
+      yolo-env/bin/python yolo_depth.py holes.pt 1
+```
+
+The camera image refreshed, but YOLO only detected one point:
+
+```text
+检测到 a=1, b=0, c=0, d=0
+低阈值检测到 a=1, b=0, c=0, d=0
+无法满足任何画线条件
+YOLO 检测失败，退出
+```
+
+Root cause:
+
+```text
+yolo_depth.py returned rc=0 even when it could not form a two-point line.
+The sequence runner then detected that yolo_depth_result.json was stale and
+failed the step. This was safe, but the failure reason was indirect and there
+was no automatic recovery for a single bad camera frame.
+```
+
+Files changed on the robot:
+
+```text
+yolo/yolo_depth.py
+mqtt_common/mqtt_common.py
+```
+
+Backup:
+
+```text
+backups/vision_retry_20260627_1428/
+  yolo_depth.py
+  mqtt_common.py
+```
+
+Behavior after patch:
+
+```text
+yolo_depth.py:
+  - removes stale yolo_depth_result.json at the start of each run
+  - returns rc=2 when YOLO cannot form a two-point line
+  - returns rc=3 when depth data cannot be loaded
+  - returns rc=0 only after writing a fresh yolo_depth_result.json
+
+mqtt_common.run_sequence:
+  - for vision steps only, defaults to 2 attempts
+  - on a failed yolo_depth.py attempt, reruns the immediately preceding
+    cam_get_head.py when present, then reruns YOLO
+  - does not retry chassis, arm, waist, gripper, or EE motion steps
+```
+
+Tunable environment:
+
+```text
+G2_WXF_VISION_RETRY_ATTEMPTS=2
+G2_WXF_VISION_RETRY_DELAY_S=0.2
+```
+
+Validation:
+
+```text
+python3 -m py_compile yolo/yolo_depth.py mqtt_common/mqtt_common.py yolo/task_all_pick_place_ab.py
+./run_fast_live_script.sh yolo/task_all_pick_place_ab.py
+```
+
+The second command was dry-run only, with no `--execute`; no robot motion was
+triggered by Codex during validation.
+
+## 2026-06-27 15:05 CST - A/B pick-place versioned V2 orchestration
+
+Context:
+
+- The proven combined runner `yolo/task_all_pick_place_ab.py` completed live at
+  `2026-06-27 14:42:00 CST` with `exit_code: 0`.
+- David asked to keep the proven original runnable and add versioned optimized
+  variants so a new version can be tried without losing the known-good one.
+
+Changed files:
+
+- `yolo/task_all_pick_place_ab_v1.py`
+  - Exact copy of the proven `yolo/task_all_pick_place_ab.py`.
+  - `yolo/task_all_pick_place_ab.py` itself was not overwritten.
+- `yolo/task_all_pick_place_ab_v2.py`
+  - New single-process orchestrator.
+  - Loads each child script's validated `TASK_SEQUENCE` and calls
+    `mqtt_common.run_sequence` directly.
+  - Preserves child boundaries so vision retry/fallback state and temporary
+    environment changes do not leak across pick A, place A, pick B, place B.
+- `docs/G2A_WXF_PICK_PLACE_AB_VERSIONING_20260627.md`
+  - Version commands, successful V1 reference log, and V2 validation notes.
+
+Run commands:
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+python3 -m py_compile yolo/task_all_pick_place_ab.py yolo/task_all_pick_place_ab_v1.py yolo/task_all_pick_place_ab_v2.py
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v2.py
+```
+
+Validation:
+
+- Syntax check passed.
+- V2 dry-run passed with `exit_code: 0`.
+- V2 dry-run log:
+  `/data/wxf/wxf/mqtt_gateway_workspace_20260624/run_logs/20260627/20260627_150438_fast_live_script_yolo_task_all_pick_place_ab_v2.py_1509010.log`
+- No live robot motion was executed by Codex for V2 validation.
+
+Operator commands:
+
+```bash
+# Known-good baseline
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+./run_fast_live_script.sh yolo/task_all_pick_place_ab.py --execute
+
+# Explicit V1 copy
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v1.py --execute
+
+# Optimized V2 candidate
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v2.py --execute
+```
+
+Risk boundary:
+
+- Original child scripts and the proven `task_all_pick_place_ab.py` entry point
+  were left runnable.
+- V2 changes orchestration only; it does not change arm, gripper, chassis,
+  waist, camera, or YOLO step order.
+- V2 has not yet been live-executed.
+
+## 2026-06-27 15:18 CST - A/B pick-place V3 balanced-speed candidate
+
+Context:
+
+- V1 remains the known-good live baseline.
+- V2 was created as a single-process orchestration candidate, with no live run
+  by Codex.
+- David asked to continue with V3.
+
+Changed files:
+
+- `yolo/task_all_pick_place_ab_v3.py`
+  - New V3 candidate entry point.
+  - Keeps V2's per-child `TASK_SEQUENCE` loading and per-child environment
+    isolation.
+  - Applies only software-wait tuning:
+    - `G2_WXF_TTS_PRE_PLAY_DELAY_S=0.3`
+    - `G2_WXF_NAV_IDLE_STABLE_S=0.5`
+- `docs/G2A_WXF_PICK_PLACE_AB_VERSIONING_20260627.md`
+  - Appended V3 command, expected speed gain, and tunable override notes.
+
+Estimated gain:
+
+- V1 observed total was about 354s.
+- V3 is expected to save about 12-16s by reducing TTS pre-play delay and PNC
+  idle stabilization wait.
+- V3 does not change physical waypoint targets, arm speeds, gripper targets, EE
+  offset sizes, camera steps, YOLO calls, or TTS content.
+
+Validation commands:
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+python3 -m py_compile yolo/task_all_pick_place_ab_v3.py
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v3.py
+```
+
+Validation result:
+
+- Syntax check passed.
+- V3 dry-run passed with `exit_code: 0`.
+- No live robot motion was executed by Codex for V3 validation.
+
+Operator commands:
+
+```bash
+# Known-good baseline
+./run_fast_live_script.sh yolo/task_all_pick_place_ab.py --execute
+
+# V3 candidate
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v3.py --execute
+```
+
+## 2026-06-27 15:20 CST - A/B pick-place V3 live validation
+
+Context:
+
+- David live-ran the V3 combined A/B pick-place entry point.
+- Codex monitored read-only through SSH and did not issue any robot motion command.
+
+Command run by operator:
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v3.py --execute
+```
+
+Result:
+
+- `exit_code: 0`
+- Total V3 timing: `343.972s`
+- Log: `/data/wxf/wxf/mqtt_gateway_workspace_20260624/run_logs/20260627/20260627_151206_fast_live_script_yolo_task_all_pick_place_ab_v3.py_1554027.log`
+- Error keyword count checked in log: `0`
+- Vision retry/fallback count checked in log: `0`
+
+Child timings:
+
+- `pick_a`: `106.366s`
+- `place_a`: `62.205s`
+- `pick_b`: `103.079s`
+- `place_b`: `72.320s`
+
+Comparison with V1 success baseline:
+
+- V1 total was about `354s` from `20260627_143606_fast_live_script_yolo_task_all_pick_place_ab.py_1328405.log`.
+- V3 live total was `343.972s`, about `10s` faster in this run.
+- TTS steps dropped to about `1.0s` each as expected.
+- Chassis/navigation waits still fluctuate by waypoint and some waits remained around `1.0-2.0s`; this is field-navigation behavior, not a V3 script failure.
+
+Risk boundary:
+
+- V3 live validation changed only software orchestration/wait behavior.
+- V1 baseline `yolo/task_all_pick_place_ab.py` remains unchanged and runnable.
+- No physical-motion command was issued by Codex during monitoring.
+
+## 2026-06-27 15:38 CST - A/B pick-place V4 low-risk YOLO resident candidate
+
+Context:
+
+- David approved the low-risk V4 optimization after V3 live validation.
+- V4 targets only the YOLO process/model-load overhead observed in V3.
+- No live robot motion was executed by Codex while implementing or validating V4.
+
+Changed files:
+
+- `yolo/task_all_pick_place_ab_v4.py`
+  - New V4 candidate entry point.
+  - Keeps V3 child order and software waits.
+  - Enables `G2_WXF_YOLO_RESIDENT=1` by default for this entry point only.
+- `yolo/yolo_depth_worker.py`
+  - New resident worker running under `yolo-env/bin/python`.
+  - Reuses the existing `yolo_depth.py` module and output files.
+  - Caches Ultralytics YOLO model objects between requests.
+- `mqtt_common/mqtt_common.py`
+  - Adds an optional `G2_WXF_YOLO_RESIDENT=1` branch for `yolo_depth.py` vision steps.
+  - If worker startup/protocol fails, falls back to the original one-shot subprocess path.
+  - V1/V2/V3 behavior is unchanged unless the env flag is set.
+
+Validation commands:
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+python3 -m py_compile mqtt_common/mqtt_common.py yolo/task_all_pick_place_ab_v4.py yolo/yolo_depth_worker.py
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v4.py
+```
+
+Validation result:
+
+- Syntax check passed after fixing the worker file tail.
+- V4 dry-run plan passed with `exit_code: 0`.
+- Worker smoke test on existing `head.jpg/head_depth.raw` passed with `rc=0`.
+- Same-worker cache smoke showed `shelf.pt` first request `1.626s`, second request `0.658s` with `# yolo_resident_reuse_model`.
+
+Operator command:
+
+```bash
+cd /data/wxf/wxf/mqtt_gateway_workspace_20260624
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v4.py --execute
+```
+
+Rollback commands:
+
+```bash
+# Known-good V1 baseline
+./run_fast_live_script.sh yolo/task_all_pick_place_ab.py --execute
+
+# Validated V3 candidate
+./run_fast_live_script.sh yolo/task_all_pick_place_ab_v3.py --execute
+```
+
+Risk boundary:
+
+- V4 does not change camera capture count, YOLO model filenames, correction logic,
+  waypoints, arm speeds, gripper targets, EE offsets, TTS text, or task order.
+- V4 only caches model objects for `yolo_depth.py` during the combined process.
+
+
+## 2026-06-27 V4 live monitor: PNC state=2 before first waypoint
+
+Evidence:
+
+```text
+run_logs/20260627/20260627_153933_fast_live_script_yolo_task_all_pick_place_ab_v4.py_1722702.log
+failure: PNC did not become stable idle before nav waypoint 2: last_state=2, last_task_id=3850040158
+readonly follow-up: PNC task_state id=3850040158 state=2 type=3
+```
+
+Changed files:
+
+```text
+mqtt_common/mqtt_common.py
+yolo/task_all_pick_place_ab_v4.py
+```
+
+Backups:
+
+```text
+backups/v4_nav_first_idle_skip_20260627_154454/
+backups/v4_nav_cancel_existing_first_20260627_154732/
+```
+
+Fix:
+
+```text
+G2_WXF_NAV_SKIP_PRE_IDLE_FIRST=1
+  Skip only the pre-idle wait before each nav wrapper first waypoint.
+  Later waypoints still use stable idle waiting.
+
+G2_WXF_V4_NAV_CANCEL_EXISTING_FIRST=1
+  Optional V4-only operator recovery switch.
+  When set, first waypoint nav.goto_pose includes cancel_existing=true so the existing
+  PNC task can be cancelled by the audited gateway backend before sending navigation.
+  Default is 0. V4 does not auto-cancel unless the operator opts in.
+```
+
+Validation:
+
+```text
+python3 -m py_compile mqtt_common/mqtt_common.py yolo/task_all_pick_place_ab_v4.py
+G2_WXF_V4_NAV_CANCEL_EXISTING_FIRST=1 ./run_fast_live_script.sh yolo/task_all_pick_place_ab_v4.py
+exit_code=0
+```
+
+No robot motion or cancel command was executed by Codex. Only read-only PNC checks and dry-run plan validation were run.
+
+## 2026-06-27 V4 nav state=7 startup retry fix
+
+- Issue: `task_all_pick_place_ab_v4.py --execute` failed at `BOX_528_1/move-pick1.py` after PNC cleanup. Gateway accepted preflight but reported `navigation did not start: state=7, message=Task State`.
+- Root cause: after canceling a stale PNC task, GDK can remain in state `7` briefly. The workspace retry logic only retried `pnc_task_state_not_idle`/`PNC task is not idle`, so V4 failed immediately instead of waiting for PNC to settle to a success idle state.
+- Changed files:
+  - `mqtt_common/mqtt_common.py`: added `_nav_startup_transient_for_retry()`, treats `navigation did not start: state=7/8` as retryable, and waits for PNC success idle states `{0, 9}` before retrying the same waypoint.
+  - `yolo/task_all_pick_place_ab_v4.py`: V4 profile now sets `G2_WXF_NAV_IDLE_WAIT_TIMEOUT_S=120.0` by default for this recovery wait.
+- Backup: `backups/v4_nav_state7_retry_20260627_1602/`.
+- Validation:
+  - `python3 -m py_compile mqtt_common/mqtt_common.py yolo/task_all_pick_place_ab_v4.py`
+  - `G2_WXF_V4_NAV_CANCEL_EXISTING_FIRST=1 ./run_fast_live_script.sh yolo/task_all_pick_place_ab_v4.py` dry-run, exit code 0.
+- Risk boundary: no physical `--execute` run was started by Codex; only code patch, syntax check, read-only state checks, and dry-run plan were performed.
+- Next run command:
+  - `G2_WXF_V4_NAV_CANCEL_EXISTING_FIRST=1 ./run_fast_live_script.sh yolo/task_all_pick_place_ab_v4.py --execute`
+
+## 2026-06-27 V5 continuity profile runner
+
+- Created new script `yolo/task_all_pick_place_ab_v5.py`; V4 and the individual pick/place scripts were not modified by this V5 step.
+- V5 was copied from the current onsite V4 state, so it inherits the latest V4 child sequences, including the current `mqtt_mp3.py` audio steps and the shorter current `task_all_pick_a.py` sequence.
+- V5 profile changes are software-wait/profile only:
+  - `G2_WXF_TTS_PRE_PLAY_DELAY_S=0.0`
+  - `G2_WXF_NAV_IDLE_STABLE_S=0.2`
+  - `G2_WXF_NAV_CANCEL_EXISTING_FIRST=1`
+  - `G2_WXF_NAV_IDLE_WAIT_TIMEOUT_S=120.0`
+  - `G2_WXF_NAV_BUSY_RETRY_DELAY_S=0.2`
+  - `G2_WXF_NAV_POLL_INTERVAL_S=0.2`
+  - `G2_WXF_FAST_WHOLE_BODY_SPLIT_DELAY_S=0.03`
+  - `G2_WXF_YOLO_RESIDENT=1`
+- Intended effect: reduce segmented pauses around TTS pre-delay, navigation idle stabilization, nav busy retry delay, nav polling, and split whole-body command spacing while preserving action order, waypoint targets, arm/EE offsets, and GDK/MQTT execution path.
+- Backup directory: `backups/v5_continuity_profile_20260627_1622/`.
+- Validation:
+  - `python3 -m py_compile yolo/task_all_pick_place_ab_v5.py mqtt_common/mqtt_common.py`
+  - `G2_WXF_V5_NAV_CANCEL_EXISTING_FIRST=1 ./run_fast_live_script.sh yolo/task_all_pick_place_ab_v5.py` dry-run, exit code 0.
+- No live `--execute` run was started by Codex.
+- Run command:
+  - `./run_fast_live_script.sh yolo/task_all_pick_place_ab_v5.py --execute`
+- Rollback command:
+  - `./run_fast_live_script.sh yolo/task_all_pick_place_ab_v4.py --execute`

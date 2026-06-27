@@ -20,7 +20,7 @@ from mqtt_common import run_sequence
 TASK_SEQUENCE = [
     'python ../Robot/move_ee_pose_close_2.py',
     'python move_whole_body_by_json.py ../positions/pick_standby.json',
-    'python ../interaction/play_tts_cli.py 接下来，我将到夹具旁边进行工件B的上件作业。刚才展示的连续动作，需要提前通过SLAM模型训练我的小脑。小脑训练的难点是人形机器人的关节很多，在加上各种变量的影响，人形机器人的运动反力的控制会很难，还没办法做到跟人类那么流畅的水平，但今后我会不断学习改善',
+    "python mqtt_mp3.py --file JPCH4.mp3",
     'python cam_get_head.py',
     'yolo-env/bin/python yolo_depth.py shelf.pt 1',
     'cp yolo_depth_result.json yolo_depth_result_2.json',

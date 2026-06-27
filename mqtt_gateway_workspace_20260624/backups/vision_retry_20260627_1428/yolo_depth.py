@@ -26,7 +26,6 @@ DEPTH_SHAPE = (400, 640)                 # 深度图尺寸 (H, W)，根据实际
 MODEL_PATH = sys.argv[1] if len(sys.argv) > 1 else '06131557.pt'
 DEPTH_OFFSET = int(sys.argv[2]) if len(sys.argv) > 2 else 12
 SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
-RESULT_JSON_PATH = 'yolo_depth_result.json'
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 # ===================== 从 .raw 文件读取深度 =====================
@@ -381,26 +380,18 @@ def get_average_depth(depth_raw: np.ndarray, x: int, y: int, radius: int = 5) ->
 
 # ===================== 主流程 =====================
 
-def main() -> int:
+def main():
     start_time_main = time.time()
     print("=" * 60)
     print("YOLO + head_depth.raw 深度采样")
     print("=" * 60)
-    # Delete stale output before each run. The sequence runner requires a fresh
-    # yolo_depth_result.json from the current image; keeping an older file after
-    # a failed detection can make diagnostics ambiguous.
-    try:
-        if os.path.exists(RESULT_JSON_PATH):
-            os.remove(RESULT_JSON_PATH)
-    except OSError as exc:
-        print(f"⚠️ 删除旧诊断结果失败: {RESULT_JSON_PATH}: {exc}")
 
     # 1. YOLO 检测
     print("\n[1] 运行 YOLO 检测...")
     result = yolo_detect(IMG_PATH)
     if result[0] is None:
         print("❌ YOLO 检测失败，退出")
-        return 2
+        return
 
     (img, img_h, img_w, img_center_x, pt1, pt2,
      boxes_a, boxes_b, boxes_c, boxes_d) = result
@@ -425,7 +416,7 @@ def main() -> int:
 
     if depth_raw is None:
         print("⚠️ 无深度数据，跳过深度采样")
-        return 3
+        return
 
     # 5. 深度采样
     print("\n[4] 深度值采样...")
@@ -560,7 +551,7 @@ def main() -> int:
     print("=" * 60)
 
     # ===== 输出诊断结果到 JSON =====
-    result_json_path = RESULT_JSON_PATH
+    result_json_path = 'yolo_depth_result.json'
     result_data = {
         "model_path": MODEL_PATH,
         "image_path": IMG_PATH,
@@ -614,7 +605,6 @@ def main() -> int:
 
     inference_time = time.time() - start_time_main
     print(f"总耗时: {inference_time:.4f} 秒")
-    return 0
 
 if __name__ == '__main__':
-    raise SystemExit(main())
+    main()

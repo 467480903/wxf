@@ -16,13 +16,13 @@ from mqtt_common import load_yolo_result_json, run_ee_offsets
 
 def main() -> int:
     # Match the original calculation but read the freshest MQTT/original YOLO result.
-    _result_path, yolo_result = load_yolo_result_json("yolo_depth_result.json", base=Path(__file__).resolve().parents[1] / "yolo")
-    horizontal_offset_m = float(yolo_result["offset"]["horizontal_offset_px"]) / 1000.0
-    run_ee_offsets(
-        "BOX_528_1/offset_move_push_grab.py",
-        offset_l=(0.0, horizontal_offset_m, 0.0),
-        offset_r=(0.0, horizontal_offset_m, 0.0),
-    )
+    # _result_path, yolo_result = load_yolo_result_json("yolo_depth_result.json", base=Path(__file__).resolve().parents[1] / "yolo")
+    # horizontal_offset_m = float(yolo_result["offset"]["horizontal_offset_px"]) / 1000.0
+    # run_ee_offsets(
+    #     "BOX_528_1/offset_move_push_grab.py",
+    #     offset_l=(0.0, horizontal_offset_m, 0.0),
+    #     offset_r=(0.0, horizontal_offset_m, 0.0),
+    # )
     run_ee_offsets("BOX_528_1/offset_move_push_grab.py", offset_l=(0.09, 0.0, 0.0), offset_r=(0.09, 0.0, 0.0))
     return 0
 
