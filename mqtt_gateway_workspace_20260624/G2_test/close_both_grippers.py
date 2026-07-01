@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument(
         "--pos",
         type=float,
-        default=0,
+        default=-0.78,
         help="夹爪目标开合度。保守闭合用 -0.78，更紧可试 1.0"
     )
     parser.add_argument(

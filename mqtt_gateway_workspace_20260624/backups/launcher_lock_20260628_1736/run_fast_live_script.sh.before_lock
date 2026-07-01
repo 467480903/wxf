@@ -71,25 +71,6 @@ case "${SCRIPT_DIR}/" in
     ;;
 esac
 
-# Prevent two live launchers from sharing YOLO temp files or submitting
-# overlapping Gateway task streams. The lock is non-blocking: an accidental
-# second launch fails immediately instead of waiting and starting later.
-LOCK_DIR="${ROOT_DIR}/run_locks"
-LOCK_FILE="${LOCK_DIR}/fast_live_script.lock"
-mkdir -p "${LOCK_DIR}"
-exec 9>>"${LOCK_FILE}"
-if ! flock -n 9; then
-  echo "已有 run_fast_live_script.sh 正在运行，拒绝重复启动: ${SCRIPT_REL}" >&2
-  echo "lock_file: ${LOCK_FILE}" >&2
-  exit 75
-fi
-: >"${LOCK_FILE}"
-{
-  echo "pid=$$"
-  echo "script=${SCRIPT_REL}"
-  echo "started_at=$(date '+%Y-%m-%d %H:%M:%S %Z')"
-} >&9
-
 export G2_WXF_GATEWAY_MODE="${G2_WXF_GATEWAY_MODE:-live}"
 export G2_WXF_GATEWAY_CONFIRM_PHYSICAL="${G2_WXF_GATEWAY_CONFIRM_PHYSICAL:-1}"
 export G2_WXF_GATEWAY_PREFLIGHT="${G2_WXF_GATEWAY_PREFLIGHT:-skip}"

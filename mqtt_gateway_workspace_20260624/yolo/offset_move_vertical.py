@@ -22,4 +22,4 @@ depth_offset = (point1_center_mm + point2_center_mm - 633 - 640)  * 0.05 / ( 675
 
 
 if __name__ == "__main__":
-    run_offset(offset_l=(depth_offset, 0, 0), offset_r=(depth_offset, 0, 0))
+    run_offset(offset_l=(depth_offset-0.01, 0, 0), offset_r=(depth_offset-0.01, 0, 0))

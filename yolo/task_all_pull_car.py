@@ -29,10 +29,11 @@ TASK_SEQUENCE = [
 
     "python ../BOX_528_1/move_gopullcarb.py",
     "python ../Robot/move_ee_pose_open_2.py",
+    "python mqtt_mp3.py --file JPCH6.mp3",
     "python move_whole_body_by_json.py ../positions/car_grab_5.json",
     "python move_whole_body_by_json.py ../positions/car_grab_4.json",
     "python offset_move_car_grab_bb.py",
-    "python mqtt_mp3.py --file JPCH6.mp3",
+    
     "python ../BOX_528_1/move_pullcarb.py",
     "python move_whole_body_by_json.py ../positions/car_grab_4.json",
     "python move_whole_body_by_json.py ../positions/car_grab_5.json",

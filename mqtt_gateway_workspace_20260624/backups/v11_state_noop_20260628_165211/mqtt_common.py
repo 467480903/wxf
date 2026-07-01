@@ -311,7 +311,6 @@ def submit_task(
     timeout_s: float = 15.0,
     preflight: str | None = None,
     confirm_physical: bool | None = None,
-    log_result: bool = True,
 ) -> dict[str, Any]:
     selected_mode = mode or ("read_only" if command.startswith("gdk.read_") or command.endswith(".preflight") else safe_motion_mode())
     selected_confirm = (
@@ -350,8 +349,7 @@ def submit_task(
             flush=True,
         )
         result = fallback
-    if log_result:
-        print(json.dumps(result, ensure_ascii=False, sort_keys=True), flush=True)
+    print(json.dumps(result, ensure_ascii=False, sort_keys=True), flush=True)
     return result
 
 
@@ -537,97 +535,6 @@ def run_head_named(source_script: str, yaw_rad: float = 0.0, pitch_rad: float = 
     require_done(result)
 
 
-def _joint_state_position_map(joint_states: Any) -> dict[str, float]:
-    if not isinstance(joint_states, dict):
-        return {}
-    states = joint_states.get("states")
-    if not isinstance(states, list):
-        return {}
-    positions: dict[str, float] = {}
-    for item in states:
-        if not isinstance(item, dict):
-            continue
-        name = item.get("name")
-        if not isinstance(name, str) or not name:
-            continue
-        raw_position = item.get("position", item.get("motor_position"))
-        try:
-            positions[name] = float(raw_position)
-        except (TypeError, ValueError):
-            continue
-    return positions
-
-
-def whole_body_pose_already_reached(
-    *,
-    source_script: str,
-    json_path: str,
-    pose: str,
-    head: list[float],
-    waist: list[float],
-    left: list[float],
-    right: list[float],
-) -> bool:
-    if not env_flag("G2_WXF_WHOLE_BODY_NOOP_SKIP", False):
-        return False
-
-    target_pairs = (
-        list(zip(HEAD_KEYS, head))
-        + list(zip(WAIST_KEYS, waist))
-        + list(zip(LEFT_ARM_KEYS, left))
-        + list(zip(RIGHT_ARM_KEYS, right))
-    )
-    result = submit_task(
-        "gdk.read_joint_states",
-        {
-            "source_script": source_script,
-            "source_json": str(json_path),
-            "pose": pose,
-            "noop_probe": "whole_body_pose",
-        },
-        mode="read_only",
-        timeout_s=env_float("G2_WXF_WHOLE_BODY_NOOP_READ_TIMEOUT_S", 10.0),
-        confirm_physical=False,
-        log_result=env_flag("G2_WXF_WHOLE_BODY_NOOP_LOG_READ_RESULT", False),
-    )
-    require_done(result)
-    positions = _joint_state_position_map(result.get("result", {}).get("joint_states"))
-    missing = [name for name, _target in target_pairs if name not in positions]
-    if missing:
-        print(
-            f"# whole_body_noop_probe: pose={pose} source={source_script} "
-            f"skip=false reason=missing_joint_states count={len(missing)}",
-            flush=True,
-        )
-        return False
-
-    tolerance_rad = env_float("G2_WXF_WHOLE_BODY_NOOP_TOL_RAD", 0.01)
-    max_error_rad = 0.0
-    max_joint = ""
-    for name, target in target_pairs:
-        error = abs(float(positions[name]) - float(target))
-        if error > max_error_rad:
-            max_error_rad = error
-            max_joint = name
-    if max_error_rad <= tolerance_rad:
-        print(
-            f"# whole_body_noop_skip: pose={pose} source={source_script} "
-            f"max_joint={max_joint} max_abs_error_rad={max_error_rad:.6f} "
-            f"tolerance_rad={tolerance_rad:.6f}",
-            flush=True,
-        )
-        return True
-
-    if env_flag("G2_WXF_WHOLE_BODY_NOOP_LOG_MISS", False):
-        print(
-            f"# whole_body_noop_probe: pose={pose} source={source_script} "
-            f"skip=false max_joint={max_joint} max_abs_error_rad={max_error_rad:.6f} "
-            f"tolerance_rad={tolerance_rad:.6f}",
-            flush=True,
-        )
-    return False
-
-
 def run_whole_body_json(json_path: str, source_script: str, sync_requested: bool = False) -> None:
     data = load_json(json_path)
     head = _extract_values(data, HEAD_KEYS)
@@ -635,16 +542,6 @@ def run_whole_body_json(json_path: str, source_script: str, sync_requested: bool
     left = _extract_values(data, LEFT_ARM_KEYS)
     right = _extract_values(data, RIGHT_ARM_KEYS)
     pose = pose_name_from_path(json_path, "whole_body_json")
-    if whole_body_pose_already_reached(
-        source_script=source_script,
-        json_path=json_path,
-        pose=pose,
-        head=head,
-        waist=waist,
-        left=left,
-        right=right,
-    ):
-        return
     if env_flag("G2_WXF_FAST_WHOLE_BODY_SPLIT", False):
         split_delay_s = env_float("G2_WXF_FAST_WHOLE_BODY_SPLIT_DELAY_S", 0.08)
         if not env_flag("G2_WXF_FAST_WHOLE_BODY_SKIP_HEAD", False):
@@ -1406,7 +1303,7 @@ def _run_fast_sequence_python(base: Path, target: Path, args: list[str]) -> bool
         # Mirror /data/wxf/wxf/BOX_528_1/offset_move_push_grab.py.
         # The original child script now uses fixed left/right offsets rather
         # than the previous YOLO-horizontal correction plus split forward push.
-        run_ee_offsets(source_script, (0.088, 0.044, 0.0), (0.101, 0.048, 0.0))
+        run_ee_offsets(source_script, (0.088, 0.034, 0.0), (0.101, 0.038, 0.0))
         return True
 
     return False
