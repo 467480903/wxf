@@ -8,7 +8,7 @@ export default {
     name: 'TeachJoints',
     inject: ['getUrdfViewer', 'getRobotStatus'],
     template: `
-    <div class="panel">
+    <div class="panel" style="text-align:center;">
         <h5>示教（角）- 关节角度</h5>
 
         <!-- 头部 -->
@@ -22,8 +22,8 @@ export default {
         <hr style="border-color:#2a313c; margin:10px 0;">
 
         <!-- 手臂：左右并列 -->
-        <div style="display:flex; gap:30px; flex-wrap:wrap;">
-            <div style="flex:1; min-width:280px;">
+        <div style="display:flex; gap:30px; flex-wrap:wrap; justify-content:center;">
+            <div style="flex:0 1 380px; min-width:280px;">
                 <div class="joint-row" v-for="j in leftArmJoints" :key="j.name">
                     <span class="side">左</span>
                     <span class="label">{{ j.label }}</span>
@@ -32,7 +32,7 @@ export default {
                     <button class="plus"  @click="step(j,  stepSize)">+</button>
                 </div>
             </div>
-            <div style="flex:1; min-width:280px;">
+            <div style="flex:0 1 380px; min-width:280px;">
                 <div class="joint-row" v-for="j in rightArmJoints" :key="j.name">
                     <span class="side">右</span>
                     <span class="label">{{ j.label }}</span>
@@ -56,7 +56,7 @@ export default {
         <hr style="border-color:#2a313c; margin:10px 0;">
 
         <!-- 腿部 -->
-        <div style="display:flex; gap:30px; flex-wrap:wrap;">
+        <div style="display:flex; gap:30px; flex-wrap:wrap; justify-content:center;">
             <div class="joint-row" v-for="j in legJoints" :key="j.name">
                 <span class="label">{{ j.label }}</span>
                 <button class="minus" @click="step(j, -stepSize)">−</button>
@@ -71,11 +71,48 @@ export default {
                    style="width:80px; background:#11151c; color:#6f6; border:1px solid #2a313c; padding:3px 6px; border-radius:4px;">
             <span style="margin-left:10px; color:#6f6;">● 已连接实时状态</span>
         </div>
+
+        <!-- 保存按钮（右下角） -->
+        <div style="margin-top:16px; text-align:right;">
+            <button class="save-btn" @click="showSaveDialog = true">保存</button>
+        </div>
+
+        <!-- 保存弹窗 -->
+        <div v-if="showSaveDialog" class="save-overlay" @click.self="showSaveDialog = false">
+            <div class="save-dialog">
+                <h6 style="color:#6cf; margin-bottom:16px;">保存关节角</h6>
+
+                <div class="form-row">
+                    <label>名称</label>
+                    <input type="text" v-model="saveName" placeholder="例如 hold"
+                           @keyup.enter="doSave" />
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block; color:#b0b6c0; font-size:14px; margin-bottom:8px;">类型</label>
+                    <div class="radio-group">
+                        <label v-for="t in saveTypes" :key="t">
+                            <input type="radio" :value="t" v-model="saveType" /> {{ t }}
+                        </label>
+                    </div>
+                </div>
+
+                <div class="step-actions">
+                    <button class="nav-btn" @click="showSaveDialog = false">取消</button>
+                    <button class="nav-btn start-btn" @click="doSave" :disabled="!saveName">保存</button>
+                </div>
+            </div>
+        </div>
     </div>
     `,
     data() {
         return {
             stepSize: 1.0,
+            // 保存弹窗
+            showSaveDialog: false,
+            saveName: '',
+            saveType: 'WBC',
+            saveTypes: ['WBC', 'arms', 'left', 'right', 'head', 'waist'],
             headJoints: [
                 { name: 'idx11_head_joint1', label: '头仰', value: 0, urdfName: 'idx11_head_joint1' },
                 { name: 'idx12_head_joint2', label: '头侧', value: 0, urdfName: 'idx12_head_joint2' },
@@ -114,7 +151,7 @@ export default {
     methods: {
         step(j, delta) {
             j.value += delta;
-            // 发布 move_whole_body_by_json 命令
+            // 发布 WBC 命令
             // 3D 模型由 MQTT 状态自动刷新，无需手动同步
             this.publishJoints();
         },
@@ -130,7 +167,7 @@ export default {
                     joints[joint.name] = joint.value * Math.PI / 180;
                 });
             });
-            mqttClient.publishCommand('move_whole_body_by_json', joints);
+            mqttClient.publishCommand('WBC', joints);
         },
         // 从 MQTT 状态刷新角度显示
         syncFromStatus(status) {
@@ -144,6 +181,36 @@ export default {
                     }
                 });
             });
+        },
+        // 保存当前关节角到服务端（根据类型只保存对应关节）
+        doSave() {
+            if (!this.saveName) return;
+            // 各类型对应的关节组
+            const typeGroups = {
+                WBC:   [this.headJoints, this.leftArmJoints, this.rightArmJoints, this.waistJoints, this.legJoints],
+                arms:  [this.leftArmJoints, this.rightArmJoints],
+                left:  [this.leftArmJoints],
+                right: [this.rightArmJoints],
+                head:  [this.headJoints],
+                waist: [this.waistJoints, this.legJoints],
+            };
+            const groups = typeGroups[this.saveType] || typeGroups.WBC;
+            const joints = {};
+            groups.forEach(group => {
+                group.forEach(joint => {
+                    joints[joint.name] = joint.value * Math.PI / 180;
+                });
+            });
+            // 发送: { cmd: save_joints, type: WBC, name: hold, data: {关节名: 弧度} }
+            mqttClient.publishToTopic('/G2_minth_save_joints', {
+                cmd: 'save_joints',
+                type: this.saveType,
+                name: this.saveName,
+                data: joints
+            });
+            console.log(`[保存] type=${this.saveType}, name=${this.saveName}, joints=${Object.keys(joints).length}`);
+            this.showSaveDialog = false;
+            this.saveName = '';
         }
     },
     mounted() {

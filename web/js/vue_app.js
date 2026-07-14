@@ -4,58 +4,169 @@
 import { createApp } from 'vue';
 import { UrdfViewer } from './urdf-viewer.js';
 import { mqttClient } from './mqtt-client.js';
-import TeachJoints  from './teach-joints.js';
-import TeachCoords  from './teach-coords.js';
-import ProgramView  from './program-view.js';
-import MapView      from './map-view.js';
+import TeachJoints     from './teach-joints.js';
+import TeachCoords     from './teach-coords.js';
+import ProgramView     from './program-view.js';
+import MapView         from './map-view.js';
+import CameraView      from './camera-view.js';
+import DataCollection  from './data-collection.js';
+import ModelInference  from './model-inference.js';
+import PlaceholderView from './placeholder-view.js';
 
 
 const App = {
     data() {
         return {
-            currentMenu: 'joints',
+            currentMenu: '',          // 当前选中的菜单项 id
+            openDropdown: '',         // 当前展开的下拉父菜单 id
             menus: [
-                { id: 'joints',  label: '示教（角）' },
-                { id: 'coords',  label: '示教（坐标）' },
+                {
+                    id: 'teach', label: '示教', children: [
+                        { id: 'teach_joints', label: '角度轴' },
+                        { id: 'teach_coords', label: '末端坐标' },
+                    ]
+                },
+                {
+                    id: 'coord', label: '坐标系', children: [
+                        { id: 'coord_tool',   label: '工具标定' },
+                        { id: 'coord_work',   label: '工件标定' },
+                        { id: 'coord_vision', label: '视觉标定' },
+                        { id: 'coord_3d',     label: '3D视觉标定' },
+                    ]
+                },
+                {
+                    id: 'data', label: '数据', children: [
+                        { id: 'data_joints',  label: '角度集' },
+                        { id: 'data_coords',  label: '末端坐标' },
+                        { id: 'data_modbus',  label: 'modbus变量' },
+                        { id: 'data_sync',    label: '同步' },
+                        { id: 'data_mappoint',label: '地图点' },
+                    ]
+                },
                 { id: 'program', label: '程序' },
-                { id: 'map',     label: '地图' }
+                {
+                    id: 'map', label: '地图', children: [
+                        { id: 'map_scan',    label: '扫图建图' },
+                        { id: 'map_use',     label: '使用地图' },
+                        { id: 'map_chassis', label: '底盘控制' },
+                    ]
+                },
+                {
+                    id: 'camera', label: '相机', children: [
+                        { id: 'cam_capture', label: '采集' },
+                        { id: 'cam_label',   label: '自动标注' },
+                        { id: 'cam_flow',    label: '流程' },
+                        { id: 'cam_settings',label: '设置' },
+                    ]
+                },
+                {
+                    id: 'inference', label: '推理', children: [
+                        { id: 'inf_collect', label: '数据采集' },
+                        { id: 'inf_model',   label: '模型推理' },
+                    ]
+                },
             ],
             urdfViewer: null,
             robotStatus: null   // 共享的机器人状态
         };
     },
-    components: { TeachJoints, TeachCoords, ProgramView, MapView },
+    components: { TeachJoints, TeachCoords, ProgramView, MapView, CameraView, DataCollection, ModelInference, PlaceholderView },
     provide() {
         return {
             getUrdfViewer: () => this.urdfViewer,
             getRobotStatus: () => this.robotStatus
         };
     },
+    computed: {
+        // 当前菜单项的标题（用于占位组件）
+        currentTitle() {
+            for (const m of this.menus) {
+                if (m.id === this.currentMenu) return m.label;
+                if (m.children) {
+                    const child = m.children.find(c => c.id === this.currentMenu);
+                    if (child) return child.label;
+                }
+            }
+            return '';
+        },
+        // 判断当前菜单是否为占位页面（非已实现的组件）
+        isPlaceholder() {
+            const implemented = [
+                'teach_joints', 'teach_coords', 'program',
+                'map_scan', 'cam_capture', 'inf_collect', 'inf_model'
+            ];
+            return this.currentMenu && !implemented.includes(this.currentMenu);
+        }
+    },
     template: `
-    <div>
+    <div @click="closeDropdown">
         <canvas id="bg-canvas" ref="bgCanvas"></canvas>
 
-        <nav id="toolbar">
+        <nav id="toolbar" @click.stop>
             <span class="brand">G2 控制台</span>
-            <button
-                v-for="m in menus"
-                :key="m.id"
-                class="menu-btn"
-                :class="{ active: currentMenu === m.id }"
-                @click="toggleMenu(m.id)">
-                {{ m.label }}
-            </button>
+
+            <template v-for="m in menus" :key="m.id">
+                <!-- 无子菜单：直接按钮 -->
+                <button v-if="!m.children"
+                        class="menu-btn"
+                        :class="{ active: currentMenu === m.id }"
+                        @click="selectMenu(m.id)">
+                    {{ m.label }}
+                </button>
+
+                <!-- 有子菜单：下拉 -->
+                <div v-else class="menu-dropdown">
+                    <button class="menu-btn"
+                            :class="{ active: openDropdown === m.id || isChildActive(m) }"
+                            @click="toggleDropdown(m.id)">
+                        {{ m.label }}
+                        <span class="dropdown-arrow">▾</span>
+                    </button>
+                    <div v-show="openDropdown === m.id" class="dropdown-panel">
+                        <button v-for="c in m.children" :key="c.id"
+                                class="dropdown-item"
+                                :class="{ active: currentMenu === c.id }"
+                                @click="selectMenu(c.id)">
+                            {{ c.label }}
+                        </button>
+                    </div>
+                </div>
+            </template>
         </nav>
 
         <main id="content" :class="{ 'content-hidden': !currentMenu }">
-            <teach-joints  v-if="currentMenu === 'joints'"></teach-joints>
-            <teach-coords  v-if="currentMenu === 'coords'"></teach-coords>
-            <program-view  v-if="currentMenu === 'program'"></program-view>
-            <map-view      v-if="currentMenu === 'map'"></map-view>
+            <teach-joints     v-if="currentMenu === 'teach_joints'"></teach-joints>
+            <teach-coords     v-if="currentMenu === 'teach_coords'"></teach-coords>
+            <program-view     v-if="currentMenu === 'program'"></program-view>
+            <map-view         v-if="currentMenu === 'map_scan'"></map-view>
+
+            <!-- 相机 > 采集 -->
+            <camera-view      v-if="currentMenu === 'cam_capture'"></camera-view>
+
+            <!-- 推理 > 数据采集 / 模型推理 -->
+            <data-collection  v-if="currentMenu === 'inf_collect'"></data-collection>
+            <model-inference  v-if="currentMenu === 'inf_model'"></model-inference>
+
+            <!-- 占位页面 -->
+            <placeholder-view :title="currentTitle" v-if="isPlaceholder"></placeholder-view>
         </main>
     </div>
     `,
     methods: {
+        selectMenu(id) {
+            this.currentMenu = id;
+            this.openDropdown = '';
+        },
+        toggleDropdown(id) {
+            this.openDropdown = this.openDropdown === id ? '' : id;
+        },
+        closeDropdown() {
+            this.openDropdown = '';
+        },
+        isChildActive(menu) {
+            if (!menu.children) return false;
+            return menu.children.some(c => c.id === this.currentMenu);
+        },
         toggleMenu(id) {
             this.currentMenu = this.currentMenu === id ? '' : id;
         },

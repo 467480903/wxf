@@ -4,8 +4,12 @@
 G2 Minth App 服务程序
 
 监听 MQTT topic /G2_minth_app，根据收到的 JSON 命令执行对应动作：
-  - move_whole_body_by_json : 从 positions/ 读取 JSON，控制全身关节
-  - move_arm_by_json        : 从 positions/ 读取 JSON，仅控制上肢
+  - WBC                     : 从 datas/joints/WBC/  读取 JSON，控制全身关节
+  - arms                    : 从 datas/joints/arms/ 读取 JSON，仅控制双臂
+  - left                    : 从 datas/joints/left/ 读取 JSON，仅控制左臂
+  - right                   : 从 datas/joints/right/读取 JSON，仅控制右臂
+  - head                    : 从 datas/joints/head/ 读取 JSON，仅控制头部
+  - waist                   : 从 datas/joints/waist/读取 JSON，仅控制腰部
   - tts                     : TTS 语音播报
   - offset_move             : 末端执行器相对移动（单位：毫米）
   - grab                    : 控制左右夹爪开合
@@ -13,14 +17,19 @@ G2 Minth App 服务程序
   - go                      : 导航到指定地图点位（nav.go）
   - go_rel                  : 底盘相对运动（nav.go_rel）
 
+注意：数据保存（save_joints / save_position）已转移到 g2_minth_data_service.py
+
 状态管理：
   - 任意时刻只能执行一个命令，执行期间 state="busy"，新命令将被拒绝
   - 命令执行完成后，state 恢复为 "idle"
   - 每条命令执行完成后，都会向 /G2_minth_app_done 发布 {"cmd": "done"}
 
 命令格式示例：
-  {"cmd": "move_whole_body_by_json", "data": "arm_default.json"}
-  {"cmd": "move_arm_by_json",        "data": "arm_default.json"}
+  {"cmd": "WBC",   "data": "hold"}          # 加载 datas/joints/WBC/hold.json
+  {"cmd": "arms",  "data": "hold"}          # 加载 datas/joints/arms/hold.json
+  {"cmd": "left",  "data": "hold"}          # 加载 datas/joints/left/hold.json
+  {"cmd": "WBC",   "data": {"idx11_head_joint1": 0.1, ...}}  # 内联关节角（实时示教）
+  {"cmd": "save_joints", "type": "WBC", "name": "hold", "data": {"idx11_head_joint1": 0.1, ...}}
   {"cmd": "tts",                     "data": "你好，我是精灵G2"}
   {"cmd": "offset_move",             "data": {"lx": 20, "ly": 0, "lz": 0, "rx": 0, "ry": 0, "rz": 0}}
   {"cmd": "grab",                    "data": {"left": 0.5, "right": 0.5}}
@@ -44,6 +53,7 @@ import paho.mqtt.client as mqtt
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
 POSITIONS_DIR = os.path.join(PROJECT_DIR, "positions")
+JOINTS_DIR = os.path.join(PROJECT_DIR, "datas", "joints")
 
 BOX_DIR = os.path.join(PROJECT_DIR, "BOX_528_1")
 sys.path.append(BOX_DIR)
@@ -175,88 +185,104 @@ def _extract_positions(data, keys):
     return [data.get(key, 0.0) for key in keys]
 
 
-def handle_move_whole_body(data):
-    """全身关节运动：头部 → 腰部 → 手臂
+def _load_joints_data(cmd_type, data):
+    """加载关节角数据
     data 可以是：
-      - 字符串：positions/ 下的 JSON 文件名
-      - 字典：内联关节角 {关节名: 弧度}，直接使用
+      - 字符串：从 datas/joints/{cmd_type}/{data}.json 加载
+      - 字典：内联关节角，直接使用
+    返回 (pos_data, desc) 或 (None, error_msg)
     """
     if isinstance(data, dict):
-        # 内联关节角
-        pos_data = data
-        print(f"📄 使用内联关节角 ({len(pos_data)} 个关节)")
-    else:
-        # 从文件加载
-        json_name = data
-        json_path = os.path.join(POSITIONS_DIR, json_name)
-        if not os.path.exists(json_path):
-            print(f"❌ 找不到 positions/{json_name}")
-            return
-        with open(json_path, "r", encoding="utf-8") as f:
-            pos_data = json.load(f)
-        print(f"📄 已加载 {json_name}")
+        return data, f"内联关节角 ({len(data)} 个关节)"
 
-    # 头部
-    head_pos = _extract_positions(pos_data, HEAD_JOINT_KEYS)
-    head_vel = [HEAD_SPEED] * len(head_pos)
-    print(f"  头部 → {[f'{p:.3f}' for p in head_pos]}")
-    try:
-        robot.move_head_joint(head_pos, head_vel)
-        print("  ✅ 头部控制成功")
-    except Exception as e:
-        print(f"  ❌ 头部控制失败: {e}")
-    time.sleep(0.2)
-
-    # 腰部
-    waist_pos = _extract_positions(pos_data, WAIST_JOINT_KEYS)
-    waist_vel = [WAIST_SPEED] * len(waist_pos)
-    print(f"  腰部 → {[f'{p:.3f}' for p in waist_pos]}")
-    try:
-        robot.move_waist_joint(waist_pos, waist_vel)
-        print("  ✅ 腰部控制成功")
-    except Exception as e:
-        print(f"  ❌ 腰部控制失败: {e}")
-    time.sleep(0.2)
-
-    # 手臂（左7 + 右7）
-    left_arm_pos = _extract_positions(pos_data, LEFT_ARM_JOINT_KEYS)
-    right_arm_pos = _extract_positions(pos_data, RIGHT_ARM_JOINT_KEYS)
-    arm_positions = left_arm_pos + right_arm_pos
-    arm_velocities = [ARM_SPEED] * len(arm_positions)
-    print(f"  左臂 → {[f'{p:.3f}' for p in left_arm_pos]}")
-    print(f"  右臂 → {[f'{p:.3f}' for p in right_arm_pos]}")
-    try:
-        robot.move_arm_joint(arm_positions, arm_velocities, 2)
-        print("  ✅ 手臂控制成功")
-    except Exception as e:
-        print(f"  ❌ 手臂控制失败: {e}")
-
-
-def handle_move_arm(data):
-    """仅上肢关节运动"""
-    json_name = data
-    json_path = os.path.join(POSITIONS_DIR, json_name)
+    json_name = data if data.endswith('.json') else data + '.json'
+    json_path = os.path.join(JOINTS_DIR, cmd_type, json_name)
     if not os.path.exists(json_path):
-        print(f"❌ 找不到 positions/{json_name}")
-        return
+        return None, f"找不到 {json_path}"
     with open(json_path, "r", encoding="utf-8") as f:
         pos_data = json.load(f)
-    print(f"📄 已加载 {json_name}")
-
-    left_arm_pos = _extract_positions(pos_data, LEFT_ARM_JOINT_KEYS)
-    right_arm_pos = _extract_positions(pos_data, RIGHT_ARM_JOINT_KEYS)
-    arm_positions = left_arm_pos + right_arm_pos
-    arm_velocities = [ARM_SPEED] * len(arm_positions)
-    print(f"  左臂 → {[f'{p:.3f}' for p in left_arm_pos]}")
-    print(f"  右臂 → {[f'{p:.3f}' for p in right_arm_pos]}")
-    try:
-        robot.move_arm_joint(arm_positions, arm_velocities, 2)
-        print("  ✅ 手臂控制成功")
-    except Exception as e:
-        print(f"  ❌ 手臂控制失败: {e}")
+    return pos_data, f"已加载 datas/joints/{cmd_type}/{json_name}"
 
 
-def handle_tts(data):
+def _move_head(pos_data):
+    pos = _extract_positions(pos_data, HEAD_JOINT_KEYS)
+    vel = [HEAD_SPEED] * len(pos)
+    print(f"  头部 → {[f'{p:.3f}' for p in pos]}")
+    robot.move_head_joint(pos, vel)
+
+
+def _move_waist(pos_data):
+    pos = _extract_positions(pos_data, WAIST_JOINT_KEYS)
+    vel = [WAIST_SPEED] * len(pos)
+    print(f"  腰部 → {[f'{p:.3f}' for p in pos]}")
+    robot.move_waist_joint(pos, vel)
+
+
+def _move_both_arms(pos_data):
+    left = _extract_positions(pos_data, LEFT_ARM_JOINT_KEYS)
+    right = _extract_positions(pos_data, RIGHT_ARM_JOINT_KEYS)
+    positions = left + right
+    velocities = [ARM_SPEED] * len(positions)
+    print(f"  左臂 → {[f'{p:.3f}' for p in left]}")
+    print(f"  右臂 → {[f'{p:.3f}' for p in right]}")
+    robot.move_arm_joint(positions, velocities, 2)
+
+
+def _move_left_arm(pos_data):
+    left = _extract_positions(pos_data, LEFT_ARM_JOINT_KEYS)
+    right = [0.0] * len(RIGHT_ARM_JOINT_KEYS)
+    positions = left + right
+    velocities = [ARM_SPEED] * len(positions)
+    print(f"  左臂 → {[f'{p:.3f}' for p in left]}")
+    robot.move_arm_joint(positions, velocities, 2)
+
+
+def _move_right_arm(pos_data):
+    left = [0.0] * len(LEFT_ARM_JOINT_KEYS)
+    right = _extract_positions(pos_data, RIGHT_ARM_JOINT_KEYS)
+    positions = left + right
+    velocities = [ARM_SPEED] * len(positions)
+    print(f"  右臂 → {[f'{p:.3f}' for p in right]}")
+    robot.move_arm_joint(positions, velocities, 2)
+
+
+# 各身体部位的执行函数
+BODY_PART_MOVERS = {
+    "head":      _move_head,
+    "waist":     _move_waist,
+    "arms":      _move_both_arms,
+    "left_arm":  _move_left_arm,
+    "right_arm": _move_right_arm,
+}
+
+
+def make_joint_handler(cmd_type, body_parts):
+    """创建关节运动处理器
+    cmd_type   : 命令类型，对应 datas/joints/ 下的子目录名
+    body_parts : 要执行的身体部位列表，如 ["head", "waist", "arms"]
+    """
+    def handler(data, msg=None):
+        pos_data, desc = _load_joints_data(cmd_type, data)
+        if pos_data is None:
+            print(f"❌ {desc}")
+            return
+        print(f"📄 {desc}")
+
+        for part in body_parts:
+            mover = BODY_PART_MOVERS.get(part)
+            if mover is None:
+                continue
+            try:
+                mover(pos_data)
+                print(f"  ✅ {part} 控制成功")
+            except Exception as e:
+                print(f"  ❌ {part} 控制失败: {e}")
+            time.sleep(0.2)
+
+    return handler
+
+
+def handle_tts(data, msg=None):
     """TTS 语音播报"""
     text = data
     print(f"🔊 TTS: {text}")
@@ -268,7 +294,7 @@ def handle_tts(data):
         print(f"  ❌ TTS 播放失败: {e}")
 
 
-def handle_offset_move(data):
+def handle_offset_move(data, msg=None):
     """
     末端相对移动
     data 格式: {"lx": 20, "ly": 0, "lz": 0, "rx": 0, "ry": 0, "rz": 0}
@@ -295,7 +321,7 @@ def handle_offset_move(data):
         print(f"  ❌ 末端移动失败: {e}")
 
 
-def handle_grab(data):
+def handle_grab(data, msg=None):
     """
     控制夹爪开合
     data 格式: {"left": 0.5, "right": 0.5}
@@ -337,7 +363,7 @@ def handle_grab(data):
         print(f"  ❌ 左夹爪控制失败: {e}")
 
 
-def handle_cam_head(data):
+def handle_cam_head(data, msg=None):
     """
     拍摄头部彩色+深度相机，通过 TCP 发送给检测服务
     data 可选指定 model 名称
@@ -431,7 +457,7 @@ def handle_cam_head(data):
                 pass
 
 
-def handle_go(data):
+def handle_go(data, msg=None):
     """
     导航到指定地图点位
     data 格式：整数导航点索引，如 9
@@ -451,7 +477,7 @@ def handle_go(data):
         print(f"  ❌ 导航异常: {e}")
 
 
-def handle_go_rel(data):
+def handle_go_rel(data, msg=None):
     """
     底盘相对运动
     data 格式: {"x": 0, "y": 0, "yaw_rad": 0}
@@ -477,14 +503,18 @@ def handle_go_rel(data):
 # ═══════════════════════════════════════════════════════════
 
 CMD_HANDLERS = {
-    "move_whole_body_by_json": handle_move_whole_body,
-    "move_arm_by_json":        handle_move_arm,
-    "tts":                     handle_tts,
-    "offset_move":             handle_offset_move,
-    "grab":                    handle_grab,
-    "cam_head":                handle_cam_head,
-    "go":                      handle_go,
-    "go_rel":                  handle_go_rel,
+    "WBC":         make_joint_handler("WBC",   ["head", "waist", "arms"]),
+    "arms":        make_joint_handler("arms",  ["arms"]),
+    "left":        make_joint_handler("left",  ["left_arm"]),
+    "right":       make_joint_handler("right", ["right_arm"]),
+    "head":        make_joint_handler("head",  ["head"]),
+    "waist":       make_joint_handler("waist", ["waist"]),
+    "tts":         handle_tts,
+    "offset_move": handle_offset_move,
+    "grab":        handle_grab,
+    "cam_head":    handle_cam_head,
+    "go":          handle_go,
+    "go_rel":      handle_go_rel,
 }
 
 
@@ -530,7 +560,7 @@ def on_message(client, userdata, msg):
     # 标记为忙碌并执行
     set_state("busy")
     try:
-        handler(data)
+        handler(data, cmd_msg)
     except Exception as e:
         print(f"❌ 命令执行异常: {e}")
     finally:
@@ -550,6 +580,7 @@ def main():
     print("#   G2 Minth App 服务程序 - 启动   #")
     print("#" * 60)
     print(f"positions 目录: {POSITIONS_DIR}")
+    print(f"joints 目录  : {JOINTS_DIR}")
     print(f"命令 topic : {MQTT_TOPIC}")
     print(f"完成 topic : {MQTT_DONE_TOPIC}")
     print(f"支持命令: {list(CMD_HANDLERS.keys())}")

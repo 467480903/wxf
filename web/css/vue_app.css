@@ -56,6 +56,146 @@ html, body {
     border-color: #0d6efd;
 }
 
+/* ── 下拉菜单 ───────────────────────────────────── */
+.menu-dropdown {
+    position: relative;
+    display: inline-block;
+}
+.dropdown-arrow {
+    font-size: 10px;
+    margin-left: 4px;
+    opacity: 0.7;
+}
+.dropdown-panel {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    background: rgba(20, 24, 32, 0.98);
+    border: 1px solid #2a313c;
+    border-radius: 4px;
+    padding: 4px 0;
+    min-width: 130px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 100;
+}
+.dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    color: #cfd4dc;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.15s;
+}
+.dropdown-item:hover { background: #2a3340; }
+.dropdown-item.active {
+    color: #6cf;
+    font-weight: 600;
+}
+
+/* ── 占位页面 ───────────────────────────────────── */
+.placeholder-msg {
+    text-align: center;
+    padding: 80px 0;
+}
+.placeholder-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+.placeholder-text {
+    color: #555;
+    font-size: 16px;
+}
+
+/* ── 保存按钮 + 弹窗 ────────────────────────────── */
+.save-btn {
+    min-width: 120px;
+    height: 40px;
+    background: #1d6f3a;
+    color: #fff;
+    border: 1px solid #28894a;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 0 20px;
+}
+.save-btn:hover { background: #28894a; }
+
+/* ── 坐标系下拉菜单 ─────────────────────────────── */
+.coord-sys-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.coord-sys-label {
+    color: #b0b6c0;
+    font-size: 14px;
+    white-space: nowrap;
+}
+.coord-sys-select {
+    height: 34px;
+    background: #11151c;
+    color: #e8eaed;
+    border: 1px solid #2a313c;
+    border-radius: 4px;
+    padding: 0 10px;
+    font-size: 14px;
+    cursor: pointer;
+    min-width: 100px;
+}
+.coord-sys-select:focus {
+    outline: none;
+    border-color: #0d6efd;
+}
+
+.save-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.save-dialog {
+    background: rgba(20, 24, 32, 0.98);
+    border: 1px solid #2a313c;
+    border-radius: 8px;
+    padding: 24px 32px;
+    min-width: 380px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+}
+.save-dialog .form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.save-dialog .form-row label {
+    width: 60px;
+    text-align: right;
+    color: #b0b6c0;
+    font-size: 14px;
+}
+.save-dialog .form-row input {
+    flex: 1;
+    height: 36px;
+    background: #11151c;
+    color: #e8eaed;
+    border: 1px solid #2a313c;
+    border-radius: 4px;
+    padding: 0 10px;
+    font-size: 14px;
+}
+
 /* ── 内容区 ─────────────────────────────────────── */
 #content {
     position: relative;
@@ -93,6 +233,7 @@ html, body {
 .joint-row {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     margin-bottom: 8px;
 }
@@ -107,10 +248,10 @@ html, body {
     color: #6cf;
     font-weight: 600;
 }
-/* 按钮宽度 = 页面 1/15 (约 6.67%) */
+/* 按钮宽度 = 页面 1/9 (约 11.1%)，最小 150px */
 .joint-row button {
-    width: 6.67vw;
-    min-width: 60px;
+    width: 11.1vw;
+    min-width: 150px;
     height: 40px;
     background: #2c3640;
     color: #fff;
@@ -140,6 +281,7 @@ html, body {
 .coord-row {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     margin-bottom: 8px;
 }
@@ -150,10 +292,10 @@ html, body {
     font-weight: 700;
     font-size: 14px;
 }
-/* 按钮宽度 = 页面 1/15 (约 6.67%) */
+/* 按钮宽度 = 页面 1/9 (约 11.1%)，最小 150px */
 .coord-row button {
-    width: 6.67vw;
-    min-width: 60px;
+    width: 11.1vw;
+    min-width: 150px;
     height: 40px;
     background: #2c3640;
     color: #fff;
@@ -211,4 +353,250 @@ html, body {
     background: #0a0c10;
     border: 1px solid #2a313c;
     border-radius: 6px;
+}
+
+/* ── 相机视图 ──────────────────────────────────── */
+.camera-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+.camera-cell {
+    background: #11151c;
+    border: 1px solid #2a313c;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+}
+.camera-title {
+    color: #6cf;
+    font-size: 13px;
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+.camera-img {
+    width: 100%;
+    max-height: 240px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+.camera-placeholder {
+    width: 100%;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 13px;
+    background: #0a0c10;
+    border-radius: 4px;
+}
+.cam-btn {
+    min-width: 120px;
+    height: 40px;
+    margin: 0 8px;
+    background: #2c3640;
+    color: #fff;
+    border: 1px solid #3a4452;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+}
+.cam-btn:hover:not(:disabled) { background: #3a4452; }
+.cam-btn.active { background: #0d6efd; border-color: #0d6efd; }
+.cam-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.calc-btn {
+    min-width: 160px;
+    height: 38px;
+    background: #3a2c1a;
+    color: #fc6;
+    border: 1px solid #5a4218;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+.calc-btn:hover { background: #4a3820; }
+.result-img {
+    max-width: 480px;
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid #2a313c;
+}
+
+/* ── 数据采集 / 模型推理 共用表格 ──────────────── */
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+.step-dot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #1f2630;
+    border: 1px solid #2a313c;
+    font-size: 13px;
+}
+.step-dot.active {
+    background: #0d6efd;
+    color: #fff;
+}
+.step-dot.done {
+    background: #1d6f3a;
+    color: #fff;
+}
+.step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    font-weight: 700;
+    font-size: 12px;
+}
+.step-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+.step-content h6 {
+    color: #6cf;
+    margin-bottom: 14px;
+}
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.form-row label {
+    width: 90px;
+    text-align: right;
+    color: #b0b6c0;
+    font-size: 14px;
+}
+.form-row input {
+    flex: 1;
+    height: 36px;
+    background: #11151c;
+    color: #e8eaed;
+    border: 1px solid #2a313c;
+    border-radius: 4px;
+    padding: 0 10px;
+    font-size: 14px;
+}
+.step-actions {
+    text-align: center;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+.nav-btn {
+    min-width: 120px;
+    height: 40px;
+    background: #2c3640;
+    color: #fff;
+    border: 1px solid #3a4452;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+}
+.nav-btn:hover:not(:disabled) { background: #3a4452; }
+.nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.nav-btn.start-btn { background: #1d6f3a; }
+.nav-btn.start-btn:hover { background: #28894a; }
+
+.dc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.dc-table th {
+    background: #1a1f28;
+    color: #6cf;
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid #2a313c;
+    font-weight: 600;
+}
+.dc-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #1a1f28;
+    color: #cfd4dc;
+}
+.dc-table tr {
+    cursor: pointer;
+}
+.dc-table tr:hover td { background: #1a1f28; }
+.dc-table tr.selected td { background: #0d3a5e; }
+
+.config-group {
+    margin-bottom: 18px;
+}
+.config-title {
+    display: block;
+    color: #b0b6c0;
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+.checkbox-group, .radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding-left: 10px;
+}
+.checkbox-group label, .radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #cfd4dc;
+    font-size: 14px;
+    cursor: pointer;
+}
+.checkbox-group input, .radio-group input {
+    accent-color: #0d6efd;
+}
+
+.collect-cameras {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.collect-cam {
+    flex: 0 1 360px;
+    background: #11151c;
+    border: 1px solid #2a313c;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+}
+.collect-cam .camera-img {
+    max-height: 200px;
+}
+
+.countdown-display {
+    text-align: center;
+    padding: 40px 0;
+}
+.countdown-num {
+    font-size: 72px;
+    font-weight: 700;
+    color: #6f6;
+    line-height: 1;
+}
+.countdown-text {
+    color: #888;
+    font-size: 16px;
+    margin-top: 10px;
 }
