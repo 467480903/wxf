@@ -18,10 +18,10 @@ import numpy as np
 import agibot_gdk
 
 # ========== TCP 配置 ==========
-TCP_HOST = "192.168.0.8"
+TCP_HOST = "10.2.236.7"
 TCP_PORT = 9998
 MODEL_NAME = sys.argv[1] if len(sys.argv) > 1 else "shelf.pt"
-RESPONSE_FILE = "yyolo_depth_result.json"
+RESPONSE_FILE = "yolo_depth_result.json"
 
 # ========== 初始化相机 ==========
 camera = agibot_gdk.Camera()
@@ -136,7 +136,7 @@ else:
         sock.sendall(message.encode("utf-8"))
         print("📨 报文已发送，等待回复...")
 
-        # 接收回复（服务端发送完毕后关闭连接即结束）
+        # 接收回复（以 \n 作为报文结束标志）
         received = b""
         while True:
             try:
@@ -148,6 +148,9 @@ else:
                 # 连接已被对端关闭
                 break
             received += chunk
+            if b"\n" in chunk:
+                # 收到报文结束符，停止接收
+                break
 
         if not received:
             print("⚠️ 未收到任何回复")

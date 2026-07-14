@@ -38,7 +38,7 @@ except ImportError:
 class WebCameraViewerWithSave:
     """Web版相机查看器（带保存图片功能）"""
 
-    def __init__(self, host='0.0.0.0', port=5000):
+    def __init__(self, host='0.0.0.0', port=5001):
         """初始化Web相机查看器"""
         self.camera = None
         self.host = host
@@ -444,6 +444,29 @@ class WebCameraViewerWithSave:
             background-color: #6c757d;
             cursor: not-allowed;
         }
+        .btn-auto-save {
+            display: inline-block;
+            margin-top: 10px;
+            margin-left: 8px;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #17a2b8;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-auto-save:hover {
+            background-color: #117a8b;
+        }
+        .btn-auto-save.active {
+            background-color: #dc3545;
+        }
+        .btn-auto-save.active:hover {
+            background-color: #c82333;
+        }
         .save-msg {
             margin-top: 5px;
             font-size: 12px;
@@ -532,6 +555,10 @@ class WebCameraViewerWithSave:
                                 onclick="saveImage(${camera.index}, '${camera.name}')">
                             📷 保存图片
                         </button>
+                        ${isRgb ? `<button class="btn-auto-save" id="auto-save-btn-${camera.index}"
+                                onclick="toggleAutoSave(${camera.index}, '${camera.name}')">
+                            ⏱ 自动保存
+                        </button>` : ''}
                     </div>
                     <div class="save-msg" id="save-msg-${camera.index}"></div>
                 `;
@@ -573,6 +600,52 @@ class WebCameraViewerWithSave:
                     msg.textContent = '';
                 }, 3000);
             });
+        }
+
+        // 自动保存：每0.5秒自动保存一张图片
+        const autoSaveTimers = {};
+
+        function toggleAutoSave(index, name) {
+            const btn = document.getElementById(`auto-save-btn-${index}`);
+            const msg = document.getElementById(`save-msg-${index}`);
+
+            if (autoSaveTimers[index]) {
+                // 当前正在自动保存，停止
+                clearInterval(autoSaveTimers[index]);
+                delete autoSaveTimers[index];
+                btn.classList.remove('active');
+                btn.textContent = '⏱ 自动保存';
+                msg.textContent = '🛑 已停止自动保存';
+                msg.style.color = '#6c757d';
+                setTimeout(() => { msg.textContent = ''; }, 2000);
+            } else {
+                // 开始自动保存：立即保存一张，然后每500ms保存
+                autoSaveTimers[index] = setInterval(() => {
+                    fetch('/save_image', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ index: index })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            msg.textContent = `✅ 自动保存: ${data.filename}`;
+                            msg.style.color = '#17a2b8';
+                        } else {
+                            msg.textContent = `❌ ${data.error}`;
+                            msg.style.color = '#dc3545';
+                        }
+                    })
+                    .catch(error => {
+                        msg.textContent = `❌ 请求失败: ${error}`;
+                        msg.style.color = '#dc3545';
+                    });
+                }, 500);
+                btn.classList.add('active');
+                btn.textContent = '🛑 关闭自动保存';
+                msg.textContent = '🔄 自动保存已开启 (每0.5秒)';
+                msg.style.color = '#17a2b8';
+            }
         }
 
         // 更新所有相机图像
