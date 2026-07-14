@@ -17,8 +17,8 @@ RESULT_JSON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "yol
 try:
     with open(RESULT_JSON_PATH, "r", encoding="utf-8") as f:
         result_data = json.load(f)
-    target_delta = float(result_data["slope"]["angle_rad"])
-    print(f"从 {RESULT_JSON_PATH} 读取 slope/angle_rad = {target_delta:.4f} rad")
+    target_delta = float(result_data["angle_rad"])
+    print(f"从 {RESULT_JSON_PATH} 读取 angle_rad = {target_delta:.4f} rad")
 except Exception as e:
     print(f"读取 {RESULT_JSON_PATH} 失败: {e}")
     exit(1)

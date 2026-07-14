@@ -1,70 +1,73 @@
 {
-  "model_path": "shelf.pt",
-  "image_path": "head.jpg",
-  "depth_raw_path": "head_depth.raw",
-  "depth_offset_px": 1,
-  "depth_shape": [
-    400,
-    640
-  ],
+  "cmd": "detect",
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-07-14 14:11:12",
+  "model_path": "/home/wxf/图片/images/best.pt",
+  "rgb_path": "/home/wxf/图片/images/rgb.jpg",
+  "depth_raw_path": "/home/wxf/图片/images/depth.raw",
   "image_size": {
     "height": 400,
     "width": 640
   },
-  "detection": {
-    "point1": {
-      "label": "a",
-      "center": [
-        226.92,
-        185.47
-      ]
-    },
-    "point2": {
-      "label": "b",
-      "center": [
-        414.34,
-        185.57
-      ]
-    }
+  "inference_time_sec": 0.0615,
+  "counts": {
+    "a": 1,
+    "b": 1
   },
-  "offset": {
-    "line_center": [
-      320.63,
-      185.52
+  "a_box": {
+    "xyxy": [
+      219.34,
+      296.34,
+      233.91,
+      303.96
     ],
-    "image_center_x": 320.0,
-    "horizontal_offset_px": 0.63,
-    "direction": "偏右"
-  },
-  "slope": {
-    "slope": 0.0005,
-    "angle_rad": 0.0005,
-    "angle_deg": 0.03
-  },
-  "depth": {
-    "point1_center_mm": 740.0,
-    "point1_left_offset_mm": 741.0,
-    "point1_left_sample_pixel": [
-      226,
-      186
-    ],
-    "point2_center_mm": 772.0,
-    "point2_right_offset_mm": 769.7,
-    "point2_right_sample_pixel": [
-      414,
-      186
-    ],
-    "center_mm": 2072.3,
-    "center_sample_pixel": [
-      320,
-      185
+    "conf": 0.8754,
+    "center": [
+      226.62,
+      300.15
     ]
   },
-  "output_files": [
-    "yolo_depth_rgb.jpg",
-    "yolo_depth_rgb_with_depth.jpg",
-    "yolo_depth_depth.jpg",
-    "yolo_depth_depth_marked.jpg",
-    "result.jpg"
-  ]
+  "b_box": {
+    "xyxy": [
+      423.23,
+      301.54,
+      437.57,
+      309.95
+    ],
+    "conf": 0.8851,
+    "center": [
+      430.4,
+      305.75
+    ]
+  },
+  "line_center": [
+    328.51,
+    302.95
+  ],
+  "image_center_x": 320.0,
+  "horizontal_offset_px": 8.51,
+  "direction": "偏右",
+  "slope": 0.0274,
+  "angle_rad": 0.0274,
+  "angle_deg": 1.57,
+  "depth": {
+    "depth_shape": [
+      400,
+      640
+    ],
+    "a_center_mm": 897.0,
+    "b_center_mm": 896.0,
+    "midpoint_mm": 1045.4,
+    "a_offset_mm": 900.5,
+    "a_offset_pixel": [
+      226,
+      312
+    ],
+    "b_offset_mm": 894.2,
+    "b_offset_pixel": [
+      430,
+      317
+    ]
+  }
 }
