@@ -1,5 +1,0 @@
-# command: ss -ltnp | grep -E ':(8767|1883)' || true
-# captured_at: 2026-06-24 13:32:48 CST
-LISTEN 0      100        127.0.0.1:1883       0.0.0.0:*                                                
-LISTEN 0      5            0.0.0.0:8767       0.0.0.0:*    users:(("python3",pid=995800,fd=3))         
-LISTEN 0      100            [::1]:1883          [::]:*                                                

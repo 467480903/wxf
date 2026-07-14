@@ -1,4 +1,0 @@
-[2026-06-11 19:05:11] STEP 001: standalone strict retreat 1.000m
-[2026-06-11 19:05:11] odom_xy_read_failed label=retreat_start error=RuntimeError: GetOdomInfo failed
-[2026-06-11 19:05:11] run_report=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/logs/live_retreat_1m_validation_20260611_2008_report.json
-[2026-06-11 19:05:11] standalone_retreat_validation_failed: RuntimeError: front-ultrasonic retreat blocked: odom xy unavailable before motion

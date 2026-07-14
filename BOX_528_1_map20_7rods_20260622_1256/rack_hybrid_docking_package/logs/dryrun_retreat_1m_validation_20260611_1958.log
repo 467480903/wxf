@@ -1,3 +1,0 @@
-[2026-06-11 18:59:19] STEP 001: standalone strict retreat 1.000m
-[2026-06-11 18:59:19] dry_run: standalone retreat validation plan only; no chassis, arm, turn, rack approach, or rod sequence motion will run
-[2026-06-11 18:59:19] run_report=/data/btgys/bengtian_backup_20260608_081250/wxf/BOX_528_1/logs/dryrun_retreat_1m_validation_20260611_1958_report.json

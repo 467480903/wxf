@@ -1,5 +1,0 @@
-# command: systemctl is-enabled mosquitto g2-industrial-gateway.service g2-industrial-gateway-mqtt.service
-# captured_at: 2026-06-24 13:32:48 CST
-enabled
-enabled
-enabled

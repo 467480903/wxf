@@ -1,0 +1,214 @@
+/* ── 全局布局 ───────────────────────────────────── */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: #0c0e12;
+    color: #e8eaed;
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+}
+
+/* ── 背景 canvas（始终显示，30% 透明度） ─────────── */
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.3;
+    pointer-events: auto;   /* 允许鼠标拖曳旋转 3D 模型 */
+}
+
+/* ── 顶部工具栏 ─────────────────────────────────── */
+#toolbar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: rgba(20, 24, 32, 0.92);
+    border-bottom: 1px solid #2a2f38;
+    backdrop-filter: blur(8px);
+}
+#toolbar .brand {
+    font-weight: 700;
+    color: #6cf;
+    margin-right: 16px;
+    font-size: 16px;
+}
+#toolbar button.menu-btn {
+    background: #1f2630;
+    color: #cfd4dc;
+    border: 1px solid #2a313c;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.15s;
+}
+#toolbar button.menu-btn:hover { background: #2a3340; }
+#toolbar button.menu-btn.active {
+    background: #0d6efd;
+    color: #fff;
+    border-color: #0d6efd;
+}
+
+/* ── 内容区 ─────────────────────────────────────── */
+#content {
+    position: relative;
+    z-index: 5;
+    padding: 20px;
+    height: calc(100vh - 50px);
+    overflow-y: auto;
+}
+/* 无面板显示时，内容区不拦截鼠标事件，让背景 canvas 接收 */
+#content.content-hidden {
+    pointer-events: none;
+}
+/* 面板始终接收事件 */
+#content .panel {
+    pointer-events: auto;
+}
+
+/* ── 通用面板 ───────────────────────────────────── */
+.panel {
+    background: rgba(28, 33, 42, 0.7);
+    border: 1px solid #2a313c;
+    border-radius: 8px;
+    padding: 18px;
+    margin-bottom: 16px;
+    backdrop-filter: blur(6px);
+}
+.panel h5 {
+    color: #6cf;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #2a313c;
+    padding-bottom: 6px;
+}
+
+/* ── 关节按钮组（示教角） ───────────────────────── */
+.joint-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.joint-row .label {
+    width: 80px;
+    text-align: right;
+    color: #b0b6c0;
+    font-size: 13px;
+}
+.joint-row .side {
+    width: 36px;
+    color: #6cf;
+    font-weight: 600;
+}
+/* 按钮宽度 = 页面 1/15 (约 6.67%) */
+.joint-row button {
+    width: 6.67vw;
+    min-width: 60px;
+    height: 40px;
+    background: #2c3640;
+    color: #fff;
+    border: 1px solid #3a4452;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+}
+.joint-row button:hover { background: #3a4452; }
+.joint-row button.plus  { background: #1d6f3a; }
+.joint-row button.plus:hover  { background: #28894a; }
+.joint-row button.minus { background: #8a2c2c; }
+.joint-row button.minus:hover { background: #a83838; }
+.joint-row .angle {
+    width: 72px;
+    text-align: center;
+    background: #11151c;
+    color: #6f6;
+    padding: 5px 0;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+/* ── 坐标按钮组（示教坐标） ─────────────────────── */
+.coord-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.coord-row .axis-label {
+    width: 40px;
+    text-align: center;
+    color: #6cf;
+    font-weight: 700;
+    font-size: 14px;
+}
+/* 按钮宽度 = 页面 1/15 (约 6.67%) */
+.coord-row button {
+    width: 6.67vw;
+    min-width: 60px;
+    height: 40px;
+    background: #2c3640;
+    color: #fff;
+    border: 1px solid #3a4452;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 16px;
+}
+.coord-row button.plus  { background: #1d6f3a; }
+.coord-row button.minus { background: #8a2c2c; }
+.coord-row .val {
+    width: 100px;
+    text-align: center;
+    background: #11151c;
+    color: #6f6;
+    padding: 6px 0;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+/* ── 程序视图 ──────────────────────────────────── */
+.code-block {
+    background: #11151c;
+    border: 1px solid #2a313c;
+    border-radius: 6px;
+    padding: 14px;
+    color: #c8d3e0;
+    font-family: "Consolas", monospace;
+    font-size: 13px;
+    white-space: pre;
+    overflow: auto;
+    max-height: 60vh;
+}
+.floating-btn {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 20;
+    padding: 12px 28px;
+    font-size: 16px;
+    border-radius: 28px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+}
+.floating-btn.run   { background: #dc3545; color: #fff; }
+.floating-btn.stop  { background: #6c757d; color: #fff; }
+
+/* ── 地图视图 ──────────────────────────────────── */
+.map-canvas {
+    width: 100%;
+    height: 70vh;
+    background: #0a0c10;
+    border: 1px solid #2a313c;
+    border-radius: 6px;
+}

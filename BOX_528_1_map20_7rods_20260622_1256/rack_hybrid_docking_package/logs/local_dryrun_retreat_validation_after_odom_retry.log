@@ -1,3 +1,0 @@
-[2026-06-11 04:06:12] STEP 001: standalone strict retreat 1.000m
-[2026-06-11 04:06:12] dry_run: standalone retreat validation plan only; no chassis, arm, turn, rack approach, or rod sequence motion will run
-[2026-06-11 04:06:12] run_report=/home/davie/G2/G2_dipan_yundong/rack_hybrid_docking_package/logs/local_dryrun_retreat_validation_after_odom_retry_report.json
