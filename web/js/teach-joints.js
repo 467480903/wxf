@@ -114,9 +114,9 @@ export default {
             saveType: 'WBC',
             saveTypes: ['WBC', 'arms', 'left', 'right', 'head', 'waist'],
             headJoints: [
-                { name: 'idx11_head_joint1', label: '头仰', value: 0, urdfName: 'idx11_head_joint1' },
+                { name: 'idx11_head_joint1', label: '头转', value: 0, urdfName: 'idx11_head_joint1' },
                 { name: 'idx12_head_joint2', label: '头侧', value: 0, urdfName: 'idx12_head_joint2' },
-                { name: 'idx13_head_joint3', label: '头转', value: 0, urdfName: 'idx13_head_joint3' }
+                { name: 'idx13_head_joint3', label: '头仰', value: 0, urdfName: 'idx13_head_joint3' }
             ],
             leftArmJoints: [
                 { name: 'idx21_arm_l_joint1', label: '1', value: 0, urdfName: 'idx21_arm_l_joint1' },
@@ -137,13 +137,13 @@ export default {
                 { name: 'idx67_arm_r_joint7', label: '7', value: 0, urdfName: 'idx67_arm_r_joint7' }
             ],
             waistJoints: [
-                { name: 'idx01_body_joint1', label: '腰转', value: 0, urdfName: 'idx01_body_joint1' },
-                { name: 'idx02_body_joint2', label: '腰仰', value: 0, urdfName: 'idx02_body_joint2' },
-                { name: 'idx03_body_joint3', label: '腰侧', value: 0, urdfName: 'idx03_body_joint3' }
+                { name: 'idx03_body_joint3', label: '腰仰', value: 0, urdfName: 'idx03_body_joint3' },
+                { name: 'idx04_body_joint4', label: '腰侧', value: 0, urdfName: 'idx04_body_joint4' },
+                { name: 'idx05_body_joint5', label: '腰转', value: 0, urdfName: 'idx05_body_joint5' }
             ],
             legJoints: [
-                { name: 'idx04_body_joint4', label: '腿1', value: 0, urdfName: 'idx04_body_joint4' },
-                { name: 'idx05_body_joint5', label: '腿2', value: 0, urdfName: 'idx05_body_joint5' }
+                { name: 'idx01_body_joint1', label: '腿1', value: 0, urdfName: 'idx01_body_joint1' },
+                { name: 'idx02_body_joint2', label: '腿2', value: 0, urdfName: 'idx02_body_joint2' }
             ],
             _unwatch: null
         };

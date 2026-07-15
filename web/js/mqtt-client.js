@@ -7,6 +7,9 @@ const MQTT_PORT   = 9001;
 const STATUS_TOPIC = '/G2_minth_status';
 const CLOUD_TOPIC  = '/G2_minth_cloud';
 const CAMERAS_TOPIC = '/G2_minth_cameras';
+const RUNTIME_STEP_TOPIC = '/runtime_step';
+const RUNTIME_CODES_TOPIC = '/runtime_codes';
+const RUNTIME_PROGRAM_FILES_TOPIC = '/runtime_program_files';
 
 class MqttClient {
     constructor() {
@@ -15,6 +18,9 @@ class MqttClient {
         this.statusCallback = null;
         this.cloudCallbacks = [];
         this.cameraCallbacks = [];
+        this.runtimeStepCallbacks = [];
+        this.runtimeCodesCallbacks = [];
+        this.runtimeProgramFilesCallbacks = [];
     }
 
     connect() {
@@ -42,6 +48,15 @@ class MqttClient {
                 } else if (message.destinationName === CAMERAS_TOPIC) {
                     // 分发给所有注册的相机回调
                     this.cameraCallbacks.forEach(cb => cb(data));
+                } else if (message.destinationName === RUNTIME_STEP_TOPIC) {
+                    // 分发给所有注册的调试步骤回调
+                    this.runtimeStepCallbacks.forEach(cb => cb(data));
+                } else if (message.destinationName === RUNTIME_CODES_TOPIC) {
+                    // 分发给所有注册的代码回调
+                    this.runtimeCodesCallbacks.forEach(cb => cb(data));
+                } else if (message.destinationName === RUNTIME_PROGRAM_FILES_TOPIC) {
+                    // 分发给所有注册的程序文件列表回调
+                    this.runtimeProgramFilesCallbacks.forEach(cb => cb(data));
                 }
             } catch (e) {
                 console.error('[MQTT] JSON 解析失败:', e);
@@ -55,6 +70,9 @@ class MqttClient {
                 this.client.subscribe(STATUS_TOPIC, { qos: 0 });
                 this.client.subscribe(CLOUD_TOPIC, { qos: 0 });
                 this.client.subscribe(CAMERAS_TOPIC, { qos: 0 });
+                this.client.subscribe(RUNTIME_STEP_TOPIC, { qos: 0 });
+                this.client.subscribe(RUNTIME_CODES_TOPIC, { qos: 0 });
+                this.client.subscribe(RUNTIME_PROGRAM_FILES_TOPIC, { qos: 0 });
             },
             onFailure: (err) => {
                 console.error('[MQTT] 连接失败:', err.errorMessage);
@@ -129,6 +147,61 @@ class MqttClient {
      */
     publishCameraControl(cmd) {
         this.publishToTopic('/G2_minth_camera', { cmd });
+    }
+
+    /**
+     * 注册调试步骤回调
+     */
+    addRuntimeStepCallback(callback) {
+        if (!this.runtimeStepCallbacks.includes(callback)) {
+            this.runtimeStepCallbacks.push(callback);
+        }
+    }
+
+    /**
+     * 移除调试步骤回调
+     */
+    removeRuntimeStepCallback(callback) {
+        this.runtimeStepCallbacks = this.runtimeStepCallbacks.filter(cb => cb !== callback);
+    }
+
+    /**
+     * 注册代码内容回调
+     */
+    addRuntimeCodesCallback(callback) {
+        if (!this.runtimeCodesCallbacks.includes(callback)) {
+            this.runtimeCodesCallbacks.push(callback);
+        }
+    }
+
+    /**
+     * 移除代码内容回调
+     */
+    removeRuntimeCodesCallback(callback) {
+        this.runtimeCodesCallbacks = this.runtimeCodesCallbacks.filter(cb => cb !== callback);
+    }
+
+    /**
+     * 发送 runtime 调试命令
+     */
+    publishRuntimeDebug(cmd, data) {
+        this.publishToTopic('/runtime_debug', { cmd, data });
+    }
+
+    /**
+     * 注册程序文件列表回调
+     */
+    addRuntimeProgramFilesCallback(callback) {
+        if (!this.runtimeProgramFilesCallbacks.includes(callback)) {
+            this.runtimeProgramFilesCallbacks.push(callback);
+        }
+    }
+
+    /**
+     * 移除程序文件列表回调
+     */
+    removeRuntimeProgramFilesCallback(callback) {
+        this.runtimeProgramFilesCallbacks = this.runtimeProgramFilesCallbacks.filter(cb => cb !== callback);
     }
 }
 

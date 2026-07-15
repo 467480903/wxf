@@ -103,7 +103,10 @@ const App = {
         <canvas id="bg-canvas" ref="bgCanvas"></canvas>
 
         <nav id="toolbar" @click.stop>
-            <span class="brand">G2 控制台</span>
+            <span class="brand" @click="toggleHome">
+                <span class="brand-logo"><img src="minth-logo.png" alt="Minth" /></span>
+                底盘机器人
+            </span>
 
             <template v-for="m in menus" :key="m.id">
                 <!-- 无子菜单：直接按钮 -->
@@ -155,6 +158,11 @@ const App = {
     methods: {
         selectMenu(id) {
             this.currentMenu = id;
+            this.openDropdown = '';
+        },
+        toggleHome() {
+            // 点击「底盘机器人」logo，收起所有功能页，显示 3D 模型
+            this.currentMenu = '';
             this.openDropdown = '';
         },
         toggleDropdown(id) {

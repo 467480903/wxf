@@ -34,10 +34,33 @@ html, body {
     backdrop-filter: blur(8px);
 }
 #toolbar .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-weight: 700;
     color: #6cf;
     margin-right: 16px;
     font-size: 16px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+#toolbar .brand:hover {
+    background: #1f2630;
+}
+#toolbar .brand .brand-logo {
+    width: 34px;          /* 只显示左侧 1/3 (102/3≈34) */
+    height: 28px;
+    overflow: hidden;
+    display: block;
+}
+#toolbar .brand .brand-logo img {
+    width: 102px;         /* 原始宽度，不缩放 */
+    height: 28px;
+    object-fit: none;
+    display: block;
 }
 #toolbar button.menu-btn {
     background: #1f2630;
@@ -331,6 +354,150 @@ html, body {
     overflow: auto;
     max-height: 60vh;
 }
+.code-line {
+    display: flex;
+    padding: 1px 0;
+    border-radius: 2px;
+}
+.code-line .line-num {
+    display: inline-block;
+    width: 40px;
+    text-align: right;
+    padding-right: 12px;
+    color: #555;
+    user-select: none;
+    flex-shrink: 0;
+}
+.code-line .line-content {
+    flex: 1;
+    padding-left: 8px;
+}
+.code-line-active {
+    background: #3d3a1a;
+    border-left: 3px solid #ff0;
+    margin-left: -3px;
+}
+.code-line-active .line-num {
+    color: #ff0;
+    font-weight: bold;
+}
+.code-line-active .line-content {
+    color: #ff0;
+    font-weight: 600;
+}
+
+.step-info {
+    margin-top: 12px;
+    padding: 8px 14px;
+    background: #1a1d24;
+    border: 1px solid #3d3a1a;
+    border-radius: 4px;
+    color: #b0b6c0;
+    font-size: 13px;
+    font-family: "Consolas", monospace;
+}
+.step-info .step-line-no {
+    color: #ff0;
+    font-weight: bold;
+    font-size: 15px;
+}
+.step-info .step-code {
+    color: #6f6;
+    margin-left: 10px;
+}
+
+.program-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+.program-btn {
+    min-width: 120px;
+    height: 40px;
+    border: 1px solid #2a313c;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 0 20px;
+}
+.program-btn.read-btn {
+    background: #1a3a5c;
+    color: #fff;
+    border-color: #2a5a8c;
+}
+.program-btn.read-btn:hover { background: #2a5a8c; }
+.program-btn.debug-btn {
+    background: #5c1a3a;
+    color: #fff;
+    border-color: #8c2a5a;
+}
+.program-btn.debug-btn:hover { background: #8c2a5a; }
+.program-btn.debug-btn.active {
+    background: #8c2a5a;
+    animation: pulse 1s infinite;
+}
+.program-btn.next-btn {
+    background: #3a5c1a;
+    color: #fff;
+    border-color: #5a8c2a;
+}
+.program-btn.next-btn:hover:not(:disabled) { background: #5a8c2a; }
+.program-btn.next-btn:disabled {
+    background: #2a313c;
+    color: #555;
+    cursor: not-allowed;
+    border-color: #2a313c;
+}
+.program-btn.stop-btn {
+    background: #5c1a1a;
+    color: #fff;
+    border-color: #8c2a2a;
+}
+.program-btn.stop-btn:hover { background: #8c2a2a; }
+.program-btn.run-btn {
+    background: #1a3c5c;
+    color: #6cf;
+    border-color: #2a5c8c;
+}
+.program-btn.run-btn:hover { background: #2a5c8c; }
+.program-btn.run-btn.active {
+    background: #2a5c8c;
+    color: #fff;
+    animation: pulse 1s infinite;
+}
+.program-btn.file-btn {
+    background: #3c3c1a;
+    color: #cc6;
+    border-color: #8c8c2a;
+}
+.program-btn.file-btn:hover { background: #5c5c2a; }
+.file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 16px 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+.file-list li {
+    padding: 10px 14px;
+    color: #cfd4dc;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+}
+.file-list li:hover {
+    background: #1f2630;
+    color: #6cf;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
 .floating-btn {
     position: fixed;
     right: 24px;

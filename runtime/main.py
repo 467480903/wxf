@@ -1,0 +1,17 @@
+import pdb
+from minth import Minth
+
+robot = Minth.G2()
+print(1)
+robot.TTS("你好")
+print(1)
+robot.GRIPPER({"left": 0.0, "right": 0.0})
+robot.WBC("hold")
+robot.GRIPPER({"left": -0.7, "right": -0.7})
+robot.WBC("P1")
+print(1)
+print(1)
+print(1)
+print(1)
+print(1)
+print(1)
