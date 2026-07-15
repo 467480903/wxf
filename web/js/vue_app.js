@@ -11,6 +11,8 @@ import MapView         from './map-view.js';
 import CameraView      from './camera-view.js';
 import DataCollection  from './data-collection.js';
 import ModelInference  from './model-inference.js';
+import DataJointsCoords from './data-joints-coords.js';
+import ChassisControl  from './chassis-control.js';
 import PlaceholderView from './placeholder-view.js';
 
 
@@ -36,8 +38,7 @@ const App = {
                 },
                 {
                     id: 'data', label: '数据', children: [
-                        { id: 'data_joints',  label: '角度集' },
-                        { id: 'data_coords',  label: '末端坐标' },
+                        { id: 'data_jc',      label: '关节/坐标' },
                         { id: 'data_modbus',  label: 'modbus变量' },
                         { id: 'data_sync',    label: '同步' },
                         { id: 'data_mappoint',label: '地图点' },
@@ -70,7 +71,7 @@ const App = {
             robotStatus: null   // 共享的机器人状态
         };
     },
-    components: { TeachJoints, TeachCoords, ProgramView, MapView, CameraView, DataCollection, ModelInference, PlaceholderView },
+    components: { TeachJoints, TeachCoords, ProgramView, MapView, CameraView, DataCollection, ModelInference, DataJointsCoords, ChassisControl, PlaceholderView },
     provide() {
         return {
             getUrdfViewer: () => this.urdfViewer,
@@ -93,7 +94,7 @@ const App = {
         isPlaceholder() {
             const implemented = [
                 'teach_joints', 'teach_coords', 'program',
-                'map_scan', 'cam_capture', 'inf_collect', 'inf_model'
+                'map_scan', 'map_chassis', 'cam_capture', 'inf_collect', 'inf_model', 'data_jc'
             ];
             return this.currentMenu && !implemented.includes(this.currentMenu);
         }
@@ -137,11 +138,14 @@ const App = {
             </template>
         </nav>
 
-        <main id="content" :class="{ 'content-hidden': !currentMenu }">
+        <main id="content" :class="{ 'content-hidden': !currentMenu, 'content-fullscreen': currentMenu === 'map_chassis' }">
             <teach-joints     v-if="currentMenu === 'teach_joints'"></teach-joints>
             <teach-coords     v-if="currentMenu === 'teach_coords'"></teach-coords>
             <program-view     v-if="currentMenu === 'program'"></program-view>
             <map-view         v-if="currentMenu === 'map_scan'"></map-view>
+
+            <!-- 地图 > 底盘控制 -->
+            <chassis-control  v-if="currentMenu === 'map_chassis'"></chassis-control>
 
             <!-- 相机 > 采集 -->
             <camera-view      v-if="currentMenu === 'cam_capture'"></camera-view>
@@ -149,6 +153,9 @@ const App = {
             <!-- 推理 > 数据采集 / 模型推理 -->
             <data-collection  v-if="currentMenu === 'inf_collect'"></data-collection>
             <model-inference  v-if="currentMenu === 'inf_model'"></model-inference>
+
+            <!-- 数据 > 关节/坐标 -->
+            <data-joints-coords v-if="currentMenu === 'data_jc'"></data-joints-coords>
 
             <!-- 占位页面 -->
             <placeholder-view :title="currentTitle" v-if="isPlaceholder"></placeholder-view>

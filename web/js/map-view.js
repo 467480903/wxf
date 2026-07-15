@@ -59,6 +59,9 @@ export default {
         // 通过 onMessageArrived 分发，需要额外注册回调
         mqttClient.addCloudCallback(this._onCloud);
 
+        // 通知后端开始发布点云
+        mqttClient.publishCloudControl('start_cloud');
+
         this.render();
     },
     beforeUnmount() {
@@ -67,6 +70,8 @@ export default {
         if (this._onCloud) {
             mqttClient.removeCloudCallback(this._onCloud);
         }
+        // 通知后端停止发布点云
+        mqttClient.publishCloudControl('stop_cloud');
     },
     methods: {
         resizeCanvas() {

@@ -15,6 +15,8 @@ Minth 机器人控制类库
     robot.REL({"x": 0.3})       # 底盘前进 0.3 米
     robot.OFFSET({"lx": 20})    # 左末端相对移动 20mm
     robot.GRIPPER({"left": 0.5, "right": 0.5})
+    robot.YOLO("7.14.pt")       # YOLO 目标检测
+    robot.YOLO("wxf.pt")        # 使用 wxf.pt 模型检测
     robot.close()
 
     # X2 型号（预留）
@@ -32,6 +34,7 @@ MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
 CMD_TOPIC = "/G2_minth_app"
 DONE_TOPIC = "/G2_minth_app_done"
+CAMERA_TOPIC = "/minth/g2/camera"
 
 # 默认超时时间（秒）
 DEFAULT_TIMEOUT = 15
@@ -171,6 +174,33 @@ class G2(_RobotBase):
             bool
         """
         return self._send_and_wait("grab", data)
+
+    def YOLO(self, model="wxf.pt"):
+        """YOLO 目标检测
+
+        拍摄头部彩色+深度图，发送给 YOLO 服务进行检测，等待完成后返回。
+
+        通过 MQTT 向 /minth/g2/camera 发送 {"cmd":"detect","yolo":"<model>"}，
+        camera.py 执行完毕后会向 /G2_minth_app_done 发送 {"cmd":"done"}。
+
+        Args:
+            model: YOLO 模型文件名，如 "wxf.pt"、"7.14.pt"
+        Returns:
+            bool: True=检测完成，False=超时
+        """
+        payload = {"cmd": "detect", "yolo": model}
+        self._done_event.clear()
+        msg_str = json.dumps(payload, ensure_ascii=False)
+        self._client.publish(CAMERA_TOPIC, msg_str, qos=2)
+        print(f"[Minth] → YOLO: model={model}")
+
+        # YOLO 检测耗时较长，使用较长超时
+        done = self._done_event.wait(timeout=120)
+        if done:
+            print(f"[Minth] ✓ YOLO 检测完成")
+        else:
+            print(f"[Minth] ✗ YOLO 超时 (120s)")
+        return done
 
 
 class X2(_RobotBase):

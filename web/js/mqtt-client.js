@@ -6,10 +6,15 @@ const MQTT_BROKER = location.hostname || '10.2.236.6';
 const MQTT_PORT   = 9001;
 const STATUS_TOPIC = '/G2_minth_status';
 const CLOUD_TOPIC  = '/G2_minth_cloud';
-const CAMERAS_TOPIC = '/G2_minth_cameras';
+const CAMERAS_TOPIC = '/minth/g2/cameras';
+const CAMERA_CTRL_TOPIC = '/minth/g2/camera';
 const RUNTIME_STEP_TOPIC = '/runtime_step';
 const RUNTIME_CODES_TOPIC = '/runtime_codes';
 const RUNTIME_PROGRAM_FILES_TOPIC = '/runtime_program_files';
+const DATA_REQ_TOPIC = '/minth/g2/data';
+const DATA_RESP_TOPIC = '/minth/g2/data/response';
+const MAP_POINTS_TOPIC = '/minth/g2/map/points';
+const CLOUD_CTRL_TOPIC = '/minth/g2/status';
 
 class MqttClient {
     constructor() {
@@ -21,6 +26,8 @@ class MqttClient {
         this.runtimeStepCallbacks = [];
         this.runtimeCodesCallbacks = [];
         this.runtimeProgramFilesCallbacks = [];
+        this.dataRespCallbacks = [];
+        this.mapPointsCallbacks = [];
     }
 
     connect() {
@@ -57,6 +64,12 @@ class MqttClient {
                 } else if (message.destinationName === RUNTIME_PROGRAM_FILES_TOPIC) {
                     // 分发给所有注册的程序文件列表回调
                     this.runtimeProgramFilesCallbacks.forEach(cb => cb(data));
+                } else if (message.destinationName === DATA_RESP_TOPIC) {
+                    // 分发给所有注册的数据响应回调
+                    this.dataRespCallbacks.forEach(cb => cb(data));
+                } else if (message.destinationName === MAP_POINTS_TOPIC) {
+                    // 分发给所有注册的地图点位回调
+                    this.mapPointsCallbacks.forEach(cb => cb(data));
                 }
             } catch (e) {
                 console.error('[MQTT] JSON 解析失败:', e);
@@ -73,6 +86,8 @@ class MqttClient {
                 this.client.subscribe(RUNTIME_STEP_TOPIC, { qos: 0 });
                 this.client.subscribe(RUNTIME_CODES_TOPIC, { qos: 0 });
                 this.client.subscribe(RUNTIME_PROGRAM_FILES_TOPIC, { qos: 0 });
+                this.client.subscribe(DATA_RESP_TOPIC, { qos: 0 });
+                this.client.subscribe(MAP_POINTS_TOPIC, { qos: 0 });
             },
             onFailure: (err) => {
                 console.error('[MQTT] 连接失败:', err.errorMessage);
@@ -146,7 +161,16 @@ class MqttClient {
      * 发送相机控制命令
      */
     publishCameraControl(cmd) {
-        this.publishToTopic('/G2_minth_camera', { cmd });
+        this.publishToTopic(CAMERA_CTRL_TOPIC, { cmd });
+    }
+
+    /**
+     * 发送相机控制命令（带额外字段）
+     * @param {string} cmd - 命令名
+     * @param {object} extra - 额外字段，如 { cameras: [...] } 或 { yolo: 'wxf.pt' }
+     */
+    publishCameraCommand(cmd, extra = {}) {
+        this.publishToTopic(CAMERA_CTRL_TOPIC, { cmd, ...extra });
     }
 
     /**
@@ -202,6 +226,52 @@ class MqttClient {
      */
     removeRuntimeProgramFilesCallback(callback) {
         this.runtimeProgramFilesCallbacks = this.runtimeProgramFilesCallbacks.filter(cb => cb !== callback);
+    }
+
+    /**
+     * 注册数据响应回调
+     */
+    addDataRespCallback(callback) {
+        if (!this.dataRespCallbacks.includes(callback)) {
+            this.dataRespCallbacks.push(callback);
+        }
+    }
+
+    /**
+     * 移除数据响应回调
+     */
+    removeDataRespCallback(callback) {
+        this.dataRespCallbacks = this.dataRespCallbacks.filter(cb => cb !== callback);
+    }
+
+    /**
+     * 发送数据服务请求
+     */
+    publishDataReq(cmd, extra = {}) {
+        this.publishToTopic(DATA_REQ_TOPIC, { cmd, ...extra });
+    }
+
+    /**
+     * 注册地图点位回调
+     */
+    addMapPointsCallback(callback) {
+        if (!this.mapPointsCallbacks.includes(callback)) {
+            this.mapPointsCallbacks.push(callback);
+        }
+    }
+
+    /**
+     * 移除地图点位回调
+     */
+    removeMapPointsCallback(callback) {
+        this.mapPointsCallbacks = this.mapPointsCallbacks.filter(cb => cb !== callback);
+    }
+
+    /**
+     * 发送云端控制指令（start_cloud / stop_cloud）
+     */
+    publishCloudControl(cmd) {
+        this.publishToTopic(CLOUD_CTRL_TOPIC, { cmd });
     }
 }
 

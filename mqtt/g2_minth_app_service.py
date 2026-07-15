@@ -16,6 +16,7 @@ G2 Minth App 服务程序
   - cam_head                : 拍摄头部相机并通过 TCP 发送给检测服务
   - go                      : 导航到指定地图点位（nav.go）
   - go_rel                  : 底盘相对运动（nav.go_rel）
+  - joint                   : 单关节控制（增量微调或直接运动到角度）
 
 注意：数据保存（save_joints / save_position）已转移到 g2_minth_data_service.py
 
@@ -36,6 +37,8 @@ G2 Minth App 服务程序
   {"cmd": "cam_head"}
   {"cmd": "go",                      "data": 9}
   {"cmd": "go_rel",                  "data": {"x": 1, "y": 1, "yaw_rad": 0.1}}
+  {"cmd": "joint", "data": {"name": "idx11_head_joint1", "offset": 0.01}}   # 增量微调
+  {"cmd": "joint", "data": {"name": "idx11_head_joint1", "value": 0.0}}     # 运动到指定角度
 """
 
 import sys
@@ -59,7 +62,7 @@ BOX_DIR = os.path.join(PROJECT_DIR, "BOX_528_1")
 sys.path.append(BOX_DIR)
 sys.path.append(SCRIPT_DIR)
 
-from robot_controller import RobotController
+from chassis_controller import RobotController
 from offset_move_common import EndEffectorController
 
 # ── MQTT 配置 ─────────────────────────────────────────────
@@ -67,6 +70,7 @@ MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
 MQTT_TOPIC = "/G2_minth_app"
 MQTT_DONE_TOPIC = "/G2_minth_app_done"
+MQTT_MAP_POINTS_TOPIC = "/minth/g2/map/points"
 MQTT_CLIENT_ID = "g2_minth_app_service"
 
 # ── TCP 配置（cam_head 用）────────────────────────────────
@@ -498,6 +502,155 @@ def handle_go_rel(data, msg=None):
         print(f"  ❌ 底盘相对运动异常: {e}")
 
 
+# ── 单关节控制 ────────────────────────────────────────────
+
+# 关节名 → 所属部位 + 对应的关节键列表
+JOINT_NAME_MAP = {}
+for _keys in HEAD_JOINT_KEYS:
+    JOINT_NAME_MAP[_keys] = ("head", HEAD_JOINT_KEYS, HEAD_SPEED)
+for _keys in WAIST_JOINT_KEYS:
+    JOINT_NAME_MAP[_keys] = ("waist", WAIST_JOINT_KEYS, WAIST_SPEED)
+for _keys in LEFT_ARM_JOINT_KEYS + RIGHT_ARM_JOINT_KEYS:
+    JOINT_NAME_MAP[_keys] = ("arms", LEFT_ARM_JOINT_KEYS + RIGHT_ARM_JOINT_KEYS, ARM_SPEED)
+
+
+def _get_current_joints():
+    """读取当前所有关节角度，返回 {关节名: 弧度} 字典"""
+    try:
+        joint_states = robot.get_joint_states()
+        joints = {}
+        for state in joint_states['states']:
+            joints[state['name']] = state['motor_position']
+        return joints
+    except Exception as e:
+        print(f"  ⚠ 读取关节状态失败: {e}")
+        return {}
+
+
+def handle_joint(data, msg=None):
+    """单关节控制
+    msg 格式:
+      {"cmd": "joint", "name": "idx11_head_joint1", "offset": 0.01}  # 增量微调
+      {"cmd": "joint", "name": "idx11_head_joint1", "value": 0.0}    # 直接运动到角度
+    """
+    if not isinstance(data, dict):
+        print(f"❌ joint 命令 data 不是字典: {data}")
+        return
+
+    joint_name = data.get("name")
+    if not joint_name:
+        print("❌ joint 命令缺少 name 字段")
+        return
+
+    info = JOINT_NAME_MAP.get(joint_name)
+    if info is None:
+        print(f"❌ 未知关节名: {joint_name}")
+        return
+
+    part, keys, speed = info
+
+    # 确定目标角度
+    if "value" in data:
+        target_value = float(data["value"])
+    elif "offset" in data:
+        # 增量微调：需要读取当前关节角度
+        current = _get_current_joints()
+        cur_val = current.get(joint_name, 0.0)
+        target_value = cur_val + float(data["offset"])
+        print(f"  {joint_name}: 当前={cur_val:.4f}, 偏移={data['offset']}, 目标={target_value:.4f}")
+    else:
+        print("❌ joint 命令需要 value 或 offset 字段")
+        return
+
+    # 构造只包含该关节的 pos_data
+    pos_data = {joint_name: target_value}
+
+    if part == "head":
+        pos = _extract_positions(pos_data, HEAD_JOINT_KEYS)
+        vel = [speed] * len(pos)
+        print(f"  头部关节 → {[f'{p:.4f}' for p in pos]}")
+        robot.move_head_joint(pos, vel)
+    elif part == "waist":
+        pos = _extract_positions(pos_data, WAIST_JOINT_KEYS)
+        vel = [speed] * len(pos)
+        print(f"  腰部关节 → {[f'{p:.4f}' for p in pos]}")
+        robot.move_waist_joint(pos, vel)
+    elif part == "arms":
+        left = _extract_positions(pos_data, LEFT_ARM_JOINT_KEYS)
+        right = _extract_positions(pos_data, RIGHT_ARM_JOINT_KEYS)
+        positions = left + right
+        velocities = [speed] * len(positions)
+        print(f"  手臂关节 → {[f'{p:.4f}' for p in positions]}")
+        robot.move_arm_joint(positions, velocities, 2)
+
+
+# ── 地图点位管理 ──────────────────────────────────────────
+
+MAP_POINTS_DIR = os.path.join(PROJECT_DIR, "datas", "map_points")
+
+def handle_read_map_points(data=None, msg=None):
+    """读取所有地图点位（地图引导点 + 本地保存的点位），发布到 /minth/g2/map/points"""
+    points = []
+
+    # 1. 从地图读取引导点
+    try:
+        for name, wp in nav.waypoints.items():
+            pos = wp.get("position", [0, 0, 0])
+            ori = wp.get("orientation", [0, 0, 0, 1])
+            points.append({
+                "name": name,
+                "source": wp.get("source", "map"),
+                "position": pos,
+                "orientation": ori,
+            })
+    except Exception as e:
+        print(f"  ⚠ 读取地图引导点失败: {e}")
+
+    # 2. 从本地文件读取保存的点位
+    os.makedirs(MAP_POINTS_DIR, exist_ok=True)
+    for fname in sorted(os.listdir(MAP_POINTS_DIR)):
+        if not fname.endswith('.json'):
+            continue
+        fpath = os.path.join(MAP_POINTS_DIR, fname)
+        try:
+            with open(fpath, "r", encoding="utf-8") as f:
+                pt = json.load(f)
+            pt["source"] = "local"
+            points.append(pt)
+        except Exception as e:
+            print(f"  ⚠ 跳过 {fpath}: {e}")
+
+    resp = json.dumps({"cmd": "map_points", "data": points}, ensure_ascii=False)
+    if mqtt_client:
+        mqtt_client.publish(MQTT_MAP_POINTS_TOPIC, resp, qos=0)
+    print(f"  ✅ 已发布 {len(points)} 个地图点位到 {MQTT_MAP_POINTS_TOPIC}")
+
+
+def handle_save_map_point(data, msg=None):
+    """保存当前底盘位姿为地图点位
+    data: {"name": "point_name"}
+    """
+    save_name = data.get("name", "unnamed") if isinstance(data, dict) else "unnamed"
+    os.makedirs(MAP_POINTS_DIR, exist_ok=True)
+
+    # 获取当前位姿
+    pose = nav.get_current_pose()
+    pos = pose.get("position", [0, 0, 0])
+    ori = pose.get("orientation", [0, 0, 0, 1])
+
+    pt_data = {
+        "name": save_name,
+        "position": [round(pos[0], 6), round(pos[1], 6), round(pos[2], 6)],
+        "orientation": [round(ori[0], 6), round(ori[1], 6), round(ori[2], 6), round(ori[3], 6)],
+    }
+
+    json_name = save_name if save_name.endswith('.json') else save_name + '.json'
+    json_path = os.path.join(MAP_POINTS_DIR, json_name)
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(pt_data, f, ensure_ascii=False, indent=2)
+    print(f"  ✅ 地图点位已保存: {json_path}")
+
+
 # ═══════════════════════════════════════════════════════════
 #  命令分发表
 # ═══════════════════════════════════════════════════════════
@@ -513,8 +666,11 @@ CMD_HANDLERS = {
     "offset_move": handle_offset_move,
     "grab":        handle_grab,
     "cam_head":    handle_cam_head,
-    "go":          handle_go,
-    "go_rel":      handle_go_rel,
+    "go":             handle_go,
+    "go_rel":         handle_go_rel,
+    "joint":          handle_joint,
+    "read_map_points": handle_read_map_points,
+    "save_map_point":  handle_save_map_point,
 }
 
 

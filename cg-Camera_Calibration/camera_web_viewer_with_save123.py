@@ -51,7 +51,7 @@ CALIB_IMAGES_DIR = os.path.join(_BASE_DIR, "images")
 class WebCameraViewerWithSave:
     """Web版相机查看器（带保存图片功能）"""
 
-    def __init__(self, host='0.0.0.0', port=5001):
+    def __init__(self, host='0.0.0.0', port=5006):
         """初始化Web相机查看器"""
         self.camera = None
         self.host = host
@@ -78,8 +78,8 @@ class WebCameraViewerWithSave:
         self.setup_signal_handlers()
 
         self.camera_types = [
-            # (agibot_gdk.CameraType.kHeadStereoLeft, "头部双目左相机"),
-            # (agibot_gdk.CameraType.kHeadStereoRight, "头部双目右相机"),
+            (agibot_gdk.CameraType.kHeadStereoLeft, "头部双目左相机"),
+            (agibot_gdk.CameraType.kHeadStereoRight, "头部双目右相机"),
             # (agibot_gdk.CameraType.kHandLeftColor, "左手彩色相机"),
             # (agibot_gdk.CameraType.kHandRightColor, "右手彩色相机"),
             (agibot_gdk.CameraType.kHeadDepth, "kHeadDepth"),
@@ -91,8 +91,8 @@ class WebCameraViewerWithSave:
         for i, (ct, name) in enumerate(self.camera_types):
             # 深度相机和没有"彩色/双目"字样的不显示保存按钮
             if ct in (
-                # agibot_gdk.CameraType.kHeadStereoLeft,
-                # agibot_gdk.CameraType.kHeadStereoRight,
+                agibot_gdk.CameraType.kHeadStereoLeft,
+                agibot_gdk.CameraType.kHeadStereoRight,
                 # agibot_gdk.CameraType.kHandLeftColor,
                 # agibot_gdk.CameraType.kHandRightColor,
                 agibot_gdk.CameraType.kHeadColor,

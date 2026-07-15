@@ -121,7 +121,7 @@ else:
         "model": MODEL_NAME
     }
     message = json.dumps(payload, ensure_ascii=False) + "\n"
-    print(f"📦 请求报文内容：{message}")
+    # print(f"📦 请求报文内容：{message}")
     print(f"   rgb 长度={len(rgb_b64)}, depth 长度={len(depth_b64)}, model={MODEL_NAME}")
 
     # TCP 连接并发送
