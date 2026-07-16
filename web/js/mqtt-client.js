@@ -8,6 +8,7 @@ const STATUS_TOPIC = '/G2_minth_status';
 const CLOUD_TOPIC  = '/G2_minth_cloud';
 const CAMERAS_TOPIC = '/minth/g2/cameras';
 const CAMERA_CTRL_TOPIC = '/minth/g2/camera';
+const CAMERA_DETECT_TOPIC = '/minth/g2/camera/detect';
 const RUNTIME_STEP_TOPIC = '/runtime_step';
 const RUNTIME_CODES_TOPIC = '/runtime_codes';
 const RUNTIME_PROGRAM_FILES_TOPIC = '/runtime_program_files';
@@ -23,6 +24,7 @@ class MqttClient {
         this.statusCallback = null;
         this.cloudCallbacks = [];
         this.cameraCallbacks = [];
+        this.cameraDetectCallbacks = [];
         this.runtimeStepCallbacks = [];
         this.runtimeCodesCallbacks = [];
         this.runtimeProgramFilesCallbacks = [];
@@ -55,6 +57,9 @@ class MqttClient {
                 } else if (message.destinationName === CAMERAS_TOPIC) {
                     // 分发给所有注册的相机回调
                     this.cameraCallbacks.forEach(cb => cb(data));
+                } else if (message.destinationName === CAMERA_DETECT_TOPIC) {
+                    // 分发给所有注册的检测图像回调
+                    this.cameraDetectCallbacks.forEach(cb => cb(data));
                 } else if (message.destinationName === RUNTIME_STEP_TOPIC) {
                     // 分发给所有注册的调试步骤回调
                     this.runtimeStepCallbacks.forEach(cb => cb(data));
@@ -83,6 +88,7 @@ class MqttClient {
                 this.client.subscribe(STATUS_TOPIC, { qos: 0 });
                 this.client.subscribe(CLOUD_TOPIC, { qos: 0 });
                 this.client.subscribe(CAMERAS_TOPIC, { qos: 0 });
+                this.client.subscribe(CAMERA_DETECT_TOPIC, { qos: 0 });
                 this.client.subscribe(RUNTIME_STEP_TOPIC, { qos: 0 });
                 this.client.subscribe(RUNTIME_CODES_TOPIC, { qos: 0 });
                 this.client.subscribe(RUNTIME_PROGRAM_FILES_TOPIC, { qos: 0 });
@@ -131,6 +137,22 @@ class MqttClient {
      */
     removeCameraCallback(callback) {
         this.cameraCallbacks = this.cameraCallbacks.filter(cb => cb !== callback);
+    }
+
+    /**
+     * 注册检测图像回调
+     */
+    addCameraDetectCallback(callback) {
+        if (!this.cameraDetectCallbacks.includes(callback)) {
+            this.cameraDetectCallbacks.push(callback);
+        }
+    }
+
+    /**
+     * 移除检测图像回调
+     */
+    removeCameraDetectCallback(callback) {
+        this.cameraDetectCallbacks = this.cameraDetectCallbacks.filter(cb => cb !== callback);
     }
 
     /**

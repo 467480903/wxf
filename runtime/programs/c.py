@@ -1,4 +1,3 @@
-import pdb
 from minth import Minth
 import time
 

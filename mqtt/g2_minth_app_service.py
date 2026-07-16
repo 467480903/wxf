@@ -328,43 +328,49 @@ def handle_offset_move(data, msg=None):
 def handle_grab(data, msg=None):
     """
     控制夹爪开合
-    data 格式: {"left": 0.5, "right": 0.5}
-    position 值参考 move_ee_pose_open_05.py，负值=张开，正值=闭合
+    data 格式: {"left": -0.7, "right": -0.0}
+    只操作传入的手，未传入的不操作
     """
+    has_left = "left" in data
+    has_right = "right" in data
     left_pos = data.get("left", 0.0)
     right_pos = data.get("right", 0.0)
-    print(f"  左夹爪 position={left_pos}, 右夹爪 position={right_pos}")
+
+    if has_left:
+        print(f"  左夹爪 position={left_pos}")
+    if has_right:
+        print(f"  右夹爪 position={right_pos}")
 
     # 右夹爪
-    joint_states_r = agibot_gdk.JointStates()
-    joint_states_r.group = "right_tool"
-    joint_states_r.target_type = "omnipicker"
-    joint_state_r = agibot_gdk.JointState()
-    joint_state_r.position = right_pos
-    joint_states_r.states = [joint_state_r]
-    joint_states_r.nums = 1
+    if has_right:
+        joint_states_r = agibot_gdk.JointStates()
+        joint_states_r.group = "right_tool"
+        joint_states_r.target_type = "omnipicker"
+        joint_state_r = agibot_gdk.JointState()
+        joint_state_r.position = right_pos
+        joint_states_r.states = [joint_state_r]
+        joint_states_r.nums = 1
+        try:
+            robot.move_ee_pos(joint_states_r)
+            print("  ✅ 右夹爪控制成功")
+            time.sleep(0.02)
+        except Exception as e:
+            print(f"  ❌ 右夹爪控制失败: {e}")
 
     # 左夹爪
-    joint_states_l = agibot_gdk.JointStates()
-    joint_states_l.group = "left_tool"
-    joint_states_l.target_type = "omnipicker"
-    joint_state_l = agibot_gdk.JointState()
-    joint_state_l.position = left_pos
-    joint_states_l.states = [joint_state_l]
-    joint_states_l.nums = 1
-
-    try:
-        robot.move_ee_pos(joint_states_r)
-        print("  ✅ 右夹爪控制成功")
-        time.sleep(0.02)
-    except Exception as e:
-        print(f"  ❌ 右夹爪控制失败: {e}")
-
-    try:
-        robot.move_ee_pos(joint_states_l)
-        print("  ✅ 左夹爪控制成功")
-    except Exception as e:
-        print(f"  ❌ 左夹爪控制失败: {e}")
+    if has_left:
+        joint_states_l = agibot_gdk.JointStates()
+        joint_states_l.group = "left_tool"
+        joint_states_l.target_type = "omnipicker"
+        joint_state_l = agibot_gdk.JointState()
+        joint_state_l.position = left_pos
+        joint_states_l.states = [joint_state_l]
+        joint_states_l.nums = 1
+        try:
+            robot.move_ee_pos(joint_states_l)
+            print("  ✅ 左夹爪控制成功")
+        except Exception as e:
+            print(f"  ❌ 左夹爪控制失败: {e}")
 
 
 def handle_cam_head(data, msg=None):
@@ -562,8 +568,12 @@ def handle_joint(data, msg=None):
         print("❌ joint 命令需要 value 或 offset 字段")
         return
 
-    # 构造只包含该关节的 pos_data
-    pos_data = {joint_name: target_value}
+    # 以当前关节角度为基底，只修改目标关节，其余保持不变
+    current = _get_current_joints()
+    pos_data = {}
+    for k in (HEAD_JOINT_KEYS + WAIST_JOINT_KEYS + LEFT_ARM_JOINT_KEYS + RIGHT_ARM_JOINT_KEYS):
+        pos_data[k] = current.get(k, 0.0)
+    pos_data[joint_name] = target_value
 
     if part == "head":
         pos = _extract_positions(pos_data, HEAD_JOINT_KEYS)

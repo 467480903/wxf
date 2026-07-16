@@ -1,0 +1,5 @@
+{
+  "cmd": "detect",
+  "status": "error",
+  "error": "处理异常: 模型文件不存在: /home/wxf/图片/images/head_2point"
+}

@@ -1,0 +1,74 @@
+{
+  "cmd": "detect",
+  "status": "ok",
+  "error": null,
+  "timestamp": "2026-07-16 09:47:06",
+  "model": "7.14.pt",
+  "task": "segment",
+  "rgb_path": "/home/wxf/图片/images/rgb.jpg",
+  "depth_raw_path": "/home/wxf/图片/images/depth.raw",
+  "image_size": {
+    "height": 400,
+    "width": 640
+  },
+  "inference_time_sec": 2.6063,
+  "counts": {
+    "a": 1,
+    "b": 1
+  },
+  "a_box": {
+    "xyxy": [
+      157.72,
+      235.46,
+      177.73,
+      257.42
+    ],
+    "conf": 0.858,
+    "center": [
+      167.72,
+      246.44
+    ]
+  },
+  "b_box": {
+    "xyxy": [
+      455.54,
+      233.17,
+      474.81,
+      253.18
+    ],
+    "conf": 0.7806,
+    "center": [
+      465.18,
+      243.17
+    ]
+  },
+  "line_center": [
+    316.45,
+    244.81
+  ],
+  "image_center_x": 320.0,
+  "horizontal_offset_px": -3.55,
+  "direction": "偏左",
+  "slope": -0.011,
+  "angle_rad": -0.011,
+  "angle_deg": -0.63,
+  "depth": {
+    "depth_shape": [
+      400,
+      640
+    ],
+    "a_center_mm": 579.0,
+    "b_center_mm": 616.0,
+    "midpoint_mm": 1025.2,
+    "a_offset_mm": 1620.0,
+    "a_offset_pixel": [
+      167,
+      258
+    ],
+    "b_offset_mm": 612.0,
+    "b_offset_pixel": [
+      465,
+      255
+    ]
+  }
+}

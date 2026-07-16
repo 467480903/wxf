@@ -1,0 +1,19 @@
+{
+  "cmd": "detect",
+  "status": "error",
+  "error": "检测不全: a=0, b=0",
+  "timestamp": "2026-07-16 17:50:22",
+  "model": "7.14.pt",
+  "task": "segment",
+  "rgb_path": "/home/wxf/图片/images/rgb.jpg",
+  "depth_raw_path": "/home/wxf/图片/images/depth.raw",
+  "image_size": {
+    "height": 400,
+    "width": 640
+  },
+  "inference_time_sec": 0.073,
+  "counts": {
+    "a": 0,
+    "b": 0
+  }
+}

@@ -43,6 +43,12 @@ export default {
                     <span class="val">{{ format(left[ax]) }}</span>
                     <button class="plus"  @click="step('left', ax,  stepSize)">+</button>
                 </div>
+                <!-- 左手夹爪 -->
+                <div class="gripper-row">
+                    <span class="gripper-label">夹爪</span>
+                    <button class="gripper-btn open" @click="gripper('left', 'open')">张开</button>
+                    <button class="gripper-btn close" @click="gripper('left', 'close')">闭合</button>
+                </div>
             </div>
 
             <!-- 右手 -->
@@ -53,6 +59,12 @@ export default {
                     <button class="minus" @click="step('right', ax, -stepSize)">−</button>
                     <span class="val">{{ format(right[ax]) }}</span>
                     <button class="plus"  @click="step('right', ax,  stepSize)">+</button>
+                </div>
+                <!-- 右手夹爪 -->
+                <div class="gripper-row">
+                    <span class="gripper-label">夹爪</span>
+                    <button class="gripper-btn open" @click="gripper('right', 'open')">张开</button>
+                    <button class="gripper-btn close" @click="gripper('right', 'close')">闭合</button>
                 </div>
             </div>
         </div>
@@ -131,6 +143,14 @@ export default {
             const key = side === 'left' ? 'l' + axis : 'r' + axis;
             const data = { [key]: value_mm };
             mqttClient.publishCommand('offset_move', data);
+        },
+        // 控制夹爪开合
+        gripper(side, action) {
+            // open: -0.7, close: -0.0
+            const pos = action === 'open' ? -0.7 : -0.0;
+            const data = side === 'left' ? { left: pos } : { right: pos };
+            mqttClient.publishCommand('grab', data);
+            console.log(`[夹爪] ${side} ${action} (pos=${pos})`);
         },
         // 从 MQTT 状态刷新末端坐标
         syncFromStatus(status) {

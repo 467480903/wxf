@@ -807,6 +807,48 @@ html, body {
     font-size: 13px;
 }
 
+/* ── 夹爪控制 ──────────────────────────────────── */
+.gripper-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid #2a313c;
+    border-radius: 6px;
+}
+.gripper-label {
+    font-size: 14px;
+    color: #b0b6c0;
+    min-width: 40px;
+}
+.gripper-btn {
+    flex: 1;
+    padding: 7px 16px;
+    border: 1px solid #2a313c;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+.gripper-btn.open {
+    background: #1d6f3a;
+    color: #fff;
+}
+.gripper-btn.open:hover {
+    background: #2a9050;
+    border-color: #3bb060;
+}
+.gripper-btn.close {
+    background: #8a2c2c;
+    color: #fff;
+}
+.gripper-btn.close:hover {
+    background: #aa3838;
+    border-color: #cc4444;
+}
+
 /* ── 程序视图 ──────────────────────────────────── */
 .code-block {
     background: #11151c;
@@ -1024,39 +1066,135 @@ html, body {
     background: #0a0c10;
     border-radius: 4px;
 }
-.cam-btn {
-    min-width: 120px;
-    height: 40px;
-    margin: 0 8px;
-    background: #2c3640;
-    color: #fff;
-    border: 1px solid #3a4452;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 15px;
-    font-weight: 600;
-}
-.cam-btn:hover:not(:disabled) { background: #3a4452; }
-.cam-btn.active { background: #0d6efd; border-color: #0d6efd; }
-.cam-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.calc-btn {
-    min-width: 160px;
-    height: 38px;
-    background: #3a2c1a;
-    color: #fc6;
-    border: 1px solid #5a4218;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-}
-.calc-btn:hover { background: #4a3820; }
-.result-img {
-    max-width: 480px;
+
+/* ── 相机全屏视图 ──────────────────────────────── */
+.cv-panel {
     width: 100%;
-    border-radius: 6px;
-    border: 1px solid #2a313c;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden;
+    border-radius: 0;
+    border: none;
+    background: #0d1117;
 }
+
+.cv-camera-area {
+    flex: 1 1 auto;
+    min-height: 200px;
+    padding: 12px;
+    overflow: hidden;
+}
+
+.cv-camera-area .camera-grid {
+    height: 100%;
+    gap: 10px;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+}
+
+.cv-camera-area .camera-cell {
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.cv-camera-area .camera-img {
+    max-height: none;
+    height: calc(100% - 22px);
+    flex: 1;
+}
+
+.cv-camera-area .camera-placeholder {
+    height: calc(100% - 22px);
+    flex: 1;
+}
+
+/* 计算结果单元格（左下角，和其他单元格等大） */
+.cv-result-cell {
+    border-color: #4a3820;
+    background: linear-gradient(180deg, #18120c, #11151c);
+}
+
+.cv-result-cell .camera-title {
+    color: #fc6;
+}
+
+.cv-result-cell .cv-result-text {
+    margin-top: 4px;
+    color: #5a6a84;
+    font-size: 11px;
+    font-family: monospace;
+    text-align: center;
+}
+
+/* 底部控制栏 */
+.cv-bar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: linear-gradient(180deg, #141a24, #0e131a);
+    border-top: 1px solid #253040;
+    padding: 8px 16px;
+    height: 54px;
+}
+
+.cv-bar-left {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cv-bar-center {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    border-left: 1px solid #253040;
+    border-right: 1px solid #253040;
+    margin: 0 16px;
+}
+
+.cv-status {
+    color: #5a6a84;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+.cv-status-live {
+    color: #f55;
+    animation: cv-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes cv-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.cv-btn {
+    height: 36px;
+    padding: 0 18px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid #3a4a5c;
+    transition: all 0.15s;
+}
+
+.cv-btn:hover:not(:disabled) { filter: brightness(1.25); }
+.cv-btn:active:not(:disabled) { transform: scale(0.97); }
+.cv-btn:disabled { opacity: 0.35; cursor: default; }
+
+.cv-btn-on  { background: linear-gradient(180deg, #1d6f3a, #145c2a); border-color: #28894a; color: #6f6; }
+.cv-btn-off { background: linear-gradient(180deg, #6f1d1d, #5c1414); border-color: #892828; color: #f66; }
+.cv-btn-save { background: linear-gradient(180deg, #1a3c5c, #142e48); border-color: #2a5c8c; color: #6cf; }
 
 /* ── 数据采集 / 模型推理 共用表格 ──────────────── */
 .step-indicator {

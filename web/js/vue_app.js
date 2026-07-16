@@ -138,7 +138,7 @@ const App = {
             </template>
         </nav>
 
-        <main id="content" :class="{ 'content-hidden': !currentMenu, 'content-fullscreen': currentMenu === 'map_chassis' }">
+        <main id="content" :class="{ 'content-hidden': !currentMenu, 'content-fullscreen': currentMenu === 'map_chassis' || currentMenu === 'cam_capture' }">
             <teach-joints     v-if="currentMenu === 'teach_joints'"></teach-joints>
             <teach-coords     v-if="currentMenu === 'teach_coords'"></teach-coords>
             <program-view     v-if="currentMenu === 'program'"></program-view>

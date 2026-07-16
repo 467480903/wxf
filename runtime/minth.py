@@ -11,12 +11,17 @@ Minth 机器人控制类库
     robot = Minth.G2()
     robot.GO(9)                 # 导航到地图点位 9
     robot.WBC("hold")           # 执行全身关节动作 hold.json
+    robot.ARMS("hold")          # 执行双臂关节动作 arms/hold.json
     robot.TTS("你好")           # 语音播报
     robot.REL({"x": 0.3})       # 底盘前进 0.3 米
     robot.OFFSET({"lx": 20})    # 左末端相对移动 20mm
     robot.GRIPPER({"left": 0.5, "right": 0.5})
     robot.YOLO("7.14.pt")       # YOLO 目标检测
     robot.YOLO("wxf.pt")        # 使用 wxf.pt 模型检测
+    robot.CHASSIS_CORRECT()     # 根据 detect.json 纠正底盘水平偏移
+    robot.JOINT("idx11_head_joint1", offset=0.01)   # 单关节增量微调
+    robot.JOINT("idx11_head_joint1", value=0.0)     # 单关节运动到指定角度
+    robot.WAIST_CORRECT()       # 根据 detect.json 的 angle_rad 纠正腰部旋转
     robot.close()
 
     # X2 型号（预留）
@@ -24,6 +29,7 @@ Minth 机器人控制类库
 """
 
 import json
+import os
 import threading
 
 import paho.mqtt.client as mqtt
@@ -38,6 +44,17 @@ CAMERA_TOPIC = "/minth/g2/camera"
 
 # 默认超时时间（秒）
 DEFAULT_TIMEOUT = 15
+
+# detect.json 路径（runtime/../detect/detect.json）
+_DETECT_JSON = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "detect", "detect.json",
+)
+
+# 像素 → 米 转换系数
+# 实测：70 像素偏移 → 需向右移动 130 毫米 → 系数 = 130/70/1000 m/px
+# 向右 = y 负方向，故加负号
+PX_TO_METER = -130.0 / 70.0 / 1000.0
 
 
 class _RobotBase:
@@ -134,6 +151,16 @@ class G2(_RobotBase):
         """
         return self._send_and_wait("WBC", name)
 
+    def ARMS(self, name):
+        """双臂关节运动
+        Args:
+            name: 动作名称字符串，对应 datas/joints/arms/{name}.json
+                  例如 "hold"
+        Returns:
+            bool
+        """
+        return self._send_and_wait("arms", name)
+
     def OFFSET(self, data):
         """末端执行器相对移动
         Args:
@@ -201,6 +228,116 @@ class G2(_RobotBase):
         else:
             print(f"[Minth] ✗ YOLO 超时 (120s)")
         return done
+
+    def CHASSIS_CORRECT(self, detect_json=None, px_to_meter=None):
+        """底盘水平偏移纠正
+
+        读取 detect/detect.json 中的 horizontal_offset_px 像素值，
+        按转换系数换算为米，执行底盘 Y 方向相对移动。
+
+        转换关系：70 像素 → 向右 130 毫米
+        即 1 像素 → 130/70/1000 ≈ 0.001857 米
+        向右为 y 负方向，故 y_meters = -px * 130/75/1000
+
+        Args:
+            detect_json: 可选，自定义 detect.json 路径；默认使用 ../detect/detect.json
+            px_to_meter: 可选，自定义像素到米的转换系数；默认使用 PX_TO_METER
+        Returns:
+            bool: True=纠正完成，False=超时或无数据
+        """
+        path = detect_json or _DETECT_JSON
+        if not os.path.isfile(path):
+            print(f"[Minth] ✗ CHASSIS_CORRECT: 检测结果文件不存在: {path}")
+            return False
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                result = json.load(f)
+        except Exception as e:
+            print(f"[Minth] ✗ CHASSIS_CORRECT: 读取 JSON 失败: {e}")
+            return False
+
+        px = result.get("horizontal_offset_px")
+        if px is None:
+            print(f"[Minth] ✗ CHASSIS_CORRECT: 结果中无 horizontal_offset_px 字段")
+            return False
+
+        try:
+            px = float(px)
+        except (TypeError, ValueError):
+            print(f"[Minth] ✗ CHASSIS_CORRECT: horizontal_offset_px 不是数值: {px}")
+            return False
+
+        coef = px_to_meter if px_to_meter is not None else PX_TO_METER
+        y_meters = px * coef
+        print(f"[Minth] CHASSIS_CORRECT: offset_px={px:.1f}, y_meters={y_meters:.4f}")
+
+        return self._send_and_wait("go_rel", {"x": 0, "y": y_meters, "yaw_rad": 0})
+
+    def JOINT(self, name, offset=None, value=None):
+        """单关节控制
+
+        通过 MQTT 向 /G2_minth_app 发送 joint 命令，可增量微调或运动到指定角度。
+
+        Args:
+            name: 关节名，如 "idx11_head_joint1"、"idx01_body_joint1"
+            offset: 增量微调值（弧度），如 0.01
+            value: 目标角度（弧度），如 0.0
+            注意：offset 和 value 二选一，若都提供则使用 value
+        Returns:
+            bool: True=执行完成，False=超时
+        """
+        if value is None and offset is None:
+            print("[Minth] ✗ JOINT: 需要提供 offset 或 value 参数")
+            return False
+
+        data = {"name": name}
+        if value is not None:
+            data["value"] = value
+            print(f"[Minth] → JOINT: {name} value={value}")
+        else:
+            data["offset"] = offset
+            print(f"[Minth] → JOINT: {name} offset={offset}")
+
+        return self._send_and_wait("joint", data)
+
+    def WAIST_CORRECT(self, detect_json=None, joint_name="idx05_body_joint5"):
+        """腰部旋转纠正
+
+        读取 detect/detect.json 中的 angle_rad 弧度值，
+        执行腰部关节旋转到该角度。
+
+        Args:
+            detect_json: 可选，自定义 detect.json 路径；默认使用 ../detect/detect.json
+            joint_name: 腰部旋转关节名，默认 "idx05_body_joint5"
+        Returns:
+            bool: True=旋转完成，False=超时或无数据
+        """
+        path = detect_json or _DETECT_JSON
+        if not os.path.isfile(path):
+            print(f"[Minth] ✗ WAIST_CORRECT: 检测结果文件不存在: {path}")
+            return False
+
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                result = json.load(f)
+        except Exception as e:
+            print(f"[Minth] ✗ WAIST_CORRECT: 读取 JSON 失败: {e}")
+            return False
+
+        angle = result.get("angle_rad")*(-1)
+        if angle is None:
+            print(f"[Minth] ✗ WAIST_CORRECT: 结果中无 angle_rad 字段")
+            return False
+
+        try:
+            angle = float(angle)
+        except (TypeError, ValueError):
+            print(f"[Minth] ✗ WAIST_CORRECT: angle_rad 不是数值: {angle}")
+            return False
+
+        print(f"[Minth] WAIST_CORRECT: {joint_name} angle_rad={angle:.4f}")
+        return self.JOINT(joint_name, offset=angle)
 
 
 class X2(_RobotBase):
