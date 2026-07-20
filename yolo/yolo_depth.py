@@ -14,6 +14,7 @@ import cv2
 import numpy as np
 import os
 import sys
+import json
 from ultralytics import YOLO
 
 # ===================== 全局配置 =====================
@@ -21,6 +22,8 @@ IMG_PATH = 'head.jpg'                    # 输入的 RGB 图像
 DEPTH_RAW_PATH = 'head_depth.raw'        # 深度原始数据文件
 DEPTH_SHAPE = (400, 640)                 # 深度图尺寸 (H, W)，根据实际情况修改（当前文件 512000B = 400x640）
 MODEL_PATH = sys.argv[1] if len(sys.argv) > 1 else '06131557.pt'
+MODEL_BASENAME = os.path.splitext(os.path.basename(MODEL_PATH))[0]
+RESULT_JSON = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"{MODEL_BASENAME}_result.json")
 SAVE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "images")
 os.makedirs(SAVE_DIR, exist_ok=True)
 
@@ -502,6 +505,29 @@ def main():
     print(f"  - yolo_depth_depth_marked.jpg")
     print(f"  - result.jpg (YOLO 默认输出)")
     print("=" * 60)
+
+    # ===== 保存检测结果到 JSON =====
+    result_data = {
+        "model": MODEL_PATH,
+        "h_offset": float(calc['h_offset']),
+        "angle_rad": float(calc['angle_rad']),
+        "angle_deg": float(calc['angle_deg']),
+        "slope": float(calc['slope']),
+        "line_center": [float(calc['line_center'][0]), float(calc['line_center'][1])],
+        "img_center_x": float(calc['img_center_x']),
+        "pt1": [float(calc['pt1'][0]), float(calc['pt1'][1])],
+        "pt2": [float(calc['pt2'][0]), float(calc['pt2'][1])],
+        "label1": calc['label1'],
+        "label2": calc['label2'],
+        "depth_a_left": float(depth_a_left),
+        "depth_b_right": float(depth_b_right),
+        "depth_center": float(depth_center),
+        "depth_a_center": float(depth_a_center),
+        "depth_b_center": float(depth_b_center),
+    }
+    with open(RESULT_JSON, 'w') as f:
+        json.dump(result_data, f, indent=2)
+    print(f"\n✅ 检测结果已保存: {RESULT_JSON}")
 
 
 if __name__ == '__main__':

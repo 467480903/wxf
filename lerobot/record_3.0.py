@@ -19,6 +19,8 @@ MQTT_PORT = 1883
 MQTT_TOPIC = "/record_lerobot_dataset"
 MQTT_LOG_TOPIC = "/record_lerobot_dataset/log"
 
+RIGHT_NAME = "arm_r_end_link"
+
 # --- 全局状态 ---
 is_recording = False
 record_thread = None
@@ -78,6 +80,9 @@ def ensure_dirs_v3(output_dir: Path, episode_id: int) -> Tuple[Path, Path, Path]
 def write_info_json_v3(meta_dir: Path, fps: float, robot_type: str, state_dim: int, joint_names: List[str]):
     features = {
         "observation.state": {"dtype": "float32", "shape": [state_dim], "names": joint_names},
+        "observation.gripper_position": {"dtype": "float32", "shape": [1], "names": ["gripper_position"]},
+        "observation.ee_position": {"dtype": "float32", "shape": [3], "names": ["x", "y", "z"]},
+        "observation.ee_orientation": {"dtype": "float32", "shape": [4], "names": ["x", "y", "z", "w"]},
         "action": {"dtype": "float32", "shape": [state_dim], "names": joint_names}
     }
     for cam in CAMERAS:
@@ -114,7 +119,6 @@ def record_thread_function(args):
         "idx61_arm_r_joint1", "idx62_arm_r_joint2", "idx63_arm_r_joint3",
         "idx64_arm_r_joint4", "idx65_arm_r_joint5", "idx66_arm_r_joint6", "idx67_arm_r_joint7"
     ]
-
     log_message(f"开始录制 Episode {args.episode_id}...")
 
     try:
@@ -129,6 +133,30 @@ def record_thread_function(args):
                 current_state = [states_map.get(name, 0.0) for name in joint_names]
             else:
                 current_state = [0.0] * len(joint_names)
+
+            # 1.1 末端夹爪位置采集（右臂）
+            try:
+                end_state = robot.get_end_state()
+                right_end = end_state.get('right_end_state', {})
+                end_states_list = right_end.get('end_states', [])
+                current_gripper_position = end_states_list[0].get('position', 0.0) if end_states_list else 0.0
+            except Exception as e:
+                current_gripper_position = 0.0
+
+            # 1.2 末端位姿采集（右臂 ee_position / ee_orientation）
+            try:
+                mc_status = robot.get_motion_control_status()
+                current_ee_position = [0.0, 0.0, 0.0]
+                current_ee_orientation = [0.0, 0.0, 0.0, 1.0]
+                for i, frame_name in enumerate(mc_status.frame_names):
+                    if frame_name == RIGHT_NAME:
+                        p = mc_status.frame_poses[i]
+                        current_ee_position = [p.position.x, p.position.y, p.position.z]
+                        current_ee_orientation = [p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w]
+                        break
+            except Exception as e:
+                current_ee_position = [0.0, 0.0, 0.0]
+                current_ee_orientation = [0.0, 0.0, 0.0, 1.0]
 
             # 2. 视频采集
             for cam in CAMERAS:
@@ -154,6 +182,9 @@ def record_thread_function(args):
             # 3. 数据记录
             data_rows.append({
                 "observation.state": current_state,
+                "observation.gripper_position": current_gripper_position,
+                "observation.ee_position": current_ee_position,
+                "observation.ee_orientation": current_ee_orientation,
                 "episode_index": args.episode_id,
                 "frame_index": frame_idx,
                 "timestamp_ns": time.time_ns(),

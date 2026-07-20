@@ -43,6 +43,7 @@ print(f"右执行器关节: {right_state['names']}")
 print("\n=== 执行器状态检查 ===")
 for side in ['left', 'right']:
     state = end_state[f'{side}_end_state']
+    print(f"{side}执行器位置: {state['end_states'][0]['position']:.3f} 行程值")
     if state['controlled']:
         print(f"✅ {side}执行器正在控制中")
     else:
